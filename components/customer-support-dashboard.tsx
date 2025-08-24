@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,9 @@ export function CustomerSupportDashboard() {
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
 
+  // State for keyboard action feedback
+  const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
@@ -43,6 +46,13 @@ export function CustomerSupportDashboard() {
     await generateAIResponse(currentMessage)
   }
 
+  const showKeyboardFeedback = (type: 'approve' | 'review') => {
+    setKeyboardFeedback(type)
+    setTimeout(() => {
+      setKeyboardFeedback(null)
+    }, 300) // Same duration as swipe animation
+  }
+
   const handleApprove = () => {
     if (!currentMessage) return
     approveMessage(currentMessage.id, "agent-1")
@@ -51,6 +61,22 @@ export function CustomerSupportDashboard() {
   const handleSendToReview = () => {
     if (!currentMessage) return
     sendToReview(currentMessage.id, "agent-1", "Needs manual review")
+  }
+
+  const handleKeyboardApprove = () => {
+    if (!currentMessage) return
+    showKeyboardFeedback('approve')
+    setTimeout(() => {
+      handleApprove()
+    }, 300) // Show feedback for same duration as swipe
+  }
+
+  const handleKeyboardReview = () => {
+    if (!currentMessage) return
+    showKeyboardFeedback('review')
+    setTimeout(() => {
+      handleSendToReview()
+    }, 300) // Show feedback for same duration as swipe
   }
 
   // Add keyboard shortcuts
@@ -64,11 +90,11 @@ export function CustomerSupportDashboard() {
       switch (event.key.toLowerCase()) {
         case 'a':
           event.preventDefault()
-          handleApprove()
+          handleKeyboardApprove()
           break
         case 'r':
           event.preventDefault()
-          handleSendToReview()
+          handleKeyboardReview()
           break
         case 'u':
           event.preventDefault()
@@ -81,7 +107,7 @@ export function CustomerSupportDashboard() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [currentMessage, currentMessageIndex, handleApprove, handleSendToReview, moveToPreviousMessage])
+  }, [currentMessage, currentMessageIndex, moveToPreviousMessage])
 
   if (isLoading) {
     return (
@@ -184,7 +210,13 @@ export function CustomerSupportDashboard() {
           disabled={currentMessage.isGenerating}
           className="absolute inset-0"
         >
-          <Card className="h-full overflow-auto">
+          <Card 
+            className="h-full overflow-auto transition-all duration-300"
+            style={{
+              backgroundColor: keyboardFeedback === 'approve' ? 'rgba(34, 197, 94, 0.2)' : keyboardFeedback === 'review' ? 'rgba(251, 146, 60, 0.2)' : undefined,
+              border: keyboardFeedback === 'approve' ? '2px solid rgb(34, 197, 94)' : keyboardFeedback === 'review' ? '2px solid rgb(251, 146, 60)' : undefined,
+            }}
+          >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -251,6 +283,26 @@ export function CustomerSupportDashboard() {
                 </div>
               </div>
             </CardContent>
+            
+            {/* Keyboard feedback badges */}
+            {keyboardFeedback && (
+              <>
+                <div
+                  className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${
+                    keyboardFeedback === 'approve' ? "bg-green-500 text-white opacity-100" : "opacity-0"
+                  }`}
+                >
+                  APPROVE
+                </div>
+                <div
+                  className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${
+                    keyboardFeedback === 'review' ? "bg-orange-500 text-white opacity-100" : "opacity-0"
+                  }`}
+                >
+                  TO REVIEW
+                </div>
+              </>
+            )}
           </Card>
         </SwipeableCard>
       </div>
