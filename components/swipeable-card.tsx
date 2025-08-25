@@ -85,8 +85,8 @@ export function SwipeableCard({
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    // Only prevent default if this is a horizontal swipe to allow vertical scrolling
-    if (isHorizontalSwipe) {
+    // Prevent all scrolling once we start dragging (lock-in effect)
+    if (isDragging) {
       e.preventDefault()
     }
     const touch = e.touches[0]
@@ -94,7 +94,7 @@ export function SwipeableCard({
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (isHorizontalSwipe) {
+    if (isDragging) {
       e.preventDefault()
     }
     handleEnd()
@@ -125,18 +125,25 @@ export function SwipeableCard({
     }
   }, [isDragging, dragOffset, startPos])
 
-  // Disable scrolling during horizontal swipes
+  // Disable all scrolling during any drag operation (lock-in effect)
   useEffect(() => {
-    if (isHorizontalSwipe && isDragging) {
-      // Prevent body scroll during horizontal swipe
+    if (isDragging) {
+      // Prevent body scroll during any drag operation
       const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
       
+      // Also prevent scrolling on the document
+      const preventDefault = (e: Event) => e.preventDefault()
+      document.addEventListener('touchmove', preventDefault, { passive: false })
+      document.addEventListener('wheel', preventDefault, { passive: false })
+      
       return () => {
         document.body.style.overflow = originalOverflow
+        document.removeEventListener('touchmove', preventDefault)
+        document.removeEventListener('wheel', preventDefault)
       }
     }
-  }, [isHorizontalSwipe, isDragging])
+  }, [isDragging])
 
   const rotation = (dragOffset.x / (typeof window !== 'undefined' ? window.innerWidth : 1000)) * MAX_ROTATION
   const opacity = Math.max(0.7, 1 - Math.abs(dragOffset.x) / 300)
