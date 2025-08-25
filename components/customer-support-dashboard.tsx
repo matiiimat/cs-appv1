@@ -152,8 +152,6 @@ export function CustomerSupportDashboard() {
       <div className="mb-6 sm:mb-8">
         <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-            
-            <Badge className="text-center items-center" variant="outline">{pendingMessages.length - currentMessageIndex - 1} remaining</Badge>
             <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
               <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">A</kbd> Approve</span>
               <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">R</kbd> Review</span>
@@ -310,6 +308,18 @@ export function CustomerSupportDashboard() {
       <div className="mt-8">
         
       </div>
+      
+      {/* Messages remaining counter at bottom center */}
+      {/* {pendingMessages.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-background/95 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <span>{pendingMessages.length - currentMessageIndex - 1} remaining</span>
+            </div>
+          </div>
+        </div>
+      )} */}
     </div>
   )
 }
