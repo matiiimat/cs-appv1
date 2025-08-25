@@ -241,7 +241,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const rejectMessage = (id: string, agentId: string, reason?: string) => {
+  const rejectMessage = (id: string, agentId: string) => {
     const processedAt = new Date().toISOString()
     const message = messages.find((m) => m.id === id)
 
@@ -268,7 +268,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const sendToReview = (id: string, agentId: string, reason?: string) => {
+  const sendToReview = (id: string, agentId: string) => {
     const processedAt = new Date().toISOString()
     const message = messages.find((m) => m.id === id)
 

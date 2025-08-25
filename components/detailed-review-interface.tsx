@@ -19,7 +19,7 @@ interface ChatMessage {
 }
 
 export function DetailedReviewInterface() {
-  const { messages, updateMessageStatus } = useMessageManager()
+  const { messages, updateMessage } = useMessageManager()
   const { settings } = useSettings()
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState("")
@@ -37,9 +37,9 @@ export function DetailedReviewInterface() {
   }, [reviewMessages, selectedMessageId])
 
   useEffect(() => {
-    if (selectedMessage?.aiResponse) {
-      setReplyText(selectedMessage.aiResponse)
-      setLastAiResponse(selectedMessage.aiResponse)
+    if (selectedMessage?.aiSuggestedResponse) {
+      setReplyText(selectedMessage.aiSuggestedResponse)
+      setLastAiResponse(selectedMessage.aiSuggestedResponse)
     }
   }, [selectedMessage])
 
@@ -72,7 +72,7 @@ export function DetailedReviewInterface() {
 
   const handleApprove = () => {
     if (selectedMessage) {
-      updateMessageStatus(selectedMessage.id, "approved")
+      updateMessage(selectedMessage.id, { status: "approved" })
 
       const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
 
@@ -80,7 +80,7 @@ export function DetailedReviewInterface() {
         // Find the next message after the current one
         const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
         const nextMessage =
-          remainingMessages.find((msg, index) => {
+          remainingMessages.find((msg) => {
             const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
             return originalIndex > currentIndex
           }) || remainingMessages[0]
@@ -97,14 +97,14 @@ export function DetailedReviewInterface() {
 
   const handleSendToReview = () => {
     if (selectedMessage) {
-      updateMessageStatus(selectedMessage.id, "pending")
+      updateMessage(selectedMessage.id, { status: "pending" })
 
       const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
 
       if (remainingMessages.length > 0) {
         const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
         const nextMessage =
-          remainingMessages.find((msg, index) => {
+          remainingMessages.find((msg) => {
             const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
             return originalIndex > currentIndex
           }) || remainingMessages[0]
@@ -121,7 +121,7 @@ export function DetailedReviewInterface() {
 
   const handleUndo = () => {
     // Simple undo - could be enhanced to track history
-    setReplyText(selectedMessage?.aiResponse || "")
+    setReplyText(selectedMessage?.aiSuggestedResponse || "")
     setChatMessages([])
   }
 
@@ -139,14 +139,14 @@ export function DetailedReviewInterface() {
     setAiChatInput("")
 
     setTimeout(() => {
-      const aiResponse: ChatMessage = {
+      const aiSuggestedResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: `Based on the customer's message about "${selectedMessage.content.substring(0, 50)}...", I suggest focusing on ${selectedMessage.category.toLowerCase()} best practices. The customer seems ${selectedMessage.priority === "high" ? "urgent" : "patient"}, so adjust your tone accordingly.`,
+        content: `Based on the customer's message about "${selectedMessage.message.substring(0, 50)}...", I suggest focusing on ${selectedMessage.category?.toLowerCase()} best practices. The customer seems ${selectedMessage.priority === "high" ? "urgent" : "patient"}, so adjust your tone accordingly.`,
         sender: "ai",
         timestamp: new Date(),
       }
-      setChatMessages((prev) => [...prev, aiResponse])
-      setLastAiResponse(aiResponse.content)
+      setChatMessages((prev) => [...prev, aiSuggestedResponse])
+      setLastAiResponse(aiSuggestedResponse.content)
     }, 1000)
   }
 
@@ -168,11 +168,11 @@ export function DetailedReviewInterface() {
 
       if (macroAction === "translate_to_spanish") {
         responseContent = "I've translated the AI response to Spanish and added it to your reply field."
-        const spanishTranslation = await translateToSpanish(lastAiResponse || selectedMessage.aiResponse || "")
+        const spanishTranslation = await translateToSpanish(lastAiResponse || selectedMessage.aiSuggestedResponse || "")
         updatedReplyText = spanishTranslation
       } else if (macroAction === "use_last_ai_response") {
         responseContent = "I've added the last AI response to your reply field."
-        updatedReplyText = lastAiResponse || selectedMessage.aiResponse || ""
+        updatedReplyText = lastAiResponse || selectedMessage.aiSuggestedResponse || ""
       } else if (macroAction === "custom_action") {
         const customMacro = settings.macros.find((m) => m.id === "custom-macro")
         responseContent = `I've executed your custom macro: "${customMacro?.action || "No custom action defined"}"`
@@ -184,14 +184,14 @@ export function DetailedReviewInterface() {
         updatedReplyText = replyText ? `${replyText}\n\n${macroAction}` : macroAction
       }
 
-      const aiResponse: ChatMessage = {
+      const aiSuggestedResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: responseContent,
         sender: "ai",
         timestamp: new Date(),
       }
 
-      setChatMessages((prev) => [...prev, aiResponse])
+      setChatMessages((prev) => [...prev, aiSuggestedResponse])
       setReplyText(updatedReplyText)
     }, 1000)
   }
@@ -313,7 +313,7 @@ export function DetailedReviewInterface() {
                       <span>{new Date(selectedMessage.timestamp).toLocaleString()}</span>
                     </div>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm leading-relaxed">{selectedMessage.content}</p>
+                      <p className="text-sm leading-relaxed">{selectedMessage.message}</p>
                     </div>
                   </div>
                 </CardContent>

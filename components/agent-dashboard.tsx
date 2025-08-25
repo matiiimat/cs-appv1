@@ -12,7 +12,7 @@ interface AgentDashboardProps {
 }
 
 export function AgentDashboard({ onSwitchToSwipe }: AgentDashboardProps) {
-  const { stats, getRecentActivity, getMessagesByStatus } = useMessageManager()
+  const { stats, getRecentActivity } = useMessageManager()
   const recentActivity = getRecentActivity()
 
   const categoryData = [

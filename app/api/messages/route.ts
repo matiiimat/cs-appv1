@@ -1,7 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // Mock database for demonstration
-const messages: any[] = []
+interface Message {
+  id: string;
+  timestamp: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+const messages: Message[] = []
 
 export async function GET() {
   return NextResponse.json({ messages })
@@ -20,7 +27,7 @@ export async function POST(request: NextRequest) {
     messages.push(newMessage)
 
     return NextResponse.json({ message: newMessage }, { status: 201 })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }
@@ -37,7 +44,7 @@ export async function PUT(request: NextRequest) {
     messages[messageIndex] = { ...messages[messageIndex], ...updates }
 
     return NextResponse.json({ message: messages[messageIndex] })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update message" }, { status: 500 })
   }
 }

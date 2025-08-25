@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,6 @@ import { Trash2, ExternalLink, Moon, Sun } from "lucide-react"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateMacro, addMacro, deleteMacro } = useSettings()
-  const [newMacro, setNewMacro] = useState({ name: "", description: "", action: "" })
 
   useEffect(() => {
     if (settings.theme === "dark") {
@@ -53,12 +52,6 @@ export function SettingsPage() {
     }
   }, [settings.macros.length, addMacro])
 
-  const handleAddMacro = () => {
-    if (newMacro.name && newMacro.description && newMacro.action) {
-      addMacro(newMacro)
-      setNewMacro({ name: "", description: "", action: "" })
-    }
-  }
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl">

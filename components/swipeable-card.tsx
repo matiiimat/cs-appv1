@@ -62,13 +62,6 @@ export function SwipeableCard({
     handleStart(e.clientX, e.clientY)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    handleMove(e.clientX, e.clientY)
-  }
-
-  const handleMouseUp = () => {
-    handleEnd()
-  }
 
   // Touch events - Enhanced touch handling for better mobile support
   const handleTouchStart = (e: React.TouchEvent) => {

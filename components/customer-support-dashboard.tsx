@@ -15,7 +15,6 @@ export function CustomerSupportDashboard() {
     isLoading,
     approveMessage,
     sendToReview,
-    moveToNextMessage,
     moveToPreviousMessage,
     generateAIResponse,
   } = useMessageManager()
