@@ -27,18 +27,6 @@ export function CustomerSupportDashboard() {
   // State for keyboard action feedback
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-destructive text-destructive-foreground"
-      case "medium":
-        return "bg-secondary text-secondary-foreground"
-      case "low":
-        return "bg-muted text-muted-foreground"
-      default:
-        return "bg-muted text-muted-foreground"
-    }
-  }
 
   const handleRegenerateResponse = async () => {
     if (!currentMessage) return
@@ -208,7 +196,7 @@ export function CustomerSupportDashboard() {
           className="absolute inset-0"
         >
           <Card 
-            className="h-full overflow-auto transition-all duration-300"
+            className="h-full overflow-hidden transition-all duration-300"
             style={{
               backgroundColor: keyboardFeedback === 'approve' ? 'rgba(34, 197, 94, 0.2)' : keyboardFeedback === 'review' ? 'rgba(251, 146, 60, 0.2)' : undefined,
               border: keyboardFeedback === 'approve' ? '2px solid rgb(34, 197, 94)' : keyboardFeedback === 'review' ? '2px solid rgb(251, 146, 60)' : undefined,
@@ -226,9 +214,6 @@ export function CustomerSupportDashboard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {currentMessage.priority && (
-                    <Badge className={getPriorityColor(currentMessage.priority)}>{currentMessage.priority}</Badge>
-                  )}
                   {currentMessage.category && (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Tag className="h-3 w-3" />
@@ -242,7 +227,7 @@ export function CustomerSupportDashboard() {
                 {currentMessage.timestamp}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-full overflow-y-auto">
               <div className="mb-6">
                 <h4 className="font-semibold mb-2">Subject: {currentMessage.subject}</h4>
                 <p className="text-foreground leading-relaxed">{currentMessage.message}</p>
