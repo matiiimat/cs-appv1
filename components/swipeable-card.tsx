@@ -21,15 +21,18 @@ export function SwipeableCard({
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
   const SWIPE_THRESHOLD = 100
   const MAX_ROTATION = 15
+  const DIRECTION_THRESHOLD = 10 // Minimum movement to determine swipe direction
 
   const handleStart = (clientX: number, clientY: number) => {
     if (disabled) return
     setIsDragging(true)
     setStartPos({ x: clientX, y: clientY })
+    setIsHorizontalSwipe(false)
   }
 
   const handleMove = (clientX: number, clientY: number) => {
@@ -37,7 +40,17 @@ export function SwipeableCard({
 
     const deltaX = clientX - startPos.x
     const deltaY = clientY - startPos.y
-    setDragOffset({ x: deltaX, y: deltaY })
+    
+    // Determine if this is a horizontal swipe
+    if (!isHorizontalSwipe && (Math.abs(deltaX) > DIRECTION_THRESHOLD || Math.abs(deltaY) > DIRECTION_THRESHOLD)) {
+      const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY)
+      setIsHorizontalSwipe(isHorizontal)
+    }
+    
+    // Only update drag offset if it's a horizontal swipe
+    if (isHorizontalSwipe) {
+      setDragOffset({ x: deltaX, y: 0 }) // Force Y to 0 for horizontal-only movement
+    }
   }
 
   const handleEnd = () => {
@@ -45,7 +58,8 @@ export function SwipeableCard({
 
     const { x } = dragOffset
 
-    if (Math.abs(x) > SWIPE_THRESHOLD) {
+    // Only trigger swipe actions if it was a horizontal swipe
+    if (isHorizontalSwipe && Math.abs(x) > SWIPE_THRESHOLD) {
       if (x > 0) {
         onSwipeRight()
       } else {
@@ -55,6 +69,7 @@ export function SwipeableCard({
 
     setIsDragging(false)
     setDragOffset({ x: 0, y: 0 })
+    setIsHorizontalSwipe(false)
   }
 
   // Mouse events
@@ -65,19 +80,23 @@ export function SwipeableCard({
 
   // Touch events - Enhanced touch handling for better mobile support
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault() // Prevent scrolling while swiping
     const touch = e.touches[0]
     handleStart(touch.clientX, touch.clientY)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault() // Prevent scrolling while swiping
+    // Only prevent default if this is a horizontal swipe to allow vertical scrolling
+    if (isHorizontalSwipe) {
+      e.preventDefault()
+    }
     const touch = e.touches[0]
     handleMove(touch.clientX, touch.clientY)
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault()
+    if (isHorizontalSwipe) {
+      e.preventDefault()
+    }
     handleEnd()
   }
 
@@ -106,7 +125,20 @@ export function SwipeableCard({
     }
   }, [isDragging, dragOffset, startPos])
 
-  const rotation = (dragOffset.x / window.innerWidth) * MAX_ROTATION
+  // Disable scrolling during horizontal swipes
+  useEffect(() => {
+    if (isHorizontalSwipe && isDragging) {
+      // Prevent body scroll during horizontal swipe
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [isHorizontalSwipe, isDragging])
+
+  const rotation = (dragOffset.x / (typeof window !== 'undefined' ? window.innerWidth : 1000)) * MAX_ROTATION
   const opacity = Math.max(0.7, 1 - Math.abs(dragOffset.x) / 300)
 
   const getSwipeIndicatorColor = () => {
@@ -124,7 +156,7 @@ export function SwipeableCard({
       ref={cardRef}
       className={`relative select-none cursor-grab active:cursor-grabbing transition-transform touch-none ${className}`}
       style={{
-        transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`,
+        transform: `translateX(${dragOffset.x}px) rotate(${rotation}deg)`,
         opacity: opacity,
         backgroundColor: getSwipeIndicatorColor(),
         border: getSwipeIndicatorBorder(),
