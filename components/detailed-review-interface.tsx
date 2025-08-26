@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
-import { Clock, User, Send, Bot, MessageSquare, Zap, Smartphone, Keyboard } from "lucide-react"
+import { Clock, User, Send, Bot, MessageSquare, Zap } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -92,11 +92,6 @@ export function DetailedReviewInterface() {
     }
   }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
 
-  const handleUndo = useCallback(() => {
-    // Simple undo - could be enhanced to track history
-    setReplyText(selectedMessage?.aiSuggestedResponse || "")
-    setChatMessages([])
-  }, [selectedMessage, setReplyText, setChatMessages])
 
   // Auto-scroll to bottom when new chat messages are added
   useEffect(() => {
@@ -108,32 +103,6 @@ export function DetailedReviewInterface() {
     }
   }, [chatMessages])
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (!selectedMessage) return
-
-      // Only trigger if not typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
-
-      switch (e.key.toLowerCase()) {
-        case "a":
-          e.preventDefault()
-          handleApprove()
-          break
-        case "r":
-          e.preventDefault()
-          handleSendToReview()
-          break
-        case "u":
-          e.preventDefault()
-          handleUndo()
-          break
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyPress)
-    return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [selectedMessage, handleApprove, handleSendToReview, handleUndo])
 
   const handleAiChat = async () => {
     if (!aiChatInput.trim() || !selectedMessage) return
@@ -322,19 +291,6 @@ Provide an improved version that can be sent directly to the customer.`
 
   return (
     <div className="container mx-auto px-6 py-6">
-      <div className="mb-4 p-3 bg-muted/50 rounded-lg border">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Smartphone className="h-3 w-3" />
-            <span>Mobile: Swipe to approve or send to review</span>
-          </div>
-          <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-1">
-            <Keyboard className="h-3 w-3" />
-            <span>Desktop: Press A to Approve, R for Review, U to Undo</span>
-          </div>
-        </div>
-      </div>
 
       <div className="flex gap-6 h-[calc(100vh-180px)]">
         <div className="w-1/6 min-w-[200px]">
