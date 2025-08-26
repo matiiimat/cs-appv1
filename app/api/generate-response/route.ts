@@ -1,12 +1,13 @@
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
 import { type NextRequest, NextResponse } from "next/server"
+import { AIService } from "@/lib/ai-providers"
+import { type AIProviderConfig } from "@/lib/settings-context"
 
 interface GenerateResponseRequest {
   customerName: string
   customerEmail: string
   subject: string
   message: string
+  aiConfig: AIProviderConfig
 }
 
 interface GenerateResponseResponse {
@@ -17,12 +18,19 @@ interface GenerateResponseResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, aiConfig }: GenerateResponseRequest = await request.json()
+
+    if (!aiConfig || !aiConfig.apiKey) {
+      return NextResponse.json(
+        { error: "AI configuration is required" }, 
+        { status: 400 }
+      )
+    }
+
+    const aiService = new AIService(aiConfig)
 
     // Generate category and priority
-    const { text: categoryAndPriority } = await generateText({
-      model: openai("gpt-4o"),
-      system: `You are an AI assistant that categorizes customer support messages and determines their priority level.
+    const categoryAndPrioritySystem = `You are an AI assistant that categorizes customer support messages and determines their priority level.
 
 Analyze the customer message and respond with ONLY a JSON object in this exact format:
 {
@@ -33,12 +41,17 @@ Analyze the customer message and respond with ONLY a JSON object in this exact f
 Priority guidelines:
 - high: Account access issues, billing disputes, system outages, security concerns
 - medium: Feature requests, general billing questions, minor technical issues
-- low: General inquiries, documentation requests, non-urgent questions`,
-      prompt: `Customer: ${customerName}
+- low: General inquiries, documentation requests, non-urgent questions`
+
+    const categoryAndPriorityPrompt = `Customer: ${customerName}
 Email: ${customerEmail}
 Subject: ${subject}
-Message: ${message}`,
-    })
+Message: ${message}`
+
+    const categoryAndPriority = await aiService.generateText(
+      categoryAndPrioritySystem,
+      categoryAndPriorityPrompt
+    )
 
     let parsedCategoryPriority
     try {
@@ -49,9 +62,7 @@ Message: ${message}`,
     }
 
     // Generate AI response
-    const { text: aiResponse } = await generateText({
-      model: openai("gpt-4o"),
-      system: `You are a professional customer support agent. Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
+    const aiResponseSystem = `You are a professional customer support agent. Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
 Guidelines:
 - Be friendly and professional
@@ -65,14 +76,19 @@ Guidelines:
 - Always end with an offer for further assistance
 
 The message category is: ${parsedCategoryPriority.category}
-The priority level is: ${parsedCategoryPriority.priority}`,
-      prompt: `Customer: ${customerName}
+The priority level is: ${parsedCategoryPriority.priority}`
+
+    const aiResponsePrompt = `Customer: ${customerName}
 Email: ${customerEmail}
 Subject: ${subject}
 Message: ${message}
 
-Generate a professional customer support response.`,
-    })
+Generate a professional customer support response.`
+
+    const aiResponse = await aiService.generateText(
+      aiResponseSystem,
+      aiResponsePrompt
+    )
 
     const response: GenerateResponseResponse = {
       aiSuggestedResponse: aiResponse,

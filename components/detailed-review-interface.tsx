@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,6 +43,61 @@ export function DetailedReviewInterface() {
     }
   }, [selectedMessage])
 
+  const handleApprove = useCallback(() => {
+    if (selectedMessage) {
+      updateMessage(selectedMessage.id, { status: "approved" })
+
+      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
+
+      if (remainingMessages.length > 0) {
+        // Find the next message after the current one
+        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
+        const nextMessage =
+          remainingMessages.find((msg) => {
+            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
+            return originalIndex > currentIndex
+          }) || remainingMessages[0]
+
+        setSelectedMessageId(nextMessage.id)
+      } else {
+        setSelectedMessageId(null)
+      }
+
+      setReplyText("")
+      setChatMessages([])
+    }
+  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
+
+  const handleSendToReview = useCallback(() => {
+    if (selectedMessage) {
+      updateMessage(selectedMessage.id, { status: "pending" })
+
+      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
+
+      if (remainingMessages.length > 0) {
+        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
+        const nextMessage =
+          remainingMessages.find((msg) => {
+            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
+            return originalIndex > currentIndex
+          }) || remainingMessages[0]
+
+        setSelectedMessageId(nextMessage.id)
+      } else {
+        setSelectedMessageId(null)
+      }
+
+      setReplyText("")
+      setChatMessages([])
+    }
+  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
+
+  const handleUndo = useCallback(() => {
+    // Simple undo - could be enhanced to track history
+    setReplyText(selectedMessage?.aiSuggestedResponse || "")
+    setChatMessages([])
+  }, [selectedMessage, setReplyText, setChatMessages])
+
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (!selectedMessage) return
@@ -68,62 +123,7 @@ export function DetailedReviewInterface() {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [selectedMessage])
-
-  const handleApprove = () => {
-    if (selectedMessage) {
-      updateMessage(selectedMessage.id, { status: "approved" })
-
-      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
-
-      if (remainingMessages.length > 0) {
-        // Find the next message after the current one
-        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
-        const nextMessage =
-          remainingMessages.find((msg) => {
-            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
-            return originalIndex > currentIndex
-          }) || remainingMessages[0]
-
-        setSelectedMessageId(nextMessage.id)
-      } else {
-        setSelectedMessageId(null)
-      }
-
-      setReplyText("")
-      setChatMessages([])
-    }
-  }
-
-  const handleSendToReview = () => {
-    if (selectedMessage) {
-      updateMessage(selectedMessage.id, { status: "pending" })
-
-      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
-
-      if (remainingMessages.length > 0) {
-        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
-        const nextMessage =
-          remainingMessages.find((msg) => {
-            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
-            return originalIndex > currentIndex
-          }) || remainingMessages[0]
-
-        setSelectedMessageId(nextMessage.id)
-      } else {
-        setSelectedMessageId(null)
-      }
-
-      setReplyText("")
-      setChatMessages([])
-    }
-  }
-
-  const handleUndo = () => {
-    // Simple undo - could be enhanced to track history
-    setReplyText(selectedMessage?.aiSuggestedResponse || "")
-    setChatMessages([])
-  }
+  }, [selectedMessage, handleApprove, handleSendToReview, handleUndo])
 
   const handleAiChat = async () => {
     if (!aiChatInput.trim() || !selectedMessage) return

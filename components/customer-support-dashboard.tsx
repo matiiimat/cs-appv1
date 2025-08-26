@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,38 +33,38 @@ export function CustomerSupportDashboard() {
     await generateAIResponse(currentMessage)
   }
 
-  const showKeyboardFeedback = (type: 'approve' | 'review') => {
+  const showKeyboardFeedback = useCallback((type: 'approve' | 'review') => {
     setKeyboardFeedback(type)
     setTimeout(() => {
       setKeyboardFeedback(null)
     }, 300) // Same duration as swipe animation
-  }
+  }, [setKeyboardFeedback])
 
-  const handleApprove = () => {
+  const handleApprove = useCallback(() => {
     if (!currentMessage) return
     approveMessage(currentMessage.id, "agent-1")
-  }
+  }, [currentMessage, approveMessage])
 
-  const handleSendToReview = () => {
+  const handleSendToReview = useCallback(() => {
     if (!currentMessage) return
     sendToReview(currentMessage.id, "agent-1", "Needs manual review")
-  }
+  }, [currentMessage, sendToReview])
 
-  const handleKeyboardApprove = () => {
+  const handleKeyboardApprove = useCallback(() => {
     if (!currentMessage) return
     showKeyboardFeedback('approve')
     setTimeout(() => {
       handleApprove()
     }, 300) // Show feedback for same duration as swipe
-  }
+  }, [currentMessage, showKeyboardFeedback, handleApprove])
 
-  const handleKeyboardReview = () => {
+  const handleKeyboardReview = useCallback(() => {
     if (!currentMessage) return
     showKeyboardFeedback('review')
     setTimeout(() => {
       handleSendToReview()
     }, 300) // Show feedback for same duration as swipe
-  }
+  }, [currentMessage, showKeyboardFeedback, handleSendToReview])
 
   // Add keyboard shortcuts
   useEffect(() => {
@@ -94,7 +94,7 @@ export function CustomerSupportDashboard() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [currentMessage, currentMessageIndex, moveToPreviousMessage])
+  }, [currentMessage, currentMessageIndex, moveToPreviousMessage, handleKeyboardApprove, handleKeyboardReview])
 
   if (isLoading) {
     return (

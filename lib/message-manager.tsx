@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
+import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from "react"
+import { useSettings } from "./settings-context"
 
 export interface CustomerMessage {
   id: string
@@ -115,6 +116,7 @@ const mockIncomingMessages: Omit<
 ]
 
 export function MessageManagerProvider({ children }: { children: ReactNode }) {
+  const { settings } = useSettings()
   const [messages, setMessages] = useState<CustomerMessage[]>([])
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -128,7 +130,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }>
   >([])
 
-  const generateAIResponse = async (message: CustomerMessage) => {
+  const generateAIResponse = useCallback(async (message: CustomerMessage) => {
     try {
       // Update message to show generating state
       setMessages((prev) =>
@@ -143,6 +145,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           customerEmail: message.customerEmail,
           subject: message.subject,
           message: message.message,
+          aiConfig: settings.aiConfig,
         }),
       })
 
@@ -181,7 +184,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         ),
       )
     }
-  }
+  }, [settings.aiConfig, setMessages])
 
   const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp">) => {
     const newMessage: CustomerMessage = {
@@ -394,7 +397,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }
 
     initializeMessages()
-  }, [])
+  }, [generateAIResponse])
 
   // Adjust currentMessageIndex when pending messages change
   useEffect(() => {

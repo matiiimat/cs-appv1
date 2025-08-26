@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 
 interface SwipeableCardProps {
   children: React.ReactNode
@@ -35,7 +35,7 @@ export function SwipeableCard({
     setIsHorizontalSwipe(false)
   }
 
-  const handleMove = (clientX: number, clientY: number) => {
+  const handleMove = useCallback((clientX: number, clientY: number) => {
     if (!isDragging || disabled) return
 
     const deltaX = clientX - startPos.x
@@ -51,9 +51,9 @@ export function SwipeableCard({
     if (isHorizontalSwipe) {
       setDragOffset({ x: deltaX, y: 0 }) // Force Y to 0 for horizontal-only movement
     }
-  }
+  }, [isDragging, disabled, startPos.x, startPos.y, isHorizontalSwipe, setDragOffset, setIsHorizontalSwipe])
 
-  const handleEnd = () => {
+  const handleEnd = useCallback(() => {
     if (!isDragging || disabled) return
 
     const { x } = dragOffset
@@ -70,7 +70,7 @@ export function SwipeableCard({
     setIsDragging(false)
     setDragOffset({ x: 0, y: 0 })
     setIsHorizontalSwipe(false)
-  }
+  }, [isDragging, disabled, dragOffset, isHorizontalSwipe, onSwipeRight, onSwipeLeft, setIsDragging, setDragOffset, setIsHorizontalSwipe])
 
   // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -123,7 +123,7 @@ export function SwipeableCard({
       document.removeEventListener("mousemove", handleGlobalMouseMove)
       document.removeEventListener("mouseup", handleGlobalMouseUp)
     }
-  }, [isDragging, dragOffset, startPos])
+  }, [isDragging, dragOffset, startPos, handleMove, handleEnd])
 
   // Disable all scrolling during any drag operation (lock-in effect)
   useEffect(() => {

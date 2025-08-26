@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,10 +8,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trash2, ExternalLink, Moon, Sun } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Trash2, ExternalLink, Moon, Sun, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateMacro, addMacro, deleteMacro } = useSettings()
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
 
   useEffect(() => {
     if (settings.theme === "dark") {
@@ -23,6 +27,67 @@ export function SettingsPage() {
 
   const handleThemeChange = (theme: "light" | "dark") => {
     updateSettings({ theme })
+  }
+
+  const handleProviderChange = (provider: string) => {
+    const providerModels = AI_PROVIDERS[provider]?.models || []
+    const defaultModel = providerModels[0] || ""
+    
+    updateSettings({
+      aiConfig: {
+        ...settings.aiConfig,
+        provider: provider as "openai" | "anthropic" | "google" | "azure" | "custom",
+        model: defaultModel,
+      }
+    })
+    setConnectionResult(null)
+  }
+
+  const handleModelChange = (model: string) => {
+    updateSettings({
+      aiConfig: {
+        ...settings.aiConfig,
+        model,
+      }
+    })
+    setConnectionResult(null)
+  }
+
+  const handleApiKeyChange = (apiKey: string) => {
+    updateSettings({
+      aiConfig: {
+        ...settings.aiConfig,
+        apiKey,
+      }
+    })
+    setConnectionResult(null)
+  }
+
+  const handleTestConnection = async () => {
+    if (!settings.aiConfig.apiKey) {
+      setConnectionResult({ success: false, error: "API key is required" })
+      return
+    }
+
+    setTestingConnection(true)
+    setConnectionResult(null)
+
+    try {
+      const aiService = new AIService(settings.aiConfig)
+      const result = await aiService.testConnection()
+      setConnectionResult(result)
+    } catch (error) {
+      setConnectionResult({
+        success: false,
+        error: error instanceof Error ? error.message : "Connection failed"
+      })
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
+  const getAvailableModels = () => {
+    return AI_PROVIDERS[settings.aiConfig.provider]?.models || []
   }
 
   useEffect(() => {
@@ -61,9 +126,10 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+          <TabsTrigger value="ai-config">AI Configuration</TabsTrigger>
           <TabsTrigger value="macros">Macros</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
@@ -124,6 +190,157 @@ export function SettingsPage() {
                 <Button variant="outline" size="sm">
                   View Updates
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai-config" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Provider Configuration</CardTitle>
+              <CardDescription>Configure your AI provider and API settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="ai-provider">AI Provider</Label>
+                  <Select
+                    value={settings.aiConfig.provider}
+                    onValueChange={handleProviderChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select AI provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
+                        <SelectItem key={key} value={key}>
+                          {provider.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ai-model">Model</Label>
+                  <Select
+                    value={settings.aiConfig.model}
+                    onValueChange={handleModelChange}
+                    disabled={getAvailableModels().length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableModels().map((model) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="api-key">API Key</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="api-key"
+                    type="password"
+                    value={settings.aiConfig.apiKey}
+                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    placeholder="Enter your API key"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleTestConnection}
+                    disabled={testingConnection || !settings.aiConfig.apiKey}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    {testingConnection ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : connectionResult?.success ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : connectionResult?.success === false ? (
+                      <XCircle className="h-4 w-4 text-red-600" />
+                    ) : null}
+                    Test
+                  </Button>
+                </div>
+                {connectionResult && (
+                  <div className={`text-sm p-2 rounded ${
+                    connectionResult.success 
+                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {connectionResult.success 
+                      ? 'Connection successful!' 
+                      : connectionResult.error || 'Connection failed'}
+                  </div>
+                )}
+              </div>
+
+              {settings.aiConfig.provider === 'custom' && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-endpoint">Custom Endpoint</Label>
+                  <Input
+                    id="custom-endpoint"
+                    value={settings.aiConfig.customEndpoint || ''}
+                    onChange={(e) => updateSettings({
+                      aiConfig: {
+                        ...settings.aiConfig,
+                        customEndpoint: e.target.value,
+                      }
+                    })}
+                    placeholder="https://api.example.com/v1"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="temperature">Temperature</Label>
+                  <Input
+                    id="temperature"
+                    type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={settings.aiConfig.temperature}
+                    onChange={(e) => updateSettings({
+                      aiConfig: {
+                        ...settings.aiConfig,
+                        temperature: parseFloat(e.target.value) || 0.7,
+                      }
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Controls randomness (0-2). Lower values = more focused, higher = more creative.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="max-tokens">Max Tokens</Label>
+                  <Input
+                    id="max-tokens"
+                    type="number"
+                    min="1"
+                    max="4000"
+                    value={settings.aiConfig.maxTokens}
+                    onChange={(e) => updateSettings({
+                      aiConfig: {
+                        ...settings.aiConfig,
+                        maxTokens: parseInt(e.target.value) || 1000,
+                      }
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum number of tokens to generate in the response.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

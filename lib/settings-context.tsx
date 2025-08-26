@@ -9,12 +9,22 @@ export interface Macro {
   action: string
 }
 
+export interface AIProviderConfig {
+  provider: "openai" | "anthropic" | "google" | "azure" | "custom"
+  model: string
+  apiKey: string
+  customEndpoint?: string
+  temperature: number
+  maxTokens: number
+}
+
 export interface Settings {
   theme: "light" | "dark"
   agentName: string
   agentSignature: string
   aiInstructions: string
   macros: Macro[]
+  aiConfig: AIProviderConfig
 }
 
 interface SettingsContextType {
@@ -54,6 +64,13 @@ const defaultSettings: Settings = {
         "Thank you for contacting us. Your issue has been resolved. Please let us know if you need any further assistance.",
     },
   ],
+  aiConfig: {
+    provider: "openai",
+    model: "gpt-4o",
+    apiKey: "",
+    temperature: 0.7,
+    maxTokens: 1000,
+  },
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
