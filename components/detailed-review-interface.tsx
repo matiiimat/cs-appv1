@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
-import { Clock, User, Send, Bot, MessageSquare, Zap } from "lucide-react"
+import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -68,29 +68,6 @@ export function DetailedReviewInterface() {
     }
   }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
 
-  const handleSendToReview = useCallback(() => {
-    if (selectedMessage) {
-      updateMessage(selectedMessage.id, { status: "pending" })
-
-      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
-
-      if (remainingMessages.length > 0) {
-        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
-        const nextMessage =
-          remainingMessages.find((msg) => {
-            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
-            return originalIndex > currentIndex
-          }) || remainingMessages[0]
-
-        setSelectedMessageId(nextMessage.id)
-      } else {
-        setSelectedMessageId(null)
-      }
-
-      setReplyText("")
-      setChatMessages([])
-    }
-  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
 
 
   // Auto-scroll to bottom when new chat messages are added
@@ -371,13 +348,9 @@ Provide an improved version that can be sent directly to the customer.`
                     className="min-h-[120px] resize-none"
                   />
                   <div className="flex gap-2">
-                    <Button onClick={handleApprove} className="flex-1">
+                    <Button onClick={handleApprove} className="w-full">
                       <Send className="h-4 w-4 mr-2" />
                       Approve & Send
-                    </Button>
-                    <Button onClick={handleSendToReview} variant="outline" className="flex-1 bg-transparent">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Send to Review
                     </Button>
                   </div>
                 </CardContent>
@@ -395,7 +368,7 @@ Provide an improved version that can be sent directly to the customer.`
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 max-h-[300px]">
+              <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 max-h-[300px] overflow-hidden">
                 <div className="space-y-3">
                   {chatMessages.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
@@ -450,48 +423,48 @@ Provide an improved version that can be sent directly to the customer.`
                     <Zap className="h-3 w-3" />
                     Quick Actions
                   </p>
-                  <div className="space-y-1">
+                  <div className="flex gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAction("improve_tone")}
-                      className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
+                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
                       title="Make the response more professional and empathetic"
                     >
-                      <Zap className="h-3 w-3 mr-1" />
+                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">1</span>
                       Improve Tone
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAction("make_shorter")}
-                      className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
+                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
                       title="Make the response more concise"
                     >
-                      <Zap className="h-3 w-3 mr-1" />
+                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">2</span>
                       Make Shorter
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAction("add_steps")}
-                      className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
+                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
                       title="Add clear step-by-step instructions"
                     >
-                      <Zap className="h-3 w-3 mr-1" />
+                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">3</span>
                       Add Steps
                     </Button>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 border-t">
-                <div className="flex gap-2">
+              <div className="p-3 border-t mt-auto">
+                <div className="flex gap-2 items-end">
                   <Textarea
                     placeholder="Ask AI about this case..."
                     value={aiChatInput}
                     onChange={(e) => setAiChatInput(e.target.value)}
-                    className="flex-1 min-h-[60px] resize-none text-xs"
+                    className="flex-1 min-h-[60px] max-h-[80px] resize-none text-xs"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault()
@@ -499,7 +472,7 @@ Provide an improved version that can be sent directly to the customer.`
                       }
                     }}
                   />
-                  <Button size="sm" onClick={handleAiChat} disabled={!aiChatInput.trim()}>
+                  <Button size="sm" onClick={handleAiChat} disabled={!aiChatInput.trim()} className="mb-0">
                     <Send className="h-3 w-3" />
                   </Button>
                 </div>
