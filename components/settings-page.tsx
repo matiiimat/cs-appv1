@@ -126,12 +126,9 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="ai">AI Assistant</TabsTrigger>
-          <TabsTrigger value="ai-config">AI Configuration</TabsTrigger>
-          <TabsTrigger value="macros">Macros</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="ai">AI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -160,42 +157,71 @@ export function SettingsPage() {
                   rows={4}
                 />
               </div>
+              <div className="space-y-3">
+                <Label>Theme</Label>
+                <div className="flex gap-4">
+                  <Button
+                    variant={settings.theme === "light" ? "default" : "outline"}
+                    onClick={() => handleThemeChange("light")}
+                    className="flex items-center gap-2"
+                  >
+                    <Sun className="h-4 w-4" />
+                    Light
+                  </Button>
+                  <Button
+                    variant={settings.theme === "dark" ? "default" : "outline"}
+                    onClick={() => handleThemeChange("dark")}
+                    className="flex items-center gap-2"
+                  >
+                    <Moon className="h-4 w-4" />
+                    Dark
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="ai" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Assistant Configuration</CardTitle>
-              <CardDescription>Customize how the AI assistant behaves and responds</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="aiInstructions">Custom Instructions</Label>
-                <Textarea
-                  id="aiInstructions"
-                  value={settings.aiInstructions}
-                  onChange={(e) => updateSettings({ aiInstructions: e.target.value })}
-                  placeholder="Enter custom instructions for the AI assistant"
-                  rows={6}
-                />
-              </div>
-              <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Release Notes</p>
-                  <p className="text-xs text-muted-foreground">Stay updated with the latest AI improvements</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  View Updates
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <Tabs defaultValue="assistant" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="assistant">Assistant</TabsTrigger>
+              <TabsTrigger value="configuration">Configuration</TabsTrigger>
+              <TabsTrigger value="macros">Macros</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="ai-config" className="space-y-6">
+            <TabsContent value="assistant" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Assistant</CardTitle>
+                  <CardDescription>Customize how the AI assistant behaves and responds</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="aiInstructions">Custom Instructions</Label>
+                    <Textarea
+                      id="aiInstructions"
+                      value={settings.aiInstructions}
+                      onChange={(e) => updateSettings({ aiInstructions: e.target.value })}
+                      placeholder="Enter custom instructions for the AI assistant"
+                      rows={6}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Release Notes</p>
+                      <p className="text-xs text-muted-foreground">Stay updated with the latest AI improvements</p>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      View Updates
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="configuration" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>AI Provider Configuration</CardTitle>
@@ -344,89 +370,59 @@ export function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="macros" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Action Macros</CardTitle>
-              <CardDescription>Predefined actions for common support tasks</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                {settings.macros.map((macro) => (
-                  <div key={macro.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <h4 className="font-medium">{macro.name}</h4>
-                        <p className="text-sm text-muted-foreground">{macro.description}</p>
+            <TabsContent value="macros" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Action Macros</CardTitle>
+                  <CardDescription>Predefined actions for common support tasks</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    {settings.macros.map((macro) => (
+                      <div key={macro.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <h4 className="font-medium">{macro.name}</h4>
+                            <p className="text-sm text-muted-foreground">{macro.description}</p>
+                          </div>
+                          {macro.id === "custom-macro" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteMacro(macro.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {macro.id === "custom-macro" && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Custom Action Text</Label>
+                            <Textarea
+                              value={macro.action}
+                              onChange={(e) => updateMacro(macro.id, { action: e.target.value })}
+                              rows={2}
+                              className="text-sm"
+                              placeholder="Define your custom macro behavior..."
+                            />
+                          </div>
+                        )}
                       </div>
-                      {macro.id === "custom-macro" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMacro(macro.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    {macro.id === "custom-macro" && (
-                      <div className="space-y-2">
-                        <Label className="text-xs">Custom Action Text</Label>
-                        <Textarea
-                          value={macro.action}
-                          onChange={(e) => updateMacro(macro.id, { action: e.target.value })}
-                          rows={2}
-                          className="text-sm"
-                          placeholder="Define your custom macro behavior..."
-                        />
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Use the predefined macros above for common support actions
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appearance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Theme & Appearance</CardTitle>
-              <CardDescription>Customize the look and feel of your workspace</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Label>Theme</Label>
-                <div className="flex gap-4">
-                  <Button
-                    variant={settings.theme === "light" ? "default" : "outline"}
-                    onClick={() => handleThemeChange("light")}
-                    className="flex items-center gap-2"
-                  >
-                    <Sun className="h-4 w-4" />
-                    Light
-                  </Button>
-                  <Button
-                    variant={settings.theme === "dark" ? "default" : "outline"}
-                    onClick={() => handleThemeChange("dark")}
-                    className="flex items-center gap-2"
-                  >
-                    <Moon className="h-4 w-4" />
-                    Dark
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Use the predefined macros above for common support actions
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>
