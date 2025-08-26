@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,6 +26,7 @@ export function DetailedReviewInterface() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
   const [lastAiResponse, setLastAiResponse] = useState("")
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const reviewMessages = messages.filter((msg) => msg.status === "review")
   const selectedMessage = reviewMessages.find((msg) => msg.id === selectedMessageId)
@@ -97,6 +98,16 @@ export function DetailedReviewInterface() {
     setReplyText(selectedMessage?.aiSuggestedResponse || "")
     setChatMessages([])
   }, [selectedMessage, setReplyText, setChatMessages])
+
+  // Auto-scroll to bottom when new chat messages are added
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+      }
+    }
+  }, [chatMessages])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -355,7 +366,7 @@ export function DetailedReviewInterface() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea className="flex-1 p-3">
+              <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 max-h-[300px]">
                 <div className="space-y-3">
                   {chatMessages.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
