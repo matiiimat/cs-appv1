@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
+import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
 import { Clock, User, Send, Bot, MessageSquare, Zap, Smartphone, Keyboard } from "lucide-react"
 
@@ -25,7 +26,6 @@ export function DetailedReviewInterface() {
   const [replyText, setReplyText] = useState("")
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
-  const [lastAiResponse, setLastAiResponse] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const reviewMessages = messages.filter((msg) => msg.status === "review")
@@ -40,7 +40,6 @@ export function DetailedReviewInterface() {
   useEffect(() => {
     if (selectedMessage?.aiSuggestedResponse) {
       setReplyText(selectedMessage.aiSuggestedResponse)
-      setLastAiResponse(selectedMessage.aiSuggestedResponse)
     }
   }, [selectedMessage])
 
@@ -139,6 +138,18 @@ export function DetailedReviewInterface() {
   const handleAiChat = async () => {
     if (!aiChatInput.trim() || !selectedMessage) return
 
+    // Check if AI is configured
+    if (!settings.aiConfig.apiKey) {
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        content: "Please configure your AI settings first to use the AI assistant.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorMessage])
+      return
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       content: aiChatInput,
@@ -149,84 +160,146 @@ export function DetailedReviewInterface() {
     setChatMessages((prev) => [...prev, userMessage])
     setAiChatInput("")
 
-    setTimeout(() => {
-      const aiSuggestedResponse: ChatMessage = {
+    try {
+      const aiService = new AIService(settings.aiConfig)
+      
+      // Build conversation context for the AI
+      const conversationContext = chatMessages
+        .map(msg => `${msg.sender === "agent" ? "Agent" : "AI"}: ${msg.content}`)
+        .join("\n")
+      
+      const currentDraft = replyText || selectedMessage.aiSuggestedResponse || ""
+
+      const systemPrompt = `You are an expert customer support AI assistant helping a human agent craft the perfect response to send directly to a customer. Your role is to:
+
+1. Generate customer-ready responses that can be sent directly to the customer
+2. Adapt and improve responses based on the agent's feedback and questions  
+3. Consider the customer's specific situation, tone, and urgency
+4. Maintain a professional, helpful, and empathetic tone
+5. Provide specific, actionable solutions when possible
+
+Customer Information:
+- Name: ${selectedMessage.customerName}
+- Email: ${selectedMessage.customerEmail}  
+- Subject: ${selectedMessage.subject}
+- Message: ${selectedMessage.message}
+- Category: ${selectedMessage.category}
+- Priority: ${selectedMessage.priority}
+
+Current draft response: ${currentDraft}
+
+Previous conversation with agent:
+${conversationContext}
+
+Agent's latest input: ${aiChatInput}
+
+Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue. The response should be ready to send to the customer directly.`
+
+      const response = await aiService.generateText(systemPrompt, aiChatInput)
+      
+      const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: `Based on the customer's message about "${selectedMessage.message.substring(0, 50)}...", I suggest focusing on ${selectedMessage.category?.toLowerCase()} best practices. The customer seems ${selectedMessage.priority === "high" ? "urgent" : "patient"}, so adjust your tone accordingly.`,
+        content: response,
         sender: "ai",
         timestamp: new Date(),
       }
-      setChatMessages((prev) => [...prev, aiSuggestedResponse])
-      setLastAiResponse(aiSuggestedResponse.content)
-    }, 1000)
+      
+      setChatMessages((prev) => [...prev, aiResponse])
+      
+    } catch (error) {
+      console.error("AI chat error:", error)
+      const errorResponse: ChatMessage = {
+        id: Date.now().toString(),
+        content: "Sorry, I encountered an error while generating a response. Please check your AI configuration and try again.",
+        sender: "ai", 
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorResponse])
+    }
   }
 
-  const handleMacroClick = async (macroAction: string) => {
-    if (!selectedMessage) return
+  const handleQuickAction = async (actionType: string) => {
+    if (!selectedMessage || !settings.aiConfig.apiKey) return
+
+    const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
+    if (!currentResponse) {
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        content: "Please have some content in the draft reply first to use quick actions.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorMessage])
+      return
+    }
+
+    let actionPrompt = ""
+    let actionDescription = ""
+
+    switch (actionType) {
+      case "improve_tone":
+        actionPrompt = "Make this response more professional and empathetic"
+        actionDescription = "Improving tone and empathy"
+        break
+      case "make_shorter":
+        actionPrompt = "Make this response more concise while keeping all important information"
+        actionDescription = "Making response more concise"
+        break
+      case "add_steps":
+        actionPrompt = "Add clear step-by-step instructions to help the customer resolve their issue"
+        actionDescription = "Adding step-by-step instructions"
+        break
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      content: `Execute macro: ${macroAction}`,
+      content: actionDescription,
       sender: "agent",
       timestamp: new Date(),
     }
 
     setChatMessages((prev) => [...prev, userMessage])
 
-    setTimeout(async () => {
-      let responseContent = ""
-      let updatedReplyText = replyText
+    try {
+      const aiService = new AIService(settings.aiConfig)
+      
+      const systemPrompt = `You are helping improve a customer support response. The customer's original issue was:
 
-      if (macroAction === "translate_to_spanish") {
-        responseContent = "I've translated the AI response to Spanish and added it to your reply field."
-        const spanishTranslation = await translateToSpanish(lastAiResponse || selectedMessage.aiSuggestedResponse || "")
-        updatedReplyText = spanishTranslation
-      } else if (macroAction === "use_last_ai_response") {
-        responseContent = "I've added the last AI response to your reply field."
-        updatedReplyText = lastAiResponse || selectedMessage.aiSuggestedResponse || ""
-      } else if (macroAction === "custom_action") {
-        const customMacro = settings.macros.find((m) => m.id === "custom-macro")
-        responseContent = `I've executed your custom macro: "${customMacro?.action || "No custom action defined"}"`
-        if (customMacro?.action) {
-          updatedReplyText = replyText ? `${replyText}\n\n${customMacro.action}` : customMacro.action
-        }
-      } else {
-        responseContent = `I've processed your macro request: "${macroAction}"`
-        updatedReplyText = replyText ? `${replyText}\n\n${macroAction}` : macroAction
-      }
+Customer: ${selectedMessage.customerName}
+Issue: ${selectedMessage.message}
+Category: ${selectedMessage.category}
+Priority: ${selectedMessage.priority}
 
-      const aiSuggestedResponse: ChatMessage = {
+Current response draft:
+${currentResponse}
+
+Your task: ${actionPrompt}
+
+Provide an improved version that can be sent directly to the customer.`
+
+      const response = await aiService.generateText(systemPrompt, actionPrompt)
+      
+      const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: responseContent,
+        content: response,
         sender: "ai",
         timestamp: new Date(),
       }
-
-      setChatMessages((prev) => [...prev, aiSuggestedResponse])
-      setReplyText(updatedReplyText)
-    }, 1000)
-  }
-
-  const translateToSpanish = async (text: string): Promise<string> => {
-    const commonTranslations: { [key: string]: string } = {
-      Hello: "Hola",
-      "Thank you": "Gracias",
-      Please: "Por favor",
-      Sorry: "Lo siento",
-      Help: "Ayuda",
-      Problem: "Problema",
-      Solution: "Solución",
-      Customer: "Cliente",
-      Support: "Soporte",
+      
+      setChatMessages((prev) => [...prev, aiResponse])
+      
+    } catch (error) {
+      console.error("Quick action error:", error)
+      const errorResponse: ChatMessage = {
+        id: Date.now().toString(),
+        content: "Sorry, I encountered an error while processing your request. Please check your AI configuration.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorResponse])
     }
-
-    let translatedText = text
-    Object.entries(commonTranslations).forEach(([english, spanish]) => {
-      translatedText = translatedText.replace(new RegExp(english, "gi"), spanish)
-    })
-
-    return `[Traducido al español] ${translatedText}`
   }
+
 
   if (reviewMessages.length === 0) {
     return (
@@ -377,12 +450,38 @@ export function DetailedReviewInterface() {
                   {chatMessages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.sender === "agent" ? "justify-end" : "justify-start"}`}>
                       <div
-                        className={`max-w-[80%] p-2 rounded-lg text-xs ${
-                          msg.sender === "agent" ? "bg-accent text-accent-foreground" : "bg-muted"
+                        className={`max-w-[80%] ${
+                          msg.sender === "agent" ? "" : "w-full"
                         }`}
                       >
-                        <p>{msg.content}</p>
-                        <p className="text-xs opacity-70 mt-1">{new Date(msg.timestamp).toLocaleTimeString()}</p>
+                        <div
+                          className={`p-2 rounded-lg text-xs ${
+                            msg.sender === "agent" ? "bg-accent text-accent-foreground" : "bg-muted"
+                          }`}
+                        >
+                          <p>{msg.content}</p>
+                          <p className="text-xs opacity-70 mt-1">{new Date(msg.timestamp).toLocaleTimeString()}</p>
+                        </div>
+                        {msg.sender === "ai" && (
+                          <div className="mt-1 flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setReplyText(msg.content)}
+                              className="text-xs h-6 px-2"
+                            >
+                              Replace Draft
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setReplyText(replyText ? `${replyText}\n\n${msg.content}` : msg.content)}
+                              className="text-xs h-6 px-2"
+                            >
+                              Add to Draft
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -399,32 +498,32 @@ export function DetailedReviewInterface() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleMacroClick("translate_to_spanish")}
+                      onClick={() => handleQuickAction("improve_tone")}
                       className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
-                      title="Translate AI response to Spanish and send to conversation field"
+                      title="Make the response more professional and empathetic"
                     >
                       <Zap className="h-3 w-3 mr-1" />
-                      Translate to Spanish
+                      Improve Tone
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleMacroClick("use_last_ai_response")}
+                      onClick={() => handleQuickAction("make_shorter")}
                       className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
-                      title="Send the last AI response to conversation field"
+                      title="Make the response more concise"
                     >
                       <Zap className="h-3 w-3 mr-1" />
-                      Use AI Response
+                      Make Shorter
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleMacroClick("custom_action")}
+                      onClick={() => handleQuickAction("add_steps")}
                       className="w-full justify-start text-xs h-8 bg-background hover:bg-accent"
-                      title="Execute your custom macro from settings"
+                      title="Add clear step-by-step instructions"
                     >
                       <Zap className="h-3 w-3 mr-1" />
-                      Custom Macro
+                      Add Steps
                     </Button>
                   </div>
                 </div>
