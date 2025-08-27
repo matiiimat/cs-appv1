@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 export interface Macro {
   id: string
@@ -35,6 +35,9 @@ interface SettingsContextType {
   updateMacro: (macroId: string, macro: Partial<Macro>) => void
   addMacro: (macro: Omit<Macro, "id">) => void
   deleteMacro: (macroId: string) => void
+  saveSettings: () => Promise<void>
+  isLoading: boolean
+  lastSaved: Date | null
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -77,8 +80,28 @@ const defaultSettings: Settings = {
   },
 }
 
+const SETTINGS_STORAGE_KEY = 'supportai-settings'
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings)
+          setSettings({ ...defaultSettings, ...parsed })
+          setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+        } catch (error) {
+          console.error('Failed to parse saved settings:', error)
+        }
+      }
+    }
+  }, [])
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
@@ -106,6 +129,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }))
   }
 
+  const saveSettings = async () => {
+    setIsLoading(true)
+    try {
+      const settingsWithTimestamp = {
+        ...settings,
+        lastSaved: new Date().toISOString()
+      }
+      
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
+      setLastSaved(new Date())
+      
+      // Simulate a small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 300))
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -114,6 +158,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         updateMacro,
         addMacro,
         deleteMacro,
+        saveSettings,
+        isLoading,
+        lastSaved,
       }}
     >
       {children}

@@ -98,6 +98,51 @@ async function getTenantFromRequest(request: NextRequest): Promise<Organization>
 - JWT for session management
 - Role-based access control (RBAC)
 
+#### 1.2.1 Settings API Migration IMPORTANT
+**Priority: High**
+
+Replace current localStorage settings storage with API-based persistence:
+
+```typescript
+// Current: localStorage implementation (lib/settings-context.tsx)
+const saveSettings = async () => {
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
+}
+
+// Future: Replace with tenant-aware API
+const saveSettings = async () => {
+  const response = await fetch('/api/settings', {
+    method: 'POST',
+    body: JSON.stringify(settings),
+    headers: { 
+      'Authorization': `Bearer ${userToken}`,
+      'Content-Type': 'application/json'
+    }
+  })
+  
+  if (!response.ok) {
+    throw new Error('Failed to save settings')
+  }
+  
+  return response.json()
+}
+
+// app/api/settings/route.ts
+export async function POST(request: NextRequest) {
+  const tenant = await getTenantFromRequest(request)
+  const settings = await request.json()
+  
+  // Save to database with tenant isolation
+  await db.organizationSettings.upsert({
+    where: { organizationId: tenant.id },
+    update: { settings, updatedAt: new Date() },
+    create: { organizationId: tenant.id, settings, createdAt: new Date() }
+  })
+  
+  return NextResponse.json({ success: true })
+}
+```
+
 #### 1.3 Multi-tenant Architecture
 **Priority: Critical**
 
@@ -303,23 +348,24 @@ Common integrations customers want:
 ### Must-Have (Launch Blockers)
 1. ✅ Multi-tenant database architecture
 2. ✅ Authentication & authorization
-3. ✅ Tenant-specific AI configuration
-4. ✅ Basic organization management
-5. ✅ Usage tracking for billing
+3. ✅ Settings API migration (replace localStorage)
+4. ✅ Tenant-specific AI configuration
+5. ✅ Basic organization management
+6. ✅ Usage tracking for billing
 
 ### Should-Have (Competitive Features)
-6. White-labeling capabilities
-7. Webhook system for customer AI
-8. Advanced analytics dashboard
-9. API access for customers
-10. Common integrations (Slack, email)
+7. White-labeling capabilities
+8. Webhook system for customer AI
+9. Advanced analytics dashboard
+10. API access for customers
+11. Common integrations (Slack, email)
 
 ### Nice-to-Have (Differentiators)
-11. Advanced customization options
-12. Workflow automation
-13. Advanced reporting
-14. Mobile app
-15. SSO integration
+12. Advanced customization options
+13. Workflow automation
+14. Advanced reporting
+15. Mobile app
+16. SSO integration
 
 ## Technical Recommendations
 

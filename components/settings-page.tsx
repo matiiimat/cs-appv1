@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2, ExternalLink, Moon, Sun, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { Trash2, ExternalLink, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateMacro, addMacro, deleteMacro } = useSettings()
+  const { settings, updateSettings, updateMacro, addMacro, deleteMacro, saveSettings, isLoading, lastSaved } = useSettings()
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
+  const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
 
   useEffect(() => {
     if (settings.theme === "dark") {
@@ -96,6 +97,20 @@ export function SettingsPage() {
     return AI_PROVIDERS[settings.aiConfig.provider]?.models || []
   }
 
+  const handleSaveSettings = async () => {
+    setSaveResult(null)
+    try {
+      await saveSettings()
+      setSaveResult({ success: true })
+      setTimeout(() => setSaveResult(null), 3000) // Clear success message after 3 seconds
+    } catch (error) {
+      setSaveResult({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to save settings' 
+      })
+    }
+  }
+
   useEffect(() => {
     if (settings.macros.length === 0) {
       const predefinedMacros = [
@@ -127,8 +142,42 @@ export function SettingsPage() {
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-        <p className="text-muted-foreground">Configure your agent profile and AI assistant preferences</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+            <p className="text-muted-foreground">Configure your agent profile and AI assistant preferences</p>
+          </div>
+          <div className="flex items-center gap-4">
+            {lastSaved && (
+              <p className="text-sm text-muted-foreground">
+                Last saved: {lastSaved.toLocaleTimeString()}
+              </p>
+            )}
+            <Button 
+              onClick={handleSaveSettings}
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isLoading ? 'Saving...' : 'Save Settings'}
+            </Button>
+          </div>
+        </div>
+        {saveResult && (
+          <div className={`mt-4 text-sm p-3 rounded ${
+            saveResult.success 
+              ? 'bg-green-50 text-green-700 border border-green-200' 
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}>
+            {saveResult.success 
+              ? 'Settings saved successfully!' 
+              : saveResult.error || 'Failed to save settings'}
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
