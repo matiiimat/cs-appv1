@@ -8,6 +8,8 @@ interface GenerateResponseRequest {
   subject: string
   message: string
   aiConfig: AIProviderConfig
+  agentName: string
+  agentSignature: string
 }
 
 interface GenerateResponseResponse {
@@ -18,7 +20,7 @@ interface GenerateResponseResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, aiConfig }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature }: GenerateResponseRequest = await request.json()
 
     if (!aiConfig || !aiConfig.apiKey) {
       return NextResponse.json(
@@ -62,7 +64,7 @@ Message: ${message}`
     }
 
     // Generate AI response
-    const aiResponseSystem = `You are a professional customer support agent. Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
+    const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
 Guidelines:
 - Be friendly and professional
@@ -74,6 +76,7 @@ Guidelines:
 - For technical issues, provide step-by-step guidance
 - For billing issues, reference account details appropriately
 - Always end with an offer for further assistance
+- End your response with this exact signature: "${agentSignature}"
 
 The message category is: ${parsedCategoryPriority.category}
 The priority level is: ${parsedCategoryPriority.priority}`
