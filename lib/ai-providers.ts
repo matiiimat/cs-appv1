@@ -147,7 +147,13 @@ class LocalAIProvider implements AIProvider {
       return data.choices?.[0]?.message?.content || "No response generated"
     } catch (error) {
       console.error("Local AI provider error:", error)
-      throw new Error(`Local AI provider failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.name === 'TypeError') {
+          throw new Error(`Cannot connect to local AI server at ${endpoint}. Please ensure your local AI server is running.`)
+        }
+        throw new Error(`Local AI error: ${error.message}`)
+      }
+      throw new Error('Local AI server connection failed')
     }
   }
 

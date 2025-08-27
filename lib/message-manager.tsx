@@ -149,7 +149,11 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to generate response")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `Failed to generate response (${response.status})`
+        throw new Error(errorMessage)
+      }
 
       const data = await response.json()
 

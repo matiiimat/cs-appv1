@@ -99,6 +99,24 @@ Generate a professional customer support response.`
     return NextResponse.json(response)
   } catch (error) {
     console.error("[v0] Error generating AI response:", error)
-    return NextResponse.json({ error: "Failed to generate AI response" }, { status: 500 })
+    
+    // Provide specific error messages for common issues
+    let errorMessage = "Failed to generate AI response"
+    
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        if (aiConfig.provider === 'local') {
+          errorMessage = "Cannot connect to local AI server. Please ensure your local AI server is running and accessible."
+        } else {
+          errorMessage = "Cannot connect to AI service. Please check your API configuration."
+        }
+      } else if (error.message.includes('API key')) {
+        errorMessage = "Invalid API key or configuration. Please check your AI provider settings."
+      } else {
+        errorMessage = error.message
+      }
+    }
+    
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

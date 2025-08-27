@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2, ExternalLink, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
+import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
@@ -244,7 +244,7 @@ export function SettingsPage() {
               <CardDescription>Configure your AI provider and API settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="ai-provider">AI Provider</Label>
                   <Select
@@ -264,25 +264,65 @@ export function SettingsPage() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ai-model">Model</Label>
-                  <Select
-                    value={settings.aiConfig.model}
-                    onValueChange={handleModelChange}
-                    disabled={getAvailableModels().length === 0}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getAvailableModels().map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {settings.aiConfig.provider === 'local' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="local-endpoint">Local AI Server URL</Label>
+                      <Input
+                        id="local-endpoint"
+                        value={settings.aiConfig.localEndpoint || settings.aiConfig.apiKey || ''}
+                        onChange={(e) => updateSettings({
+                          aiConfig: {
+                            ...settings.aiConfig,
+                            localEndpoint: e.target.value,
+                            apiKey: e.target.value,
+                          }
+                        })}
+                        placeholder="http://192.168.1.24:1234"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        URL of your local AI server
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="local-model-identifier">Model Identifier</Label>
+                      <Input
+                        id="local-model-identifier"
+                        value={settings.aiConfig.model}
+                        onChange={(e) => updateSettings({
+                          aiConfig: {
+                            ...settings.aiConfig,
+                            model: e.target.value,
+                          }
+                        })}
+                        placeholder="mistralai/devstral-small-2505"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Exact model identifier as shown in your local AI server
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-model">Model</Label>
+                    <Select
+                      value={settings.aiConfig.model}
+                      onValueChange={handleModelChange}
+                      disabled={getAvailableModels().length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableModels().map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               {settings.aiConfig.provider !== 'local' && (
@@ -377,45 +417,6 @@ export function SettingsPage() {
                 </div>
               )}
 
-              {settings.aiConfig.provider === 'local' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="local-endpoint">Local AI Server URL</Label>
-                    <Input
-                      id="local-endpoint"
-                      value={settings.aiConfig.localEndpoint || settings.aiConfig.apiKey || ''}
-                      onChange={(e) => updateSettings({
-                        aiConfig: {
-                          ...settings.aiConfig,
-                          localEndpoint: e.target.value,
-                          apiKey: e.target.value, // Store endpoint in apiKey field for compatibility
-                        }
-                      })}
-                      placeholder="http://192.168.1.24:1234"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      URL of your local AI server (e.g., LM Studio)
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="local-model">Model Identifier</Label>
-                    <Input
-                      id="local-model"
-                      value={settings.aiConfig.model}
-                      onChange={(e) => updateSettings({
-                        aiConfig: {
-                          ...settings.aiConfig,
-                          model: e.target.value,
-                        }
-                      })}
-                      placeholder="mistralai/devstral-small-2505"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Exact model identifier as shown in your local AI server
-                    </p>
-                  </div>
-                </div>
-              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
