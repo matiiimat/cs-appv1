@@ -36,7 +36,7 @@ export function SettingsPage() {
     updateSettings({
       aiConfig: {
         ...settings.aiConfig,
-        provider: provider as "openai" | "anthropic" | "google" | "azure" | "custom",
+        provider: provider as "openai" | "anthropic" | "google" | "azure" | "custom" | "local",
         model: defaultModel,
       }
     })
@@ -64,7 +64,13 @@ export function SettingsPage() {
   }
 
   const handleTestConnection = async () => {
-    if (!settings.aiConfig.apiKey) {
+    // For local AI, check if endpoint is provided instead of API key
+    if (settings.aiConfig.provider === 'local') {
+      if (!settings.aiConfig.apiKey && !settings.aiConfig.localEndpoint) {
+        setConnectionResult({ success: false, error: "Local AI server URL is required" })
+        return
+      }
+    } else if (!settings.aiConfig.apiKey) {
       setConnectionResult({ success: false, error: "API key is required" })
       return
     }
@@ -269,45 +275,80 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="api-key">API Key</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="api-key"
-                    type="password"
-                    value={settings.aiConfig.apiKey}
-                    onChange={(e) => handleApiKeyChange(e.target.value)}
-                    placeholder="Enter your API key"
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleTestConnection}
-                    disabled={testingConnection || !settings.aiConfig.apiKey}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    {testingConnection ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : connectionResult?.success ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : connectionResult?.success === false ? (
-                      <XCircle className="h-4 w-4 text-red-600" />
-                    ) : null}
-                    Test
-                  </Button>
-                </div>
-                {connectionResult && (
-                  <div className={`text-sm p-2 rounded ${
-                    connectionResult.success 
-                      ? 'bg-green-50 text-green-700 border border-green-200' 
-                      : 'bg-red-50 text-red-700 border border-red-200'
-                  }`}>
-                    {connectionResult.success 
-                      ? 'Connection successful!' 
-                      : connectionResult.error || 'Connection failed'}
+              {settings.aiConfig.provider !== 'local' && (
+                <div className="space-y-2">
+                  <Label htmlFor="api-key">API Key</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="api-key"
+                      type="password"
+                      value={settings.aiConfig.apiKey}
+                      onChange={(e) => handleApiKeyChange(e.target.value)}
+                      placeholder="Enter your API key"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleTestConnection}
+                      disabled={testingConnection || !settings.aiConfig.apiKey}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      {testingConnection ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : connectionResult?.success ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : connectionResult?.success === false ? (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      ) : null}
+                      Test
+                    </Button>
                   </div>
-                )}
-              </div>
+                  {connectionResult && (
+                    <div className={`text-sm p-2 rounded ${
+                      connectionResult.success 
+                        ? 'bg-green-50 text-green-700 border border-green-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {connectionResult.success 
+                        ? 'Connection successful!' 
+                        : connectionResult.error || 'Connection failed'}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {settings.aiConfig.provider === 'local' && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleTestConnection}
+                      disabled={testingConnection || (!settings.aiConfig.apiKey && !settings.aiConfig.localEndpoint)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      {testingConnection ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : connectionResult?.success ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : connectionResult?.success === false ? (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      ) : null}
+                      Test Connection
+                    </Button>
+                  </div>
+                  {connectionResult && (
+                    <div className={`text-sm p-2 rounded ${
+                      connectionResult.success 
+                        ? 'bg-green-50 text-green-700 border border-green-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {connectionResult.success 
+                        ? connectionResult.error || 'Connection successful!' 
+                        : connectionResult.error || 'Connection failed'}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {settings.aiConfig.provider === 'custom' && (
                 <div className="space-y-2">
@@ -323,6 +364,46 @@ export function SettingsPage() {
                     })}
                     placeholder="https://api.example.com/v1"
                   />
+                </div>
+              )}
+
+              {settings.aiConfig.provider === 'local' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="local-endpoint">Local AI Server URL</Label>
+                    <Input
+                      id="local-endpoint"
+                      value={settings.aiConfig.localEndpoint || settings.aiConfig.apiKey || ''}
+                      onChange={(e) => updateSettings({
+                        aiConfig: {
+                          ...settings.aiConfig,
+                          localEndpoint: e.target.value,
+                          apiKey: e.target.value, // Store endpoint in apiKey field for compatibility
+                        }
+                      })}
+                      placeholder="http://192.168.1.24:1234"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      URL of your local AI server (e.g., LM Studio)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="local-model">Model Identifier</Label>
+                    <Input
+                      id="local-model"
+                      value={settings.aiConfig.model}
+                      onChange={(e) => updateSettings({
+                        aiConfig: {
+                          ...settings.aiConfig,
+                          model: e.target.value,
+                        }
+                      })}
+                      placeholder="mistralai/devstral-small-2505"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Exact model identifier as shown in your local AI server
+                    </p>
+                  </div>
                 </div>
               )}
 

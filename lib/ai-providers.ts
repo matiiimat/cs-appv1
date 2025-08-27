@@ -111,12 +111,82 @@ class CustomProvider implements AIProvider {
   }
 }
 
+class LocalAIProvider implements AIProvider {
+  name = "Local AI"
+  models = ["local-model"]
+
+  async generateText(params: GenerateTextParams): Promise<string> {
+    const { system, prompt, apiKey, model, temperature = 0.7, maxTokens = 1000 } = params
+    
+    // Extract endpoint from apiKey field for local AI (we'll use it as endpoint URL)
+    const endpoint = apiKey || "http://localhost:1234"
+    
+    try {
+      const response = await fetch(`${endpoint}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model || "local-model",
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: prompt }
+          ],
+          temperature,
+          max_tokens: maxTokens,
+          stream: false
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Local AI request failed: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return data.choices?.[0]?.message?.content || "No response generated"
+    } catch (error) {
+      console.error("Local AI provider error:", error)
+      throw new Error(`Local AI provider failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  async testConnection(endpoint: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${endpoint}/v1/models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        return { success: false, error: `Connection failed: ${response.status} ${response.statusText}` }
+      }
+
+      const data = await response.json()
+      const availableModels = data.data?.map((m: { id: string }) => m.id) || []
+      
+      return { 
+        success: true, 
+        error: `Connected successfully. Available models: ${availableModels.join(', ') || 'None detected'}`
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: `Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      }
+    }
+  }
+}
+
 export const AI_PROVIDERS: Record<string, AIProvider> = {
   openai: new OpenAIProvider(),
   anthropic: new AnthropicProvider(),
   google: new GoogleProvider(),
   azure: new AzureProvider(),
   custom: new CustomProvider(),
+  local: new LocalAIProvider(),
 }
 
 export class AIService {

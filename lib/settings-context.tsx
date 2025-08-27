@@ -10,10 +10,11 @@ export interface Macro {
 }
 
 export interface AIProviderConfig {
-  provider: "openai" | "anthropic" | "google" | "azure" | "custom"
+  provider: "openai" | "anthropic" | "google" | "azure" | "custom" | "local"
   model: string
   apiKey: string
   customEndpoint?: string
+  localEndpoint?: string
   temperature: number
   maxTokens: number
 }
@@ -65,9 +66,10 @@ const defaultSettings: Settings = {
     },
   ],
   aiConfig: {
-    provider: "openai",
-    model: "gpt-4o",
-    apiKey: "",
+    provider: "local",
+    model: "mistralai/devstral-small-2505",
+    apiKey: "http://192.168.1.24:1234",
+    localEndpoint: "http://192.168.1.24:1234",
     temperature: 0.7,
     maxTokens: 1000,
   },
