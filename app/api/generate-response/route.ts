@@ -105,11 +105,7 @@ Generate a professional customer support response.`
     
     if (error instanceof Error) {
       if (error.message.includes('fetch')) {
-        if (aiConfig.provider === 'local') {
-          errorMessage = "Cannot connect to local AI server. Please ensure your local AI server is running and accessible."
-        } else {
-          errorMessage = "Cannot connect to AI service. Please check your API configuration."
-        }
+        errorMessage = "Cannot connect to AI service. Please check your API configuration and ensure the service is running."
       } else if (error.message.includes('API key')) {
         errorMessage = "Invalid API key or configuration. Please check your AI provider settings."
       } else {
