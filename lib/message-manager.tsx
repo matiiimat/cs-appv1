@@ -170,8 +170,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           subject: message.subject,
           message: message.message,
           aiConfig: settings.aiConfig,
-          agentName: settings.agentName,
-          agentSignature: settings.agentSignature,
+          agentName: settings.agentName || "Support Agent",
+          agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
         }),
       })
 

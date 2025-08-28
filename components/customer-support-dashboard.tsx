@@ -18,7 +18,6 @@ export function CustomerSupportDashboard() {
     sendToReview,
     moveToPreviousMessage,
     generateAIResponse,
-    stats,
   } = useMessageManager()
 
   // Filter to only show pending messages in the review queue
