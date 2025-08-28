@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMessageManager } from "@/lib/message-manager"
+import { formatEmailText } from "@/lib/utils"
 import { MessageSquare, Clock, User, Tag, Eye, CheckCircle, XCircle } from "lucide-react"
 
 export function ReviewQueue() {
@@ -96,7 +97,9 @@ export function ReviewQueue() {
                     AI Suggested Response
                   </h4>
                   <div className="bg-accent/5 p-3 rounded-lg border border-accent/20">
-                    <p className="text-foreground leading-relaxed">{message.aiSuggestedResponse}</p>
+                    <p className="text-foreground leading-relaxed whitespace-pre-line">
+                      {formatEmailText(message.aiSuggestedResponse || "")}
+                    </p>
                   </div>
                 </div>
               )}

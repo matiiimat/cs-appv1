@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
+import { formatEmailText } from "@/lib/utils"
 import { MessageSquare, Clock, User, Tag, Loader2, RefreshCw, RotateCcw } from "lucide-react"
 
 export function CustomerSupportDashboard() {
@@ -280,7 +281,9 @@ export function CustomerSupportDashboard() {
                       <span>AI is generating response...</span>
                     </div>
                   ) : (
-                    <p className="text-foreground leading-relaxed">{currentMessage.aiSuggestedResponse}</p>
+                    <p className="text-foreground leading-relaxed whitespace-pre-line">
+                      {formatEmailText(currentMessage.aiSuggestedResponse || "")}
+                    </p>
                   )}
                 </div>
               </div>

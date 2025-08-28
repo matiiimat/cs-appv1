@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
+import { formatEmailText } from "@/lib/utils"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
 
 interface ChatMessage {
@@ -39,7 +40,7 @@ export function DetailedReviewInterface() {
 
   useEffect(() => {
     if (selectedMessage?.aiSuggestedResponse) {
-      setReplyText(selectedMessage.aiSuggestedResponse)
+      setReplyText(formatEmailText(selectedMessage.aiSuggestedResponse))
     }
   }, [selectedMessage])
 
