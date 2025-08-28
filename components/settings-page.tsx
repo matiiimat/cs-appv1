@@ -440,26 +440,6 @@ export function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Knowledge URL</CardTitle>
-              <CardDescription>URL for the AI to fetch latest company updates and knowledge</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="companyKnowledgeUrl">Knowledge Base URL</Label>
-                <Input
-                  id="companyKnowledgeUrl"
-                  value={settings.companyKnowledgeUrl}
-                  onChange={(e) => updateSettings({ companyKnowledgeUrl: e.target.value })}
-                  placeholder="https://your-company.com/api/updates"
-                />
-                <p className="text-xs text-muted-foreground">
-                  The AI will fetch fresh company information from this URL to provide up-to-date responses
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>

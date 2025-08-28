@@ -110,7 +110,7 @@ class OpenAIProvider implements AIProvider {
       const data = await response.json()
       
       // Check if the requested model is available
-      const modelExists = data.data?.some((m: any) => m.id === model)
+      const modelExists = data.data?.some((m: { id: string }) => m.id === model)
       if (!modelExists) {
         return { success: false, error: `Model '${model}' is not available with this API key.` }
       }

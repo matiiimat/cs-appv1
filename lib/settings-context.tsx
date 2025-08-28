@@ -24,7 +24,6 @@ export interface Settings {
   agentName: string
   agentSignature: string
   aiInstructions: string
-  companyKnowledgeUrl: string
   macros: Macro[]
   aiConfig: AIProviderConfig
 }
@@ -48,7 +47,6 @@ const defaultSettings: Settings = {
   agentSignature: "Best regards,\nSupport Team",
   aiInstructions:
     "You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.",
-  companyKnowledgeUrl: "",
   macros: [
     {
       id: "1",
