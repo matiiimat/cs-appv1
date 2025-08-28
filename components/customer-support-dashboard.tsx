@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
 import { MessageSquare, Clock, User, Tag, Loader2, RefreshCw, RotateCcw } from "lucide-react"
@@ -17,12 +18,17 @@ export function CustomerSupportDashboard() {
     sendToReview,
     moveToPreviousMessage,
     generateAIResponse,
+    stats,
   } = useMessageManager()
 
   // Filter to only show pending messages in the review queue
   const pendingMessages = messages.filter(message => message.status === 'pending')
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
+
+  // Calculate progress metrics (for loading screen only)
+  const totalOriginalMessages = messages.length
+  const messagesWithAI = messages.filter(m => m.aiSuggestedResponse && !m.isGenerating).length
 
   // State for keyboard action feedback
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
@@ -97,14 +103,29 @@ export function CustomerSupportDashboard() {
   }, [currentMessage, currentMessageIndex, moveToPreviousMessage, handleKeyboardApprove, handleKeyboardReview])
 
   if (isLoading) {
+    const loadingProgress = messagesWithAI / Math.max(1, totalOriginalMessages) * 100
+    
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
-            <div className="text-center">
+            <div className="text-center space-y-6">
               <Loader2 className="mx-auto h-12 w-12 text-accent animate-spin mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Loading Messages</h3>
-              <p className="text-muted-foreground">AI is analyzing customer messages...</p>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Loading Messages</h3>
+                <p className="text-muted-foreground mb-4">AI is analyzing customer messages...</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Processing messages</span>
+                  <span className="font-medium">{messagesWithAI} of {totalOriginalMessages}</span>
+                </div>
+                <Progress value={loadingProgress} className="h-2" />
+                <div className="text-xs text-muted-foreground">
+                  {Math.round(loadingProgress)}% complete
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
