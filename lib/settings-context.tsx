@@ -10,7 +10,7 @@ export interface Macro {
 }
 
 export interface AIProviderConfig {
-  provider: "openai" | "anthropic" | "google" | "azure" | "custom" | "local"
+  provider: "openai" | "anthropic" | "local"
   model: string
   apiKey: string
   customEndpoint?: string

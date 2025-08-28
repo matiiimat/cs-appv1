@@ -29,16 +29,100 @@ class OpenAIProvider implements AIProvider {
   ]
 
   async generateText(params: GenerateTextParams): Promise<string> {
-    // TODO: Implement OpenAI integration
-    // For now, return a mock response
-    console.log("OpenAI provider called with params:", params)
-    return `Mock AI response for: ${params.prompt}`
+    const { system, prompt, apiKey, model, temperature = 0.7, maxTokens = 1000 } = params
+
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+      throw new Error("Invalid OpenAI API key format")
+    }
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model || 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: prompt }
+          ],
+          temperature,
+          max_tokens: maxTokens,
+          stream: false
+        })
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Invalid OpenAI API key")
+        } else if (response.status === 429) {
+          throw new Error("OpenAI rate limit exceeded. Please try again later.")
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(`OpenAI API error: ${errorData.error?.message || 'Bad request'}`)
+        } else {
+          throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`)
+        }
+      }
+
+      const data = await response.json()
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error("Invalid response from OpenAI API")
+      }
+
+      return data.choices[0].message.content || "No response generated"
+    } catch (error) {
+      console.error('OpenAI generateText error:', error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Failed to generate text with OpenAI")
+    }
   }
 
   async testConnection(apiKey: string, model = "gpt-3.5-turbo"): Promise<{ success: boolean; error?: string }> {
-    // TODO: Implement OpenAI connection test
-    console.log("Testing OpenAI connection with key:", apiKey?.substring(0, 10) + "...", "model:", model)
-    return { success: true }
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+      return { success: false, error: "Invalid API key format. OpenAI API keys start with 'sk-'" }
+    }
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return { success: false, error: "Invalid API key. Please check your OpenAI API key." }
+        } else if (response.status === 429) {
+          return { success: false, error: "Rate limit exceeded. Please try again later." }
+        } else {
+          return { success: false, error: `OpenAI API error: ${response.status} ${response.statusText}` }
+        }
+      }
+
+      const data = await response.json()
+      
+      // Check if the requested model is available
+      const modelExists = data.data?.some((m: any) => m.id === model)
+      if (!modelExists) {
+        return { success: false, error: `Model '${model}' is not available with this API key.` }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('OpenAI connection test error:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Failed to connect to OpenAI API" 
+      }
+    }
   }
 }
 
@@ -52,64 +136,103 @@ class AnthropicProvider implements AIProvider {
     "claude-3-haiku-20240307"
   ]
 
-  async generateText(/* _params: GenerateTextParams */): Promise<string> {
-    // Note: This would require @ai-sdk/anthropic package
-    throw new Error("Anthropic provider requires @ai-sdk/anthropic package to be installed")
+  async generateText(params: GenerateTextParams): Promise<string> {
+    const { system, prompt, apiKey, model, temperature = 0.7, maxTokens = 1000 } = params
+
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      throw new Error("Invalid Anthropic API key format")
+    }
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: model || 'claude-3-haiku-20240307',
+          max_tokens: maxTokens,
+          temperature,
+          system: system,
+          messages: [
+            { role: 'user', content: prompt }
+          ]
+        })
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Invalid Anthropic API key")
+        } else if (response.status === 429) {
+          throw new Error("Anthropic rate limit exceeded. Please try again later.")
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(`Anthropic API error: ${errorData.error?.message || 'Bad request'}`)
+        } else {
+          throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`)
+        }
+      }
+
+      const data = await response.json()
+      
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        throw new Error("Invalid response from Anthropic API")
+      }
+
+      return data.content[0].text || "No response generated"
+    } catch (error) {
+      console.error('Anthropic generateText error:', error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Failed to generate text with Anthropic")
+    }
   }
 
-  async testConnection(/* _apiKey: string */): Promise<{ success: boolean; error?: string }> {
-    return { success: false, error: "Anthropic provider not yet implemented" }
+  async testConnection(apiKey: string): Promise<{ success: boolean; error?: string }> {
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      return { success: false, error: "Invalid API key format. Anthropic API keys start with 'sk-ant-'" }
+    }
+
+    try {
+      // Use a simple API call to test the key
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'test' }]
+        })
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return { success: false, error: "Invalid API key. Please check your Anthropic API key." }
+        } else if (response.status === 429) {
+          return { success: false, error: "Rate limit exceeded. Please try again later." }
+        } else {
+          return { success: false, error: `Anthropic API error: ${response.status} ${response.statusText}` }
+        }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Anthropic connection test error:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Failed to connect to Anthropic API" 
+      }
+    }
   }
 }
 
-class GoogleProvider implements AIProvider {
-  name = "Google"
-  models = [
-    "gemini-1.5-pro",
-    "gemini-1.5-flash",
-    "gemini-1.0-pro"
-  ]
-
-  async generateText(/* _params: GenerateTextParams */): Promise<string> {
-    // Note: This would require @ai-sdk/google package
-    throw new Error("Google provider requires @ai-sdk/google package to be installed")
-  }
-
-  async testConnection(/* _apiKey: string */): Promise<{ success: boolean; error?: string }> {
-    return { success: false, error: "Google provider not yet implemented" }
-  }
-}
-
-class AzureProvider implements AIProvider {
-  name = "Azure OpenAI"
-  models = [
-    "gpt-4o",
-    "gpt-4",
-    "gpt-35-turbo"
-  ]
-
-  async generateText(/* _params: GenerateTextParams */): Promise<string> {
-    // Note: This would require @ai-sdk/azure package
-    throw new Error("Azure provider requires @ai-sdk/azure package to be installed")
-  }
-
-  async testConnection(/* _apiKey: string */): Promise<{ success: boolean; error?: string }> {
-    return { success: false, error: "Azure provider not yet implemented" }
-  }
-}
-
-class CustomProvider implements AIProvider {
-  name = "Custom"
-  models = ["custom-model"]
-
-  async generateText(/* _params: GenerateTextParams */): Promise<string> {
-    throw new Error("Custom provider implementation required")
-  }
-
-  async testConnection(/* _apiKey: string */): Promise<{ success: boolean; error?: string }> {
-    return { success: false, error: "Custom provider not yet implemented" }
-  }
-}
 
 class LocalAIProvider implements AIProvider {
   name = "Local AI"
@@ -189,9 +312,6 @@ class LocalAIProvider implements AIProvider {
 export const AI_PROVIDERS: Record<string, AIProvider> = {
   openai: new OpenAIProvider(),
   anthropic: new AnthropicProvider(),
-  google: new GoogleProvider(),
-  azure: new AzureProvider(),
-  custom: new CustomProvider(),
   local: new LocalAIProvider(),
 }
 
@@ -203,6 +323,13 @@ export class AIService {
   }
 
   async generateText(system: string, prompt: string): Promise<string> {
+    console.log('AIService generateText called with config:', {
+      provider: this.config.provider,
+      model: this.config.model,
+      hasApiKey: !!this.config.apiKey,
+      apiKeyPrefix: this.config.apiKey?.substring(0, 10) + '...'
+    })
+
     const provider = AI_PROVIDERS[this.config.provider]
     if (!provider) {
       throw new Error(`Unknown AI provider: ${this.config.provider}`)

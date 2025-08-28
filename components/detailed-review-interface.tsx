@@ -155,9 +155,10 @@ Generate a customer-ready response that addresses the agent's input while helpin
       
     } catch (error) {
       console.error("AI chat error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
       const errorResponse: ChatMessage = {
         id: Date.now().toString(),
-        content: "Sorry, I encountered an error while generating a response. Please check your AI configuration and try again.",
+        content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration and try again.`,
         sender: "ai", 
         timestamp: new Date(),
       }
@@ -237,9 +238,10 @@ Provide an improved version that can be sent directly to the customer.`
       
     } catch (error) {
       console.error("Quick action error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
       const errorResponse: ChatMessage = {
         id: Date.now().toString(),
-        content: "Sorry, I encountered an error while processing your request. Please check your AI configuration.",
+        content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration.`,
         sender: "ai",
         timestamp: new Date(),
       }

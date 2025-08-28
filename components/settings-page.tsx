@@ -30,7 +30,7 @@ export function SettingsPage() {
     updateSettings({
       aiConfig: {
         ...settings.aiConfig,
-        provider: provider as "openai" | "anthropic" | "google" | "azure" | "custom" | "local",
+        provider: provider as "openai" | "anthropic" | "local",
         model: defaultModel,
       }
     })
@@ -393,25 +393,9 @@ export function SettingsPage() {
                 </div>
               )}
 
-              {settings.aiConfig.provider === 'custom' && (
-                <div className="space-y-2">
-                  <Label htmlFor="custom-endpoint">Custom Endpoint</Label>
-                  <Input
-                    id="custom-endpoint"
-                    value={settings.aiConfig.customEndpoint || ''}
-                    onChange={(e) => updateSettings({
-                      aiConfig: {
-                        ...settings.aiConfig,
-                        customEndpoint: e.target.value,
-                      }
-                    })}
-                    placeholder="https://api.example.com/v1"
-                  />
-                </div>
-              )}
 
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="temperature">Temperature</Label>
                   <Input
@@ -452,7 +436,7 @@ export function SettingsPage() {
                     Maximum number of tokens to generate in the response.
                   </p>
                 </div>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 
