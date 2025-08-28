@@ -18,13 +18,6 @@ export function SettingsPage() {
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
 
-  useEffect(() => {
-    if (settings.theme === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [settings.theme])
 
   const handleThemeChange = (theme: "light" | "dark") => {
     updateSettings({ theme })

@@ -118,8 +118,32 @@ const mockIncomingMessages: Omit<
 export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const { settings } = useSettings()
   const [messages, setMessages] = useState<CustomerMessage[]>([])
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Load from localStorage after hydration to avoid SSR mismatch
+  useEffect(() => {
+    if (!hasLoadedFromStorage) {
+      const saved = localStorage.getItem('supportai-processed-messages')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          const hasAIResponses = parsed.some((msg: CustomerMessage) => msg.aiSuggestedResponse)
+          if (hasAIResponses) {
+            console.log('Loaded', parsed.length, 'processed messages from localStorage')
+            setMessages(parsed)
+            setIsLoading(false)
+            setHasLoadedFromStorage(true)
+            return
+          }
+        } catch (error) {
+          console.error('Failed to parse saved messages:', error)
+        }
+      }
+      setHasLoadedFromStorage(true)
+    }
+  }, [hasLoadedFromStorage])
   const [recentActivity, setRecentActivity] = useState<
     Array<{
       id: string
@@ -160,8 +184,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       // Update message with AI response
-      setMessages((prev) =>
-        prev.map((m) =>
+      setMessages((prev) => {
+        const updated = prev.map((m) =>
           m.id === message.id
             ? {
                 ...m,
@@ -171,8 +195,15 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
                 isGenerating: false,
               }
             : m,
-        ),
-      )
+        )
+        
+        // Save to localStorage whenever messages are updated with AI responses
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('supportai-processed-messages', JSON.stringify(updated))
+        }
+        
+        return updated
+      })
     } catch (error) {
       console.error("[v0] Error generating AI response:", error)
       setMessages((prev) =>

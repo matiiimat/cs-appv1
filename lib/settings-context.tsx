@@ -103,6 +103,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Apply theme to document whenever settings change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (settings.theme === "dark") {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
+    }
+  }, [settings.theme])
+
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
   }

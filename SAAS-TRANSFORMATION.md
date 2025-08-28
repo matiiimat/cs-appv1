@@ -414,6 +414,110 @@ const batchProcessor = {
 - Progress visibility keeps agents informed
 - Pause/resume functionality for maintenance windows
 
+### Message Processing Persistence
+**Priority: High** (Database Migration)
+
+Currently using localStorage for message persistence - needs database migration for SaaS:
+
+```typescript
+// Current: localStorage implementation (lib/message-manager.tsx)
+const [messages, setMessages] = useState(() => {
+  const saved = localStorage.getItem('supportai-processed-messages')
+  if (saved) {
+    const parsed = JSON.parse(saved)
+    const hasAIResponses = parsed.some(msg => msg.aiSuggestedResponse)
+    if (hasAIResponses) return parsed
+  }
+  return []
+})
+
+// Future: Database-backed message persistence per organization
+interface ProcessedMessage {
+  id: string
+  organizationId: string
+  customerMessage: CustomerMessage
+  aiSuggestedResponse: string
+  category: string
+  priority: string
+  processedAt: Date
+  processingTimeMs: number
+  aiProvider: string
+  status: 'pending' | 'approved' | 'rejected'
+}
+
+// app/api/messages/processed/route.ts
+export async function GET(request: NextRequest) {
+  const tenant = await getTenantFromRequest(request)
+  
+  // Only fetch unprocessed or recently processed messages
+  const messages = await db.processedMessage.findMany({
+    where: {
+      organizationId: tenant.id,
+      // Don't re-process messages that already have AI responses
+      aiSuggestedResponse: { not: null }
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+  
+  return NextResponse.json({ messages })
+}
+
+// Save processed messages to prevent re-processing
+export async function POST(request: NextRequest) {
+  const tenant = await getTenantFromRequest(request)
+  const { messageId, aiResponse, category, priority } = await request.json()
+  
+  await db.processedMessage.upsert({
+    where: { 
+      organizationId_messageId: { 
+        organizationId: tenant.id, 
+        messageId 
+      } 
+    },
+    update: { aiSuggestedResponse: aiResponse, category, priority },
+    create: { 
+      organizationId: tenant.id, 
+      messageId, 
+      aiSuggestedResponse: aiResponse, 
+      category, 
+      priority,
+      processedAt: new Date()
+    }
+  })
+  
+  return NextResponse.json({ success: true })
+}
+```
+
+**Database Schema:**
+```sql
+CREATE TABLE processed_messages (
+  id UUID PRIMARY KEY,
+  organization_id UUID REFERENCES organizations(id),
+  message_id VARCHAR(255) NOT NULL,
+  customer_message JSONB NOT NULL,
+  ai_suggested_response TEXT NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  priority VARCHAR(20) NOT NULL,
+  processed_at TIMESTAMP DEFAULT NOW(),
+  processing_time_ms INTEGER,
+  ai_provider VARCHAR(50),
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW(),
+  
+  UNIQUE(organization_id, message_id)
+);
+
+CREATE INDEX idx_processed_messages_org_status ON processed_messages(organization_id, status);
+```
+
+**Migration Benefits:**
+- ✅ No duplicate AI processing across refreshes
+- ✅ Persistent message state per organization  
+- ✅ Audit trail of AI processing history
+- ✅ Performance analytics (processing times, success rates)
+- ✅ Cross-device consistency for team collaboration
+
 ## Technical Recommendations
 
 ### Database Schema Changes
