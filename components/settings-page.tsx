@@ -13,7 +13,7 @@ import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-r
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateMacro, addMacro, deleteMacro, saveSettings, isLoading, lastSaved } = useSettings()
+  const { settings, updateSettings, updateMacro, addMacro, deleteMacro, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, lastSaved } = useSettings()
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
@@ -60,10 +60,23 @@ export function SettingsPage() {
   const handleTestConnection = async () => {
     // For local AI, check if endpoint is provided instead of API key
     if (settings.aiConfig.provider === 'local') {
-      if (!settings.aiConfig.apiKey && !settings.aiConfig.localEndpoint) {
+      const localEndpoint = settings.aiConfig.localEndpoint || settings.aiConfig.apiKey || ''
+      const model = settings.aiConfig.model || ''
+      
+      if (!localEndpoint) {
         setConnectionResult({ success: false, error: "Local AI server URL is required" })
         return
       }
+      
+      // Save the local AI settings before testing
+      updateSettings({
+        aiConfig: {
+          ...settings.aiConfig,
+          apiKey: localEndpoint,
+          localEndpoint: localEndpoint,
+          model: model,
+        }
+      })
     } else if (!settings.aiConfig.apiKey) {
       setConnectionResult({ success: false, error: "API key is required" })
       return
@@ -440,6 +453,63 @@ export function SettingsPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Message Categories</CardTitle>
+              <CardDescription>Define custom categories for organizing customer messages</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {settings.categories.length === 0 && (
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  No custom categories defined. AI will use &quot;N/A&quot; as fallback category.
+                </div>
+              )}
+              
+              {settings.categories.map((category) => (
+                <div key={category.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div 
+                    className="w-4 h-4 rounded-full" 
+                    style={{ backgroundColor: category.color || '#64748b' }}
+                  />
+                  <div className="flex-1">
+                    <Input
+                      value={category.name}
+                      onChange={(e) => updateCategory(category.id, { name: e.target.value })}
+                      placeholder="Category name"
+                    />
+                  </div>
+                  <Input
+                    type="color"
+                    value={category.color || '#64748b'}
+                    onChange={(e) => updateCategory(category.id, { color: e.target.value })}
+                    className="w-16 h-10"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteCategory(category.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              <Button
+                variant="outline"
+                onClick={() => addCategory({ 
+                  name: "New Category", 
+                  color: '#3b82f6' 
+                })}
+                className="w-full"
+              >
+                Add Category
+              </Button>
+              
+              <div className="text-xs text-muted-foreground">
+                Categories help organize and filter customer messages. Historical messages will keep their original categories when you make changes.
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

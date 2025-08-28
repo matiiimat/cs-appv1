@@ -11,6 +11,7 @@ import { useMessageManager } from "@/lib/message-manager"
 import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText } from "@/lib/utils"
+import { CategorySelector } from "@/components/ui/category-selector"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
 
 interface ChatMessage {
@@ -21,7 +22,7 @@ interface ChatMessage {
 }
 
 export function DetailedReviewInterface() {
-  const { messages, updateMessage } = useMessageManager()
+  const { messages, updateMessage, updateMessageCategory } = useMessageManager()
   const { settings } = useSettings()
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState("")
@@ -84,6 +85,28 @@ export function DetailedReviewInterface() {
 
   const handleAiChat = async () => {
     if (!aiChatInput.trim() || !selectedMessage) return
+
+    // Check for category change commands
+    const categoryChangeRegex = /(?:change|set|update).*category.*(?:to|as)\s+(.+)/i
+    const categoryMatch = aiChatInput.match(categoryChangeRegex)
+    
+    if (categoryMatch) {
+      const newCategory = categoryMatch[1].trim().replace(/['"]/g, '')
+      updateMessageCategory(selectedMessage.id, newCategory)
+      
+      const confirmMessage: ChatMessage = {
+        id: Date.now().toString(),
+        content: `✅ Category changed to "${newCategory}" for this message.`,
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, 
+        { id: Date.now().toString(), content: aiChatInput, sender: "agent", timestamp: new Date() },
+        confirmMessage
+      ])
+      setAiChatInput("")
+      return
+    }
 
     // Check if AI is configured
     if (!settings.aiConfig.apiKey) {
@@ -319,7 +342,10 @@ Provide an improved version that can be sent directly to the customer.`
                       <Badge variant={selectedMessage.priority === "high" ? "destructive" : "secondary"}>
                         {selectedMessage.priority}
                       </Badge>
-                      <Badge variant="outline">{selectedMessage.category}</Badge>
+                      <CategorySelector
+                        currentCategory={selectedMessage.category || ""}
+                        onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
+                      />
                     </div>
                   </div>
                 </CardHeader>

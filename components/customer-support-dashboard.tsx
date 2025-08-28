@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
+import { useSettings } from "@/lib/settings-context"
 import { formatEmailText } from "@/lib/utils"
-import { MessageSquare, Clock, User, Tag, Loader2, RefreshCw, RotateCcw } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { MessageSquare, Clock, User, Loader2, RefreshCw, RotateCcw } from "lucide-react"
 
 export function CustomerSupportDashboard() {
   const {
@@ -20,6 +21,8 @@ export function CustomerSupportDashboard() {
     moveToPreviousMessage,
     generateAIResponse,
   } = useMessageManager()
+  
+  const { settings } = useSettings()
 
   // Filter to only show pending messages in the review queue
   const pendingMessages = messages.filter(message => message.status === 'pending')
@@ -237,8 +240,11 @@ export function CustomerSupportDashboard() {
                 <div className="flex items-center gap-2">
                   {currentMessage.category && (
                     <Badge variant="outline" className="flex items-center gap-1">
-                      <Tag className="h-3 w-3" />
-                      {currentMessage.category}
+                      <div 
+                        className="w-2 h-2 rounded-full" 
+                        style={{ backgroundColor: settings.categories.find(c => c.name === currentMessage.category)?.color || '#6b7280' }}
+                      />
+                      <span>{currentMessage.category}</span>
                     </Badge>
                   )}
                 </div>

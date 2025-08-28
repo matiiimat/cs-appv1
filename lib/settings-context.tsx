@@ -9,6 +9,13 @@ export interface Macro {
   action: string
 }
 
+export interface Category {
+  id: string
+  name: string
+  color?: string
+  isDefault?: boolean
+}
+
 export interface AIProviderConfig {
   provider: "openai" | "anthropic" | "local"
   model: string
@@ -24,6 +31,7 @@ export interface Settings {
   agentName: string
   agentSignature: string
   aiInstructions: string
+  categories: Category[]
   macros: Macro[]
   aiConfig: AIProviderConfig
 }
@@ -34,6 +42,9 @@ interface SettingsContextType {
   updateMacro: (macroId: string, macro: Partial<Macro>) => void
   addMacro: (macro: Omit<Macro, "id">) => void
   deleteMacro: (macroId: string) => void
+  updateCategory: (categoryId: string, category: Partial<Category>) => void
+  addCategory: (category: Omit<Category, "id">) => void
+  deleteCategory: (categoryId: string) => void
   saveSettings: () => Promise<void>
   isLoading: boolean
   lastSaved: Date | null
@@ -47,6 +58,7 @@ const defaultSettings: Settings = {
   agentSignature: "Best regards,\nSupport Team",
   aiInstructions:
     "You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.",
+  categories: [], // Empty by default, will fall back to N/A
   macros: [
     {
       id: "1",
@@ -138,6 +150,28 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }))
   }
 
+  const updateCategory = (categoryId: string, category: Partial<Category>) => {
+    setSettings((prev) => ({
+      ...prev,
+      categories: prev.categories.map((c) => (c.id === categoryId ? { ...c, ...category } : c)),
+    }))
+  }
+
+  const addCategory = (category: Omit<Category, "id">) => {
+    const newCategory = { ...category, id: Date.now().toString() }
+    setSettings((prev) => ({
+      ...prev,
+      categories: [...prev.categories, newCategory],
+    }))
+  }
+
+  const deleteCategory = (categoryId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      categories: prev.categories.filter((c) => c.id !== categoryId),
+    }))
+  }
+
   const saveSettings = async () => {
     setIsLoading(true)
     try {
@@ -167,6 +201,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         updateMacro,
         addMacro,
         deleteMacro,
+        updateCategory,
+        addCategory,
+        deleteCategory,
         saveSettings,
         isLoading,
         lastSaved,

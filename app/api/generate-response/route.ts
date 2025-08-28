@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { AIService } from "@/lib/ai-providers"
-import { type AIProviderConfig } from "@/lib/settings-context"
+import { type AIProviderConfig, type Category } from "@/lib/settings-context"
 
 interface GenerateResponseRequest {
   customerName: string
@@ -10,6 +10,7 @@ interface GenerateResponseRequest {
   aiConfig: AIProviderConfig
   agentName: string
   agentSignature: string
+  categories?: Category[]
 }
 
 interface GenerateResponseResponse {
@@ -18,9 +19,16 @@ interface GenerateResponseResponse {
   priority: "low" | "medium" | "high"
 }
 
+function getNormalizedCategories(userCategories?: Category[]): string {
+  if (!userCategories || userCategories.length === 0) {
+    return "N/A"
+  }
+  return userCategories.map(c => c.name).join(', ')
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories }: GenerateResponseRequest = await request.json()
 
     if (!aiConfig || !aiConfig.apiKey) {
       return NextResponse.json(
@@ -32,11 +40,12 @@ export async function POST(request: NextRequest) {
     const aiService = new AIService(aiConfig)
 
     // Generate category and priority
+    const availableCategories = getNormalizedCategories(categories)
     const categoryAndPrioritySystem = `You are an AI assistant that categorizes customer support messages and determines their priority level.
 
 Analyze the customer message and respond with ONLY a JSON object in this exact format:
 {
-  "category": "one of: Account Access, Billing, Technical, Feature Request, Bug Report, General Inquiry",
+  "category": "one of: ${availableCategories}",
   "priority": "one of: low, medium, high"
 }
 

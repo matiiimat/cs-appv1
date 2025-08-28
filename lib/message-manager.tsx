@@ -46,6 +46,7 @@ interface MessageManagerContextType {
   isLoading: boolean
   addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp">) => void
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => void
+  updateMessageCategory: (id: string, category: string) => void
   approveMessage: (id: string, agentId: string) => void
   rejectMessage: (id: string, agentId: string, reason?: string) => void
   sendToReview: (id: string, agentId: string, reason?: string) => void // Added sendToReview function
@@ -172,6 +173,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           aiConfig: settings.aiConfig,
           agentName: settings.agentName || "Support Agent",
           agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
+          categories: settings.categories,
         }),
       })
 
@@ -221,7 +223,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         ),
       )
     }
-  }, [settings.aiConfig, settings.agentName, settings.agentSignature, setMessages])
+  }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, setMessages])
 
   const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp">) => {
     const newMessage: CustomerMessage = {
@@ -251,6 +253,19 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const updateMessage = (id: string, updates: Partial<CustomerMessage>) => {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)))
+  }
+
+  const updateMessageCategory = (id: string, category: string) => {
+    setMessages((prev) => {
+      const updated = prev.map((m) => (m.id === id ? { ...m, category } : m))
+      
+      // Save to localStorage whenever messages are updated
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('supportai-processed-messages', JSON.stringify(updated))
+      }
+      
+      return updated
+    })
   }
 
   const approveMessage = (id: string, agentId: string) => {
@@ -453,6 +468,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     isLoading,
     addMessage,
     updateMessage,
+    updateMessageCategory,
     approveMessage,
     rejectMessage,
     sendToReview, // Added sendToReview to context
