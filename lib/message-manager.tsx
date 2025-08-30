@@ -429,33 +429,24 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }).length,
   }
 
-  // Initialize with mock data
+  // Initialize with mock data only if no localStorage data was loaded
   useEffect(() => {
-    const initializeMessages = async () => {
-      setIsLoading(true)
+    if (!hasLoadedFromStorage) return // Wait for localStorage check
 
-      for (const mockMessage of mockIncomingMessages) {
-        const message: CustomerMessage = {
-          ...mockMessage,
-          id: Date.now().toString() + Math.random(),
-          status: "pending",
-          timestamp: new Date(Date.now() - Math.random() * 3600000).toLocaleString(), // Random time within last hour
-          autoReviewed: false, // New messages need AI review
-          isGenerating: true,
-        }
+    // Only initialize if no messages were loaded from localStorage
+    if (messages.length === 0) {
+      const initialMessages = mockIncomingMessages.map((mockMessage, index) => ({
+        ...mockMessage,
+        id: Date.now().toString() + index,
+        status: "pending" as const,
+        timestamp: new Date(Date.now() - Math.random() * 3600000).toLocaleString(),
+        autoReviewed: false, // Messages need AI review via queue button
+      }))
 
-        setMessages((prev) => [...prev, message])
-        await generateAIResponse(message)
-
-        // Small delay to simulate real-time message arrival
-        await new Promise((resolve) => setTimeout(resolve, 500))
-      }
-
+      setMessages(initialMessages)
       setIsLoading(false)
     }
-
-    initializeMessages()
-  }, [generateAIResponse])
+  }, [hasLoadedFromStorage, messages.length])
 
   // Adjust currentMessageIndex when pending messages change
   useEffect(() => {
