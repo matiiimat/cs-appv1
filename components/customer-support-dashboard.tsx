@@ -8,7 +8,7 @@ import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, Clock, User, Loader2, RefreshCw, RotateCcw } from "lucide-react"
+import { MessageSquare, Clock, User, Loader2, RotateCcw } from "lucide-react"
 
 export function CustomerSupportDashboard() {
   const {
@@ -33,10 +33,6 @@ export function CustomerSupportDashboard() {
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
 
 
-  const handleRegenerateResponse = async () => {
-    if (!currentMessage) return
-    await generateAIResponse(currentMessage)
-  }
 
   const showKeyboardFeedback = useCallback((type: 'approve' | 'review') => {
     setKeyboardFeedback(type)
@@ -229,23 +225,13 @@ export function CustomerSupportDashboard() {
 
               {/* AI Response Section */}
               <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4">
                   <h4 className="font-semibold flex items-center gap-2">
                     <div className="h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
                       <MessageSquare className="h-3 w-3 text-accent" />
                     </div>
                     AI Suggested Response
                   </h4>
-                  {!currentMessage.isGenerating && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRegenerateResponse}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
                 <div className="bg-accent/5 p-4 rounded-lg border border-accent/20">
                   {currentMessage.isGenerating ? (
