@@ -24,8 +24,8 @@ export function CustomerSupportDashboard() {
   
   const { settings } = useSettings()
 
-  // Filter to only show pending messages in the review queue
-  const pendingMessages = messages.filter(message => message.status === 'pending')
+  // Filter to only show messages that are AI-reviewed and pending human review
+  const pendingMessages = messages.filter(message => message.status === 'pending' && message.autoReviewed)
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
 

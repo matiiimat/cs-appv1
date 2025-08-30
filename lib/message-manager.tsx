@@ -14,6 +14,7 @@ export interface CustomerMessage {
   timestamp: string
   aiSuggestedResponse?: string
   isGenerating?: boolean
+  autoReviewed: boolean // Flag to track if AI has analyzed this message
   status: "pending" | "approved" | "rejected" | "edited" | "sent" | "review" // Added "review" status
   agentId?: string
   processedAt?: string
@@ -77,7 +78,7 @@ export function useMessageManager() {
 // Mock incoming messages for demo
 const mockIncomingMessages: Omit<
   CustomerMessage,
-  "id" | "status" | "timestamp" | "category" | "priority" | "aiSuggestedResponse"
+  "id" | "status" | "timestamp" | "category" | "priority" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
 >[] = [
   {
     customerName: "Sarah Johnson",
@@ -194,6 +195,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
                 category: data.category,
                 priority: data.priority,
                 aiSuggestedResponse: data.aiSuggestedResponse,
+                autoReviewed: true, // Mark as AI reviewed
                 isGenerating: false,
               }
             : m,
@@ -217,6 +219,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
                 priority: "medium" as const,
                 aiSuggestedResponse:
                   "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
+                autoReviewed: true, // Mark as reviewed even with error response
                 isGenerating: false,
               }
             : m,
@@ -225,12 +228,13 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }
   }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, setMessages])
 
-  const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp">) => {
+  const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "autoReviewed">) => {
     const newMessage: CustomerMessage = {
       ...messageData,
       id: Date.now().toString(),
       status: "pending",
       timestamp: new Date().toLocaleString(),
+      autoReviewed: false, // New messages need AI review
       isGenerating: true,
     }
 
@@ -280,6 +284,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         agentId,
         processedAt,
         responseTime,
+        autoReviewed: false, // Reset for potential customer replies
       })
 
       setRecentActivity((prev) => [
@@ -382,7 +387,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const moveToNextMessage = () => {
-    const pendingMessages = messages.filter(m => m.status === 'pending')
+    const pendingMessages = messages.filter(m => m.status === 'pending' && m.autoReviewed)
     if (currentMessageIndex < pendingMessages.length - 1) {
       setCurrentMessageIndex(currentMessageIndex + 1)
     }
@@ -435,6 +440,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           id: Date.now().toString() + Math.random(),
           status: "pending",
           timestamp: new Date(Date.now() - Math.random() * 3600000).toLocaleString(), // Random time within last hour
+          autoReviewed: false, // New messages need AI review
           isGenerating: true,
         }
 
@@ -453,7 +459,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   // Adjust currentMessageIndex when pending messages change
   useEffect(() => {
-    const pendingMessages = messages.filter(m => m.status === 'pending')
+    const pendingMessages = messages.filter(m => m.status === 'pending' && m.autoReviewed)
     if (currentMessageIndex >= pendingMessages.length && pendingMessages.length > 0) {
       setCurrentMessageIndex(Math.max(0, pendingMessages.length - 1))
     } else if (pendingMessages.length === 0) {
