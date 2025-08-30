@@ -158,7 +158,7 @@ export function MainApp() {
 
           {/* Main Content */}
           {currentView === "dashboard" ? (
-            <AgentDashboard onSwitchToSwipe={switchToSwipe} />
+            <AgentDashboard />
           ) : currentView === "swipe" ? (
             <CustomerSupportDashboard />
           ) : currentView === "detailed-review" ? (

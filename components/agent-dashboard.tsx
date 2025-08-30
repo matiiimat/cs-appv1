@@ -7,11 +7,7 @@ import { useMessageManager } from "@/lib/message-manager"
 import { MessageSquare, Clock, Zap, PlayCircle, Target, Loader2 } from "lucide-react"
 import { useState } from "react"
 
-interface AgentDashboardProps {
-  onSwitchToSwipe: () => void
-}
-
-export function AgentDashboard({ onSwitchToSwipe }: AgentDashboardProps) {
+export function AgentDashboard() {
   const { stats, messages, generateAIResponse } = useMessageManager()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   const [isProcessing, setIsProcessing] = useState(false)
