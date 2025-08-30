@@ -17,7 +17,6 @@ export function CustomerSupportDashboard() {
     approveMessage,
     sendToReview,
     moveToPreviousMessage,
-    generateAIResponse,
   } = useMessageManager()
   
   const { settings } = useSettings()
