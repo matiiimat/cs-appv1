@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMessageManager } from "@/lib/message-manager"
+import { useSettings } from "@/lib/settings-context"
 import { formatEmailText } from "@/lib/utils"
-import { MessageSquare, Clock, User, Tag, Eye, CheckCircle, XCircle } from "lucide-react"
+import { MessageSquare, Clock, User, Tag, Eye, Zap, Loader2 } from "lucide-react"
 
 export function ReviewQueue() {
-  const { getMessagesByStatus, approveMessage, rejectMessage } = useMessageManager()
+  const { getMessagesByStatus, updateMessage } = useMessageManager()
+  const { settings } = useSettings()
 
   const reviewMessages = getMessagesByStatus("review")
 
@@ -25,12 +27,46 @@ export function ReviewQueue() {
     }
   }
 
-  const handleApproveFromReview = (messageId: string) => {
-    approveMessage(messageId, "agent-1")
-  }
+  const handleQuickAction = async (messageId: string, actionTitle: string, actionInstruction: string) => {
+    const message = reviewMessages.find(m => m.id === messageId)
+    if (!message || !message.aiSuggestedResponse) return
 
-  const handleRejectFromReview = (messageId: string) => {
-    rejectMessage(messageId, "agent-1", "Rejected after manual review")
+    // Set loading state
+    updateMessage(messageId, { isGenerating: true })
+
+    try {
+      const response = await fetch("/api/generate-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: message.customerName,
+          customerEmail: message.customerEmail,
+          subject: message.subject,
+          message: message.message,
+          aiConfig: settings.aiConfig,
+          agentName: settings.agentName || "Support Agent",
+          agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
+          categories: settings.categories,
+          quickActionInstruction: actionInstruction, // Add the quick action instruction
+          currentResponse: message.aiSuggestedResponse, // Include current response for modification
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to process quick action (${response.status})`)
+      }
+
+      const data = await response.json()
+
+      // Update message with modified response
+      updateMessage(messageId, {
+        aiSuggestedResponse: data.aiSuggestedResponse,
+        isGenerating: false,
+      })
+    } catch (error) {
+      console.error("Error processing quick action:", error)
+      updateMessage(messageId, { isGenerating: false })
+    }
   }
 
   if (reviewMessages.length === 0) {
@@ -104,22 +140,30 @@ export function ReviewQueue() {
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  onClick={() => handleApproveFromReview(message.id)}
-                  className="flex-1 bg-green-500 hover:bg-green-600"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve & Send
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleRejectFromReview(message.id)}
-                  className="flex-1 border-red-200 hover:border-red-400 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
+              <div className="pt-4 border-t">
+                <h5 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-accent" />
+                  Quick Actions
+                </h5>
+                <div className="flex gap-2">
+                  {settings.quickActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickAction(message.id, action.title, action.action)}
+                      disabled={message.isGenerating}
+                      className="flex-1 max-w-[120px]"
+                      title={action.action}
+                    >
+                      {message.isGenerating ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        action.title
+                      )}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

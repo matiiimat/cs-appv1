@@ -81,11 +81,11 @@ export function AgentDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="text-center p-4 bg-white rounded-lg border">
+            <div className="text-center p-4 bg-card rounded-lg border">
               <div className="text-3xl font-bold text-orange-600 mb-1">{unprocessedMessages.length}</div>
               <div className="text-sm text-muted-foreground">Messages awaiting AI review</div>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg border">
+            <div className="text-center p-4 bg-card rounded-lg border">
               <div className="text-3xl font-bold text-green-600 mb-1">{readyForReview.length}</div>
               <div className="text-sm text-muted-foreground">Ready for agent review</div>
             </div>
@@ -93,7 +93,7 @@ export function AgentDashboard() {
           
           {unprocessedMessages.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-white rounded-lg border">
+              <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
                 <div className="flex-1">
                   <p className="font-medium mb-2">Process messages in batches</p>
                   <div className="flex items-center gap-3">

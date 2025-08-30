@@ -2,11 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-export interface Macro {
+export interface QuickAction {
   id: string
-  name: string
-  description: string
-  action: string
+  title: string // Max 12 characters for UI display
+  action: string // Instruction for AI
 }
 
 export interface Category {
@@ -32,16 +31,14 @@ export interface Settings {
   agentSignature: string
   aiInstructions: string
   categories: Category[]
-  macros: Macro[]
+  quickActions: QuickAction[]
   aiConfig: AIProviderConfig
 }
 
 interface SettingsContextType {
   settings: Settings
   updateSettings: (newSettings: Partial<Settings>) => void
-  updateMacro: (macroId: string, macro: Partial<Macro>) => void
-  addMacro: (macro: Omit<Macro, "id">) => void
-  deleteMacro: (macroId: string) => void
+  updateQuickAction: (actionId: string, action: Partial<QuickAction>) => void
   updateCategory: (categoryId: string, category: Partial<Category>) => void
   addCategory: (category: Omit<Category, "id">) => void
   deleteCategory: (categoryId: string) => void
@@ -59,25 +56,21 @@ const defaultSettings: Settings = {
   aiInstructions:
     "You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.",
   categories: [], // Empty by default, will fall back to N/A
-  macros: [
+  quickActions: [
     {
       id: "1",
-      name: "Escalate to Manager",
-      description: "Escalate this case to a manager for review",
-      action: "Please escalate this case to a manager for further review and assistance.",
+      title: "Translate ES", // 12 chars max
+      action: "Translate the response to Spanish",
     },
     {
-      id: "2",
-      name: "Request More Info",
-      description: "Ask customer for additional information",
-      action: "Could you please provide more details about your issue so we can better assist you?",
+      id: "2", 
+      title: "Make Formal",
+      action: "Rewrite the response in a more formal tone",
     },
     {
       id: "3",
-      name: "Close with Solution",
-      description: "Mark case as resolved with solution provided",
-      action:
-        "Thank you for contacting us. Your issue has been resolved. Please let us know if you need any further assistance.",
+      title: "Simplify",
+      action: "Simplify the response for easier understanding",
     },
   ],
   aiConfig: {
@@ -128,25 +121,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...newSettings }))
   }
 
-  const updateMacro = (macroId: string, macro: Partial<Macro>) => {
-    setSettings((prev) => ({
-      ...prev,
-      macros: prev.macros.map((m) => (m.id === macroId ? { ...m, ...macro } : m)),
-    }))
-  }
 
-  const addMacro = (macro: Omit<Macro, "id">) => {
-    const newMacro = { ...macro, id: Date.now().toString() }
+  const updateQuickAction = (actionId: string, action: Partial<QuickAction>) => {
     setSettings((prev) => ({
       ...prev,
-      macros: [...prev.macros, newMacro],
-    }))
-  }
-
-  const deleteMacro = (macroId: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      macros: prev.macros.filter((m) => m.id !== macroId),
+      quickActions: prev.quickActions.map((qa) => (qa.id === actionId ? { ...qa, ...action } : qa)),
     }))
   }
 
@@ -198,9 +177,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       value={{
         settings,
         updateSettings,
-        updateMacro,
-        addMacro,
-        deleteMacro,
+        updateQuickAction,
         updateCategory,
         addCategory,
         deleteCategory,

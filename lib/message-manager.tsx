@@ -81,39 +81,39 @@ const mockIncomingMessages: Omit<
   "id" | "status" | "timestamp" | "category" | "priority" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
 >[] = [
   {
-    customerName: "Sarah Johnson",
-    customerEmail: "sarah.johnson@email.com",
-    subject: "Unable to access my account",
+    customerName: "Alex Thompson",
+    customerEmail: "alex.thompson@techcorp.com",
+    subject: "Payment processing error",
     message:
-      "Hi, I've been trying to log into my account for the past hour but keep getting an error message saying my credentials are invalid. I'm sure I'm using the correct password. Can you help me reset it?",
+      "I'm trying to upgrade my subscription but keep getting a payment error. I've tried three different cards and they all fail. This is urgent as my current plan expires tomorrow. Can you help?",
   },
   {
-    customerName: "Mike Chen",
-    customerEmail: "mike.chen@company.com",
-    subject: "Billing question about recent charge",
+    customerName: "Maria Santos",
+    customerEmail: "maria.santos@design.co",
+    subject: "Data export functionality",
     message:
-      "I noticed a charge on my credit card for $99 but I can't find any details about what this was for in my account. Could you please clarify what this charge is for?",
+      "I need to export all my project data for compliance reasons. I can't find the export option in the dashboard. Is this feature available? If so, where can I access it?",
   },
   {
-    customerName: "Emma Rodriguez",
-    customerEmail: "emma.r@startup.io",
-    subject: "Feature request - API integration",
+    customerName: "James Wilson",
+    customerEmail: "james.wilson@freelance.net",
+    subject: "Two-factor authentication not working",
     message:
-      "Our development team is looking to integrate with your API for our mobile app. Do you have documentation available for the REST API endpoints? Also, are there any rate limits we should be aware of?",
+      "I enabled 2FA yesterday but now I can't log in. The authentication codes from my phone aren't being accepted. I've tried syncing the time but it still doesn't work. Please help.",
   },
   {
-    customerName: "David Kim",
-    customerEmail: "david.kim@startup.com",
-    subject: "Login issues on mobile app",
+    customerName: "Rachel Green",
+    customerEmail: "rachel.green@marketing.pro",
+    subject: "Team collaboration features missing",
     message:
-      "The mobile app keeps crashing when I try to log in. I've tried reinstalling but the problem persists. This is affecting my daily workflow.",
+      "Our team upgraded to the business plan specifically for the collaboration tools mentioned on your pricing page. However, we can't find these features in our account. Were they rolled out yet?",
   },
   {
-    customerName: "Lisa Wang",
-    customerEmail: "lisa.wang@company.org",
-    subject: "Subscription cancellation request",
+    customerName: "Kevin Park",
+    customerEmail: "kevin.park@startup.dev",
+    subject: "API rate limiting too restrictive",
     message:
-      "I need to cancel my premium subscription due to budget constraints. Can you help me with the cancellation process and confirm when it will take effect?",
+      "Our application is hitting the API rate limits during peak hours, causing service disruptions for our users. Can we discuss increasing our limits or moving to a higher tier?",
   },
 ]
 

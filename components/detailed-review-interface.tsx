@@ -189,7 +189,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
     }
   }
 
-  const handleQuickAction = async (actionType: string) => {
+  const handleQuickAction = async (actionTitle: string, actionInstruction: string) => {
     if (!selectedMessage || !settings.aiConfig.apiKey) return
 
     const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
@@ -204,27 +204,9 @@ Generate a customer-ready response that addresses the agent's input while helpin
       return
     }
 
-    let actionPrompt = ""
-    let actionDescription = ""
-
-    switch (actionType) {
-      case "improve_tone":
-        actionPrompt = "Make this response more professional and empathetic"
-        actionDescription = "Improving tone and empathy"
-        break
-      case "make_shorter":
-        actionPrompt = "Make this response more concise while keeping all important information"
-        actionDescription = "Making response more concise"
-        break
-      case "add_steps":
-        actionPrompt = "Add clear step-by-step instructions to help the customer resolve their issue"
-        actionDescription = "Adding step-by-step instructions"
-        break
-    }
-
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      content: actionDescription,
+      content: `Quick Action: ${actionTitle}`,
       sender: "agent",
       timestamp: new Date(),
     }
@@ -244,11 +226,11 @@ Priority: ${selectedMessage.priority}
 Current response draft:
 ${currentResponse}
 
-Your task: ${actionPrompt}
+Your task: ${actionInstruction}
 
 Provide an improved version that can be sent directly to the customer.`
 
-      const response = await aiService.generateText(systemPrompt, actionPrompt)
+      const response = await aiService.generateText(systemPrompt, actionInstruction)
       
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -453,36 +435,19 @@ Provide an improved version that can be sent directly to the customer.`
                     Quick Actions
                   </p>
                   <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickAction("improve_tone")}
-                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
-                      title="Make the response more professional and empathetic"
-                    >
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">1</span>
-                      Improve Tone
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickAction("make_shorter")}
-                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
-                      title="Make the response more concise"
-                    >
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">2</span>
-                      Make Shorter
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickAction("add_steps")}
-                      className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
-                      title="Add clear step-by-step instructions"
-                    >
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">3</span>
-                      Add Steps
-                    </Button>
+                    {settings.quickActions.map((action, index) => (
+                      <Button
+                        key={action.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickAction(action.title, action.action)}
+                        className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
+                        title={action.action}
+                      >
+                        <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">{index + 1}</span>
+                        {action.title}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               </div>

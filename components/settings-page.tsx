@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +13,7 @@ import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-r
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateMacro, addMacro, deleteMacro, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, lastSaved } = useSettings()
+  const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, lastSaved } = useSettings()
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
@@ -117,32 +117,6 @@ export function SettingsPage() {
     }
   }
 
-  useEffect(() => {
-    if (settings.macros.length === 0) {
-      const predefinedMacros = [
-        {
-          id: "translate-spanish",
-          name: "Translate to Spanish",
-          description: "Translate AI response to Spanish and send to conversation",
-          action: "translate_to_spanish",
-        },
-        {
-          id: "use-last-response",
-          name: "Use AI Response",
-          description: "Send the last AI response to conversation field",
-          action: "use_last_ai_response",
-        },
-        {
-          id: "custom-macro",
-          name: "Custom Macro",
-          description: "Set up your own custom behavior",
-          action: "custom_action",
-        },
-      ]
-
-      predefinedMacros.forEach((macro) => addMacro(macro))
-    }
-  }, [settings.macros.length, addMacro])
 
 
   return (
@@ -532,48 +506,53 @@ export function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Quick Action Macros</CardTitle>
-              <CardDescription>Predefined actions for common support tasks</CardDescription>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Configure quick action buttons for Messages to Review (title max 12 chars)</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                {settings.macros.map((macro) => (
-                  <div key={macro.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <h4 className="font-medium">{macro.name}</h4>
-                        <p className="text-sm text-muted-foreground">{macro.description}</p>
-                      </div>
-                      {macro.id === "custom-macro" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMacro(macro.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    {macro.id === "custom-macro" && (
-                      <div className="space-y-2">
-                        <Label className="text-xs">Custom Action Text</Label>
-                        <Textarea
-                          value={macro.action}
-                          onChange={(e) => updateMacro(macro.id, { action: e.target.value })}
-                          rows={2}
-                          className="text-sm"
-                          placeholder="Define your custom macro behavior..."
-                        />
-                      </div>
-                    )}
+            <CardContent className="space-y-4">
+              {settings.quickActions.map((action, index) => (
+                <div key={action.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span className="font-medium">Quick Action {index + 1}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Title (Button Label)</Label>
+                      <Input
+                        value={action.title}
+                        onChange={(e) => {
+                          const value = e.target.value.slice(0, 12) // Limit to 12 chars
+                          updateQuickAction(action.id, { title: value })
+                        }}
+                        placeholder="e.g. Translate ES"
+                        maxLength={12}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {action.title.length}/12 characters (button label)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">AI Instruction</Label>
+                      <Textarea
+                        value={action.action}
+                        onChange={(e) => updateQuickAction(action.id, { action: e.target.value })}
+                        placeholder="e.g. Translate the response to Spanish"
+                        rows={3}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Instruction sent to AI when button is clicked
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
 
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Use the predefined macros above for common support actions
+              <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  These quick actions will appear as buttons in the Messages to Review page.
+                  Click them to instantly apply AI modifications to responses.
                 </p>
               </div>
             </CardContent>

@@ -11,6 +11,8 @@ interface GenerateResponseRequest {
   agentName: string
   agentSignature: string
   categories?: Category[]
+  quickActionInstruction?: string // For quick actions
+  currentResponse?: string // Existing response to modify
 }
 
 interface GenerateResponseResponse {
@@ -28,7 +30,7 @@ function getNormalizedCategories(userCategories?: Category[]): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories, quickActionInstruction, currentResponse }: GenerateResponseRequest = await request.json()
 
     if (!aiConfig || !aiConfig.apiKey) {
       return NextResponse.json(
@@ -39,7 +41,37 @@ export async function POST(request: NextRequest) {
 
     const aiService = new AIService(aiConfig)
 
-    // Generate category and priority
+    // Handle quick actions - modify existing response
+    if (quickActionInstruction && currentResponse) {
+      const quickActionSystem = `You are a professional customer support agent. You have been asked to modify an existing response based on a specific instruction.
+
+Current response:
+"${currentResponse}"
+
+Instruction: ${quickActionInstruction}
+
+Please provide the modified response that follows the instruction while maintaining professionalism and the core message intent. Keep the same signature if present.`
+
+      const quickActionPrompt = `Original customer message context:
+Customer: ${customerName}
+Subject: ${subject}
+Message: ${message}
+
+Please modify the response according to the instruction.`
+
+      const modifiedResponse = await aiService.generateText(
+        quickActionSystem,
+        quickActionPrompt
+      )
+
+      return NextResponse.json({
+        aiSuggestedResponse: modifiedResponse,
+        category: "N/A", // Keep existing category
+        priority: "medium" as const, // Keep existing priority
+      })
+    }
+
+    // Generate category and priority (for new responses only)
     const availableCategories = getNormalizedCategories(categories)
     const categoryAndPrioritySystem = `You are an AI assistant that categorizes customer support messages and determines their priority level.
 
