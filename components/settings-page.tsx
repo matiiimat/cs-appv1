@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,20 @@ export function SettingsPage() {
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
+  const [savedSettings, setSavedSettings] = useState(settings)
 
+  // Detect if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    return JSON.stringify(settings) !== JSON.stringify(savedSettings)
+  }, [settings, savedSettings])
+
+
+  // Update saved settings reference when settings are actually saved
+  useEffect(() => {
+    if (saveResult?.success) {
+      setSavedSettings(settings)
+    }
+  }, [saveResult?.success, settings])
 
   const handleThemeChange = (theme: "light" | "dark") => {
     updateSettings({ theme })
@@ -87,7 +100,17 @@ export function SettingsPage() {
 
     try {
       const aiService = new AIService(settings.aiConfig)
-      const result = await aiService.testConnection()
+      
+      // Add 10-second timeout for connection test
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timed out after 10 seconds')), 10000)
+      })
+      
+      const result = await Promise.race([
+        aiService.testConnection(),
+        timeoutPromise
+      ])
+      
       setConnectionResult(result)
     } catch (error) {
       setConnectionResult({
@@ -120,32 +143,21 @@ export function SettingsPage() {
 
 
   return (
+    <>
     <div className="container mx-auto px-6 py-8 max-w-4xl">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Button 
-              onClick={handleSaveSettings}
-              disabled={isLoading}
-              className="flex items-center gap-2 shadow-sm dark:shadow-md dark:shadow-white/20"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {isLoading ? 'Saving...' : 'Save Settings'}
-            </Button>
-          </div>
         </div>
+
+
         {saveResult && (
           <div className={`mt-4 text-sm p-3 rounded ${
             saveResult.success 
-              ? 'bg-green-50 text-green-700 border border-green-200' 
-              : 'bg-red-50 text-red-700 border border-red-200'
+              ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-800 dark:text-white dark:border-green-700' 
+              : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-800 dark:text-white dark:border-red-700'
           }`}>
             {saveResult.success 
               ? 'Settings saved successfully!' 
@@ -172,7 +184,12 @@ export function SettingsPage() {
                 <Input
                   id="agentName"
                   value={settings.agentName}
-                  onChange={(e) => updateSettings({ agentName: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value.length <= 32) {
+                      updateSettings({ agentName: value })
+                    }
+                  }}
                   placeholder="Enter your name"
                 />
               </div>
@@ -181,7 +198,12 @@ export function SettingsPage() {
                 <Textarea
                   id="agentSignature"
                   value={settings.agentSignature}
-                  onChange={(e) => updateSettings({ agentSignature: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value.length <= 100) {
+                      updateSettings({ agentSignature: value })
+                    }
+                  }}
                   placeholder="Enter your email signature"
                   rows={4}
                 />
@@ -261,13 +283,16 @@ export function SettingsPage() {
                       <Input
                         id="local-endpoint"
                         value={settings.aiConfig.localEndpoint || settings.aiConfig.apiKey || ''}
-                        onChange={(e) => updateSettings({
-                          aiConfig: {
-                            ...settings.aiConfig,
-                            localEndpoint: e.target.value,
-                            apiKey: e.target.value,
-                          }
-                        })}
+                        onChange={(e) => {
+                          updateSettings({
+                            aiConfig: {
+                              ...settings.aiConfig,
+                              localEndpoint: e.target.value,
+                              apiKey: e.target.value,
+                            }
+                          })
+                          setConnectionResult(null)
+                        }}
                         placeholder="http://192.168.1.24:1234"
                       />
                     </div>
@@ -276,12 +301,15 @@ export function SettingsPage() {
                       <Input
                         id="local-model-identifier"
                         value={settings.aiConfig.model}
-                        onChange={(e) => updateSettings({
-                          aiConfig: {
-                            ...settings.aiConfig,
-                            model: e.target.value,
-                          }
-                        })}
+                        onChange={(e) => {
+                          updateSettings({
+                            aiConfig: {
+                              ...settings.aiConfig,
+                              model: e.target.value,
+                            }
+                          })
+                          setConnectionResult(null)
+                        }}
                         placeholder="mistralai/devstral-small-2505"
                       />
                     </div>
@@ -576,5 +604,31 @@ export function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+
+    {/* Sticky Save Banner */}
+    {hasUnsavedChanges && (
+      <div className="fixed bottom-0 left-0 right-0 bg-amber-50 text-amber-800 dark:bg-amber-800 dark:text-white z-50">
+        <div className="container mx-auto px-6 py-4 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">You have unsaved changes.</span>
+            </div>
+            <Button 
+              onClick={handleSaveSettings}
+              disabled={isLoading}
+              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-700 dark:hover:bg-amber-600"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isLoading ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
