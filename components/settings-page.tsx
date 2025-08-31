@@ -124,14 +124,8 @@ export function SettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-            <p className="text-muted-foreground">Configure your agent profile and AI assistant preferences</p>
           </div>
           <div className="flex items-center gap-4">
-            {lastSaved && (
-              <p className="text-sm text-muted-foreground">
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </p>
-            )}
             <Button 
               onClick={handleSaveSettings}
               disabled={isLoading}
@@ -170,7 +164,6 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">Agent Information</h3>
-                <p className="text-sm text-muted-foreground">Configure your agent profile and signature</p>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
@@ -223,7 +216,6 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">AI Provider Configuration</h3>
-                <p className="text-sm text-muted-foreground">Configure your AI provider and API settings</p>
               </div>
               <div className="space-y-6">
               <div className="space-y-4">
@@ -434,12 +426,11 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">Message Categories</h3>
-                <p className="text-sm text-muted-foreground">Define custom categories for organizing customer messages</p>
               </div>
               <div className="space-y-4">
               {settings.categories.length === 0 && (
                 <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  No custom categories defined. AI will use &quot;N/A&quot; as fallback category.
+                  No categories configured. Default categories will be used for AI categorization.
                 </div>
               )}
               
@@ -462,13 +453,15 @@ export function SettingsPage() {
                     onChange={(e) => updateCategory(category.id, { color: e.target.value })}
                     className="w-16 h-10"
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteCategory(category.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {settings.categories.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteCategory(category.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
               
@@ -494,12 +487,10 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
-                <p className="text-sm text-muted-foreground">Add your company&apos;s documentation, FAQs, policies, and support information</p>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="companyKnowledge">Company Documentation</Label>
+                <div className="flex items-center justify-end">
                   <span className={`text-sm ${
                     settings.companyKnowledge.length > 50000 
                       ? 'text-red-500' 
@@ -523,7 +514,7 @@ export function SettingsPage() {
                   maxLength={50000}
                 />
               </div>
-              <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="font-medium mb-1">💡 Pro tip:</p>
                 <p>Include your most common support scenarios, product features, policies, and troubleshooting steps. Focus on frequently asked questions and key information - the AI will automatically find and use relevant sections when responding to customers. Keep it under 50,000 characters for optimal performance.</p>
               </div>
@@ -535,7 +526,6 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">AI Assistant Instructions</h3>
-                <p className="text-sm text-muted-foreground">Customize how the AI assistant behaves and responds</p>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
@@ -556,7 +546,6 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">Quick Actions</h3>
-                <p className="text-sm text-muted-foreground">Configure quick action buttons for Messages to Review (title max 12 chars)</p>
               </div>
               <div className="space-y-4">
               {settings.quickActions.map((action, index) => (
@@ -598,8 +587,8 @@ export function SettingsPage() {
                 </div>
               ))}
 
-              <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
                   These quick actions will appear as buttons in the Messages to Review page.
                   Click them to instantly apply AI modifications to responses.
                 </p>

@@ -25,7 +25,8 @@ interface GenerateResponseResponse {
 
 function getNormalizedCategories(userCategories?: Category[]): string {
   if (!userCategories || userCategories.length === 0) {
-    return "N/A"
+    // Default categories when none are configured  
+    return "Technical Support, Billing, General Inquiry"
   }
   return userCategories.map(c => c.name).join(', ')
 }
@@ -77,16 +78,25 @@ Please modify the response according to the instruction.`
     const availableCategories = getNormalizedCategories(categories)
     const categoryAndPrioritySystem = `You are an AI assistant that categorizes customer support messages and determines their priority level.
 
+Available categories: ${availableCategories}
+
 Analyze the customer message and respond with ONLY a JSON object in this exact format:
 {
-  "category": "one of: ${availableCategories}",
-  "priority": "one of: low, medium, high"
+  "category": "exact category name from the list above",
+  "priority": "low, medium, or high"
 }
+
+Category guidelines:
+- Technical Support: Bug reports, technical issues, software problems, troubleshooting
+- Billing: Payment questions, pricing inquiries, subscription changes, invoices, plans
+- General Inquiry: General questions, information requests, non-urgent questions
 
 Priority guidelines:
 - high: Account access issues, billing disputes, system outages, security concerns
 - medium: Feature requests, general billing questions, minor technical issues
-- low: General inquiries, documentation requests, non-urgent questions`
+- low: General inquiries, documentation requests, non-urgent questions
+
+Choose the most appropriate category from the available list. For plans and pricing questions, use "Billing".`
 
     const categoryAndPriorityPrompt = `Customer: ${customerName}
 Email: ${customerEmail}

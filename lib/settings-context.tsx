@@ -56,7 +56,11 @@ const defaultSettings: Settings = {
   agentSignature: "Best regards,\nSupport Team",
   aiInstructions:
     "You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.",
-  categories: [], // Empty by default, will fall back to N/A
+  categories: [
+    { id: "1", name: "Technical Support", color: "#ef4444" }, // Red
+    { id: "2", name: "Billing", color: "#22c55e" }, // Green  
+    { id: "3", name: "General Inquiry", color: "#3b82f6" }, // Blue
+  ],
   quickActions: [
     {
       id: "1",
@@ -99,7 +103,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings)
-          setSettings({ ...defaultSettings, ...parsed })
+setSettings({ ...defaultSettings, ...parsed })
           setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
         } catch (error) {
           console.error('Failed to parse saved settings:', error)
