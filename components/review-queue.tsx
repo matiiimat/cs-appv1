@@ -1,6 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMessageManager } from "@/lib/message-manager"
@@ -90,15 +89,15 @@ export function ReviewQueue() {
 
       <div className="grid gap-4">
         {reviewMessages.map((message) => (
-          <Card key={message.id} className="border-orange-200">
-            <CardHeader>
+          <div key={message.id} className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
                     <User className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{message.customerName}</CardTitle>
+                    <h3 className="text-lg font-semibold">{message.customerName}</h3>
                     <p className="text-sm text-muted-foreground">{message.customerEmail}</p>
                   </div>
                 </div>
@@ -119,8 +118,8 @@ export function ReviewQueue() {
                 <Clock className="h-4 w-4" />
                 {message.timestamp}
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-6 pb-6">
               <div className="mb-4">
                 <h4 className="font-semibold mb-2">Subject: {message.subject}</h4>
                 <p className="text-foreground leading-relaxed mb-4">{message.message}</p>
@@ -132,7 +131,7 @@ export function ReviewQueue() {
                     <MessageSquare className="h-4 w-4 text-accent" />
                     AI Suggested Response
                   </h4>
-                  <div className="bg-accent/5 p-3 rounded-lg border border-accent/20">
+                  <div className="bg-accent/5 p-3 rounded-lg shadow-sm">
                     <p className="text-foreground leading-relaxed whitespace-pre-line">
                       {formatEmailText(message.aiSuggestedResponse || "")}
                     </p>
@@ -165,8 +164,8 @@ export function ReviewQueue() {
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>

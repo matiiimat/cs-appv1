@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
@@ -167,12 +166,13 @@ export function SettingsPage() {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agent Information</CardTitle>
-              <CardDescription>Configure your agent profile and signature</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold">Agent Information</h3>
+                <p className="text-sm text-muted-foreground">Configure your agent profile and signature</p>
+              </div>
+              <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name</Label>
                 <Input
@@ -213,17 +213,19 @@ export function SettingsPage() {
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="configuration" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Provider Configuration</CardTitle>
-              <CardDescription>Configure your AI provider and API settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold">AI Provider Configuration</h3>
+                <p className="text-sm text-muted-foreground">Configure your AI provider and API settings</p>
+              </div>
+              <div className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="ai-provider">AI Provider</Label>
@@ -424,15 +426,17 @@ export function SettingsPage() {
                   </p>
                 </div>
               </div> */}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Message Categories</CardTitle>
-              <CardDescription>Define custom categories for organizing customer messages</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold">Message Categories</h3>
+                <p className="text-sm text-muted-foreground">Define custom categories for organizing customer messages</p>
+              </div>
+              <div className="space-y-4">
               {settings.categories.length === 0 && (
                 <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                   No custom categories defined. AI will use &quot;N/A&quot; as fallback category.
@@ -482,15 +486,17 @@ export function SettingsPage() {
               <div className="text-xs text-muted-foreground">
                 Categories help organize and filter customer messages. Historical messages will keep their original categories when you make changes.
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Assistant Instructions</CardTitle>
-              <CardDescription>Customize how the AI assistant behaves and responds</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold">AI Assistant Instructions</h3>
+                <p className="text-sm text-muted-foreground">Customize how the AI assistant behaves and responds</p>
+              </div>
+              <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="aiInstructions">Custom Instructions</Label>
                 <Textarea
@@ -501,15 +507,17 @@ export function SettingsPage() {
                   rows={6}
                 />
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Configure quick action buttons for Messages to Review (title max 12 chars)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold">Quick Actions</h3>
+                <p className="text-sm text-muted-foreground">Configure quick action buttons for Messages to Review (title max 12 chars)</p>
+              </div>
+              <div className="space-y-4">
               {settings.quickActions.map((action, index) => (
                 <div key={action.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -555,8 +563,9 @@ export function SettingsPage() {
                   Click them to instantly apply AI modifications to responses.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
@@ -101,8 +100,8 @@ export function CustomerSupportDashboard() {
   if (!currentMessage) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
+        <div className="w-full max-w-md bg-card rounded-lg shadow-md">
+          <div className="pt-6 p-6">
             <div className="text-center">
               <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">Queue Empty!</h3>
@@ -114,8 +113,8 @@ export function CustomerSupportDashboard() {
                 </Button>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }
@@ -150,27 +149,27 @@ export function CustomerSupportDashboard() {
         {/* Next message card (background) */}
         {nextMessage && (
           <div className="absolute inset-0 transform scale-95 opacity-50">
-            <Card className="h-full">
-              <CardHeader>
+            <div className="h-full bg-card rounded-lg shadow-md">
+              <div className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <User className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{nextMessage.customerName}</CardTitle>
+                      <h3 className="text-lg font-semibold">{nextMessage.customerName}</h3>
                       <p className="text-sm text-muted-foreground">{nextMessage.customerEmail}</p>
                     </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className="px-6 pb-6">
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Subject: {nextMessage.subject}</h4>
                   <p className="text-foreground leading-relaxed line-clamp-3">{nextMessage.message}</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
 
@@ -181,21 +180,21 @@ export function CustomerSupportDashboard() {
           disabled={currentMessage.isGenerating}
           className="absolute inset-0"
         >
-          <Card 
-            className="h-full overflow-hidden transition-all duration-300"
+          <div 
+            className="h-full overflow-hidden transition-all duration-300 bg-card rounded-lg shadow-lg"
             style={{
               backgroundColor: keyboardFeedback === 'approve' ? 'rgba(34, 197, 94, 0.2)' : keyboardFeedback === 'review' ? 'rgba(251, 146, 60, 0.2)' : undefined,
               border: keyboardFeedback === 'approve' ? '2px solid rgb(34, 197, 94)' : keyboardFeedback === 'review' ? '2px solid rgb(251, 146, 60)' : undefined,
             }}
           >
-            <CardHeader>
+            <div className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{currentMessage.customerName}</CardTitle>
+                    <h3 className="text-lg font-semibold">{currentMessage.customerName}</h3>
                     <p className="text-sm text-muted-foreground">{currentMessage.customerEmail}</p>
                   </div>
                 </div>
@@ -215,8 +214,8 @@ export function CustomerSupportDashboard() {
                 <Clock className="h-4 w-4" />
                 {currentMessage.timestamp}
               </div>
-            </CardHeader>
-            <CardContent className="h-full overflow-y-auto">
+            </div>
+            <div className="px-6 pb-6 h-full overflow-y-auto">
               <div className="mb-6">
                 <h4 className="font-semibold mb-2">Subject: {currentMessage.subject}</h4>
                 <p className="text-foreground leading-relaxed">{currentMessage.message}</p>
@@ -245,7 +244,7 @@ export function CustomerSupportDashboard() {
                   )}
                 </div>
               </div>
-            </CardContent>
+            </div>
             
             {/* Keyboard feedback badges */}
             {keyboardFeedback && (
@@ -266,7 +265,7 @@ export function CustomerSupportDashboard() {
                 </div>
               </>
             )}
-          </Card>
+          </div>
         </SwipeableCard>
       </div>
 

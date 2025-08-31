@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
@@ -279,11 +278,11 @@ Provide an improved version that can be sent directly to the customer.`
 
       <div className="flex gap-6 h-[calc(100vh-180px)]">
         <div className="w-1/6 min-w-[200px]">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-3 flex-shrink-0">
-              <CardTitle className="text-sm">Cases to Review</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-hidden">
+          <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
+            <div className="pb-3 flex-shrink-0 p-6">
+              <h3 className="text-sm font-semibold">Cases to Review</h3>
+            </div>
+            <div className="p-0 flex-1 overflow-hidden">
               <div className="h-full overflow-y-auto p-3">
                 <div className="space-y-2">
                   {reviewMessages.map((message) => (
@@ -309,17 +308,17 @@ Provide an improved version that can be sent directly to the customer.`
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         <div className="w-3/6 flex flex-col gap-4">
           {selectedMessage && (
             <>
-              <Card className="flex-1">
-                <CardHeader className="pb-3">
+              <div className="flex-1 bg-card rounded-lg shadow-md">
+                <div className="pb-3 p-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">Customer Question</CardTitle>
+                    <h3 className="text-sm font-semibold">Customer Question</h3>
                     <div className="flex items-center gap-2">
                       <Badge variant={selectedMessage.priority === "high" ? "destructive" : "secondary"}>
                         {selectedMessage.priority}
@@ -330,8 +329,8 @@ Provide an improved version that can be sent directly to the customer.`
                       />
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div className="px-6 pb-6">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="h-4 w-4" />
@@ -344,14 +343,14 @@ Provide an improved version that can be sent directly to the customer.`
                       <p className="text-sm leading-relaxed">{selectedMessage.message}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="flex-1">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Draft Reply</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="flex-1 bg-card rounded-lg shadow-md">
+                <div className="pb-3 p-6">
+                  <h3 className="text-sm font-semibold">Draft Reply</h3>
+                </div>
+                <div className="px-6 pb-6 space-y-4">
                   <Textarea
                     placeholder="Edit the AI-generated response or write your own..."
                     value={replyText}
@@ -364,21 +363,21 @@ Provide an improved version that can be sent directly to the customer.`
                       Approve & Send
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </>
           )}
         </div>
 
         <div className="w-2/6">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
+          <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
+            <div className="pb-3 p-6">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Bot className="h-4 w-4" />
                 AI Assistant
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-0">
+              </h3>
+            </div>
+            <div className="flex-1 flex flex-col p-0">
               <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 max-h-[300px] overflow-hidden">
                 <div className="space-y-3">
                   {chatMessages.length === 0 && (
@@ -471,8 +470,8 @@ Provide an improved version that can be sent directly to the customer.`
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
