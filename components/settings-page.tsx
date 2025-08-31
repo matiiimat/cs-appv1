@@ -12,7 +12,7 @@ import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-r
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, lastSaved } = useSettings()
+  const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
@@ -254,9 +254,6 @@ export function SettingsPage() {
                         })}
                         placeholder="http://192.168.1.24:1234"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        URL of your local AI server
-                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="local-model-identifier">Model Identifier</Label>
@@ -271,9 +268,6 @@ export function SettingsPage() {
                         })}
                         placeholder="mistralai/devstral-small-2505"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Exact model identifier as shown in your local AI server
-                      </p>
                     </div>
                   </div>
                 ) : (
@@ -475,10 +469,6 @@ export function SettingsPage() {
               >
                 Add Category
               </Button>
-              
-              <div className="text-xs text-muted-foreground">
-                Categories help organize and filter customer messages. Historical messages will keep their original categories when you make changes.
-              </div>
               </div>
             </div>
           </div>
@@ -579,9 +569,6 @@ export function SettingsPage() {
                         rows={3}
                         className="text-sm"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Instruction sent to AI when button is clicked
-                      </p>
                     </div>
                   </div>
                 </div>
