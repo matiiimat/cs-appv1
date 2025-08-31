@@ -13,19 +13,6 @@ export function ReviewQueue() {
 
   const reviewMessages = getMessagesByStatus("review")
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-destructive text-destructive-foreground"
-      case "medium":
-        return "bg-secondary text-secondary-foreground"
-      case "low":
-        return "bg-muted text-muted-foreground"
-      default:
-        return "bg-muted text-muted-foreground"
-    }
-  }
-
   const handleQuickAction = async (messageId: string, actionTitle: string, actionInstruction: string) => {
     const message = reviewMessages.find(m => m.id === messageId)
     if (!message || !message.aiSuggestedResponse) return
@@ -103,7 +90,6 @@ export function ReviewQueue() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {message.priority && <Badge className={getPriorityColor(message.priority)}>{message.priority}</Badge>}
                   {message.category && (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Tag className="h-3 w-3" />

@@ -20,7 +20,6 @@ interface GenerateResponseRequest {
 interface GenerateResponseResponse {
   aiSuggestedResponse: string
   category: string
-  priority: "low" | "medium" | "high"
 }
 
 function getNormalizedCategories(userCategories?: Category[]): string {
@@ -70,20 +69,18 @@ Please modify the response according to the instruction.`
       return NextResponse.json({
         aiSuggestedResponse: modifiedResponse,
         category: "N/A", // Keep existing category
-        priority: "medium" as const, // Keep existing priority
       })
     }
 
-    // Generate category and priority (for new responses only)
+    // Generate category (for new responses only)
     const availableCategories = getNormalizedCategories(categories)
-    const categoryAndPrioritySystem = `You are an AI assistant that categorizes customer support messages and determines their priority level.
+    const categorySystem = `You are an AI assistant that categorizes customer support messages.
 
 Available categories: ${availableCategories}
 
 Analyze the customer message and respond with ONLY a JSON object in this exact format:
 {
-  "category": "exact category name from the list above",
-  "priority": "low, medium, or high"
+  "category": "exact category name from the list above"
 }
 
 Category guidelines:
@@ -91,29 +88,24 @@ Category guidelines:
 - Billing: Payment questions, pricing inquiries, subscription changes, invoices, plans
 - General Inquiry: General questions, information requests, non-urgent questions
 
-Priority guidelines:
-- high: Account access issues, billing disputes, system outages, security concerns
-- medium: Feature requests, general billing questions, minor technical issues
-- low: General inquiries, documentation requests, non-urgent questions
-
 Choose the most appropriate category from the available list. For plans and pricing questions, use "Billing".`
 
-    const categoryAndPriorityPrompt = `Customer: ${customerName}
+    const categoryPrompt = `Customer: ${customerName}
 Email: ${customerEmail}
 Subject: ${subject}
 Message: ${message}`
 
-    const categoryAndPriority = await aiService.generateText(
-      categoryAndPrioritySystem,
-      categoryAndPriorityPrompt
+    const categoryResponse = await aiService.generateText(
+      categorySystem,
+      categoryPrompt
     )
 
-    let parsedCategoryPriority
+    let parsedCategory
     try {
-      parsedCategoryPriority = JSON.parse(categoryAndPriority)
+      parsedCategory = JSON.parse(categoryResponse)
     } catch {
       // Fallback if JSON parsing fails
-      parsedCategoryPriority = { category: "General Inquiry", priority: "medium" }
+      parsedCategory = { category: "General Inquiry" }
     }
 
     // Search for relevant company knowledge
@@ -142,8 +134,7 @@ Guidelines:
 - Always end with an offer for further assistance
 - End your response with this exact signature: "${agentSignature}"
 
-The message category is: ${parsedCategoryPriority.category}
-The priority level is: ${parsedCategoryPriority.priority}
+The message category is: ${parsedCategory.category}
 
 ${relevantKnowledge ? `
 IMPORTANT: Use the following company-specific information to provide accurate responses:
@@ -166,8 +157,7 @@ Generate a professional customer support response.`
 
     const response: GenerateResponseResponse = {
       aiSuggestedResponse: aiResponse,
-      category: parsedCategoryPriority.category,
-      priority: parsedCategoryPriority.priority,
+      category: parsedCategory.category,
     }
 
     return NextResponse.json(response)

@@ -10,7 +10,6 @@ export interface CustomerMessage {
   subject: string
   message: string
   category?: string
-  priority?: "low" | "medium" | "high"
   timestamp: string
   aiSuggestedResponse?: string
   isGenerating?: boolean
@@ -78,7 +77,7 @@ export function useMessageManager() {
 // Mock incoming messages for demo
 const mockIncomingMessages: Omit<
   CustomerMessage,
-  "id" | "status" | "timestamp" | "category" | "priority" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
+  "id" | "status" | "timestamp" | "category" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
 >[] = [
   {
     customerName: "Alex Thompson",
@@ -194,7 +193,6 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
             ? {
                 ...m,
                 category: data.category,
-                priority: data.priority,
                 aiSuggestedResponse: data.aiSuggestedResponse,
                 autoReviewed: true, // Mark as AI reviewed
                 isGenerating: false,
@@ -217,7 +215,6 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
             ? {
                 ...m,
                 category: "General Inquiry",
-                priority: "medium" as const,
                 aiSuggestedResponse:
                   "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
                 autoReviewed: true, // Mark as reviewed even with error response

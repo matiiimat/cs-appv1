@@ -155,7 +155,6 @@ Customer Information:
 - Subject: ${selectedMessage.subject}
 - Message: ${selectedMessage.message}
 - Category: ${selectedMessage.category}
-- Priority: ${selectedMessage.priority}
 
 Current draft response: ${currentDraft}
 
@@ -222,7 +221,6 @@ Generate a customer-ready response that addresses the agent's input while helpin
 Customer: ${selectedMessage.customerName}
 Issue: ${selectedMessage.message}
 Category: ${selectedMessage.category}
-Priority: ${selectedMessage.priority}
 
 Current response draft:
 ${currentResponse}
@@ -322,9 +320,6 @@ Provide an improved version that can be sent directly to the customer.`
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Customer Question</h3>
                     <div className="flex items-center gap-2">
-                      <Badge variant={selectedMessage.priority === "high" ? "destructive" : "secondary"}>
-                        {selectedMessage.priority}
-                      </Badge>
                       <CategorySelector
                         currentCategory={selectedMessage.category || ""}
                         onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
