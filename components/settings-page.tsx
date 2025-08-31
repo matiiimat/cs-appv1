@@ -388,10 +388,17 @@ export function SettingsPage() {
                 <h3 className="text-lg font-semibold">Message Categories</h3>
                 <Button
                   variant="outline"
-                  onClick={() => addCategory({ 
-                    name: "New Category", 
-                    color: '#3b82f6' 
-                  })}
+                  onClick={() => {
+                    if (settings.categories.length >= 10) {
+                      alert("Maximum of 10 categories allowed. Please remove some categories before adding new ones.")
+                      return
+                    }
+                    addCategory({ 
+                      name: "New Category", 
+                      color: '#3b82f6' 
+                    })
+                  }}
+                  disabled={settings.categories.length >= 10}
                   className="text-sm shadow-sm dark:shadow-md dark:shadow-white/20"
                 >
                   Add Category
@@ -406,23 +413,30 @@ export function SettingsPage() {
               
               {settings.categories.map((category) => (
                 <div key={category.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: category.color || '#64748b' }}
-                  />
+                  <div className="relative">
+                    <div 
+                      className="w-4 h-4 rounded-full cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" 
+                      style={{ backgroundColor: category.color || '#64748b' }}
+                      onClick={() => {
+                        const colorInput = document.createElement('input');
+                        colorInput.type = 'color';
+                        colorInput.value = category.color || '#64748b';
+                        colorInput.onchange = (e) => updateCategory(category.id, { color: (e.target as HTMLInputElement).value });
+                        colorInput.click();
+                      }}
+                    />
+                  </div>
                   <div className="flex-1">
                     <Input
                       value={category.name}
-                      onChange={(e) => updateCategory(category.id, { name: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value.slice(0, 20) // Limit to 20 chars
+                        updateCategory(category.id, { name: value })
+                      }}
                       placeholder="Category name"
+                      maxLength={20}
                     />
                   </div>
-                  <Input
-                    type="color"
-                    value={category.color || '#64748b'}
-                    onChange={(e) => updateCategory(category.id, { color: e.target.value })}
-                    className="w-16 h-10"
-                  />
                   {settings.categories.length > 1 && (
                     <Button
                       variant="ghost"

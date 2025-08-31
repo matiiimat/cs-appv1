@@ -29,7 +29,9 @@ export function DetailedReviewInterface() {
   const [aiChatInput, setAiChatInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const reviewMessages = messages.filter((msg) => msg.status === "review")
+  const reviewMessages = messages
+    .filter((msg) => msg.status === "review")
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort by date, oldest first
   const selectedMessage = reviewMessages.find((msg) => msg.id === selectedMessageId)
 
   useEffect(() => {
@@ -280,7 +282,7 @@ Provide an improved version that can be sent directly to the customer.`
         <div className="w-1/6 min-w-[200px]">
           <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
             <div className="pb-3 flex-shrink-0 p-6">
-              <h3 className="text-sm font-semibold">Cases to Review</h3>
+              <h3 className="text-sm font-semibold">Cases to Review ({reviewMessages.length})</h3>
             </div>
             <div className="p-0 flex-1 overflow-hidden">
               <div className="h-full overflow-y-auto p-3">

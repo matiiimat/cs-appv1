@@ -53,7 +53,6 @@ export function AgentDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Support Dashboard</h1>
-          <p className="text-muted-foreground">Manage AI processing queue and review operations</p>
         </div>
       </div>
 
@@ -67,7 +66,6 @@ export function AgentDashboard() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold">AI Processing Queue</h3>
-                <p className="text-muted-foreground">Process customer messages with AI assistance</p>
               </div>
             </div>
             {(isProcessing || processingMessages.length > 0) && (
