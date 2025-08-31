@@ -1,6 +1,16 @@
 export function searchCompanyKnowledge(query: string, knowledge: string): string {
+  // Safety checks
   if (!knowledge || !knowledge.trim()) {
     return ''
+  }
+
+  if (!query || !query.trim()) {
+    return ''
+  }
+
+  // Prevent extremely large queries from causing issues
+  if (query.length > 1000) {
+    query = query.substring(0, 1000)
   }
 
   // Convert query to lowercase for case-insensitive matching
@@ -13,7 +23,6 @@ export function searchCompanyKnowledge(query: string, knowledge: string): string
 
   // Split knowledge into lines and paragraphs
   const lines = knowledge.split('\n').map(line => line.trim()).filter(line => line)
-  const relevantSections: string[] = []
 
   // Score each line based on keyword matches
   const scoredLines = lines.map(line => {

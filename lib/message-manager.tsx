@@ -227,7 +227,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         ),
       )
     }
-  }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, setMessages])
+  }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, settings.companyKnowledge, setMessages])
 
   const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "autoReviewed">) => {
     const newMessage: CustomerMessage = {

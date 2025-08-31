@@ -107,9 +107,15 @@ Message: ${message}`
     }
 
     // Search for relevant company knowledge
-    const relevantKnowledge = companyKnowledge 
-      ? searchCompanyKnowledge(`${subject} ${message}`, companyKnowledge)
-      : ''
+    let relevantKnowledge = ''
+    if (companyKnowledge) {
+      try {
+        relevantKnowledge = searchCompanyKnowledge(`${subject} ${message}`, companyKnowledge)
+      } catch (error) {
+        console.warn('Knowledge search failed, proceeding without company knowledge:', error)
+        // Continue without knowledge rather than failing the entire request
+      }
+    }
 
     // Generate AI response
     const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.

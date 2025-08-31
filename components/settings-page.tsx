@@ -494,7 +494,7 @@ export function SettingsPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
-                <p className="text-sm text-muted-foreground">Add your company's documentation, FAQs, policies, and support information</p>
+                <p className="text-sm text-muted-foreground">Add your company&apos;s documentation, FAQs, policies, and support information</p>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
@@ -519,7 +519,7 @@ export function SettingsPage() {
                   }}
                   placeholder="Paste your company's support documentation, FAQs, policies, troubleshooting guides, product information, etc. The AI will use this information to provide accurate, company-specific responses to customer inquiries."
                   rows={12}
-                  className="font-mono text-sm"
+                  className="font-mono text-sm h-[300px] resize-y overflow-y-auto"
                   maxLength={50000}
                 />
               </div>
