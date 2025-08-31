@@ -3,8 +3,29 @@
 import { useState, useEffect, createContext, useContext, useCallback, useRef, type ReactNode } from "react"
 import { useSettings } from "./settings-context"
 
+// Ticket ID generation utility
+function generateTicketId(): string {
+  const TICKET_COUNTER_KEY = 'supportai-ticket-counter'
+  
+  // Get current counter from localStorage
+  let counter = 1
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(TICKET_COUNTER_KEY)
+    if (saved) {
+      counter = parseInt(saved, 10) + 1
+    }
+    
+    // Save incremented counter
+    localStorage.setItem(TICKET_COUNTER_KEY, counter.toString())
+  }
+  
+  // Format as #000001
+  return `#${counter.toString().padStart(6, '0')}`
+}
+
 export interface CustomerMessage {
   id: string
+  ticketId: string // Unique ticket ID like "#000001"
   customerName: string
   customerEmail: string
   subject: string
@@ -82,7 +103,7 @@ export function useMessageManager() {
 // Mock incoming messages for demo
 const mockIncomingMessages: Omit<
   CustomerMessage,
-  "id" | "status" | "timestamp" | "category" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
+  "id" | "ticketId" | "status" | "timestamp" | "category" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
 >[] = [
   {
     customerName: "Alex Thompson",
@@ -274,10 +295,11 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     cancelRequestedRef.current = true
   }, [])
 
-  const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "autoReviewed">) => {
+  const addMessage = (messageData: Omit<CustomerMessage, "id" | "ticketId" | "status" | "timestamp" | "autoReviewed">) => {
     const newMessage: CustomerMessage = {
       ...messageData,
       id: Date.now().toString(),
+      ticketId: generateTicketId(),
       status: "pending",
       timestamp: new Date().toLocaleString(),
       autoReviewed: false, // New messages need AI review
@@ -484,6 +506,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       const initialMessages = mockIncomingMessages.map((mockMessage, index) => ({
         ...mockMessage,
         id: Date.now().toString() + index,
+        ticketId: generateTicketId(),
         status: "pending" as const,
         timestamp: new Date(Date.now() - Math.random() * 3600000).toLocaleString(),
         autoReviewed: false, // Messages need AI review via queue button

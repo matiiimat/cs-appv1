@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useMessageManager } from "@/lib/message-manager"
-import { MessageSquare, Clock, Zap, PlayCircle, Target, Loader2 } from "lucide-react"
+import { formatRelativeTime } from "@/lib/utils"
+import { MessageSquare, Clock, Zap, PlayCircle, Target, Loader2, AlertCircle } from "lucide-react"
 import { useState } from "react"
 
 export function AgentDashboard() {
@@ -14,6 +15,14 @@ export function AgentDashboard() {
   const unprocessedMessages = messages.filter(m => !m.autoReviewed && m.status === 'pending')
   const processingMessages = messages.filter(m => m.isGenerating)
   const readyForReview = messages.filter(m => m.autoReviewed && m.status === 'pending')
+  
+  // Find oldest pending ticket (includes both pending and review status)
+  const pendingMessages = messages.filter(m => m.status === 'pending' || m.status === 'review')
+  const oldestTicket = pendingMessages.length > 0 
+    ? pendingMessages.reduce((oldest, current) => 
+        new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest
+      )
+    : null
   
   const handleProcessQueue = async () => {
     await processBatch(selectedBatchSize)
@@ -131,7 +140,7 @@ export function AgentDashboard() {
       </div>
 
       {/* Essential Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Total Messages</div>
@@ -159,6 +168,24 @@ export function AgentDashboard() {
           </div>
           <div className="text-2xl font-bold mb-2">{stats.avgResponseTime.toFixed(1)} min</div>
           <p className="text-xs text-muted-foreground">Processing efficiency</p>
+        </div>
+
+        <div className="p-6 bg-card rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-medium">Oldest Pending Ticket</div>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {oldestTicket ? (
+            <>
+              <div className="text-2xl font-bold mb-2">{oldestTicket.ticketId}</div>
+              <p className="text-xs text-muted-foreground">{formatRelativeTime(oldestTicket.timestamp)}</p>
+            </>
+          ) : (
+            <>
+              <div className="text-2xl font-bold mb-2 text-muted-foreground">None</div>
+              <p className="text-xs text-muted-foreground">No pending tickets</p>
+            </>
+          )}
         </div>
       </div>
     </div>
