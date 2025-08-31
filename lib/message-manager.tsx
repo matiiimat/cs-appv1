@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from "react"
+import { useState, useEffect, createContext, useContext, useCallback, useRef, type ReactNode } from "react"
 import { useSettings } from "./settings-context"
 
 export interface CustomerMessage {
@@ -44,6 +44,10 @@ interface MessageManagerContextType {
   currentMessageIndex: number
   stats: MessageStats
   isLoading: boolean
+  isProcessingBatch: boolean
+  processedCount: number
+  totalToProcess: number
+  cancelBatchProcessing: () => void
   addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp">) => void
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => void
   updateMessageCategory: (id: string, category: string) => void
@@ -54,6 +58,7 @@ interface MessageManagerContextType {
   moveToNextMessage: () => void
   moveToPreviousMessage: () => void
   generateAIResponse: (message: CustomerMessage) => Promise<void>
+  processBatch: (batchSize: number) => Promise<void>
   getMessagesByStatus: (status: CustomerMessage["status"]) => CustomerMessage[]
   getRecentActivity: () => Array<{
     id: string
@@ -122,6 +127,10 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false)
+  const [processedCount, setProcessedCount] = useState(0)
+  const [totalToProcess, setTotalToProcess] = useState(0)
+  const cancelRequestedRef = useRef(false)
 
   // Load from localStorage after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -225,6 +234,45 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       )
     }
   }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, settings.companyKnowledge, setMessages])
+
+  const processBatch = useCallback(async (batchSize: number) => {
+    const unprocessedMessages = messages.filter(m => !m.autoReviewed && m.status === 'pending')
+    const messagesToProcess = unprocessedMessages.slice(0, batchSize)
+    
+    setIsProcessingBatch(true)
+    setProcessedCount(0)
+    setTotalToProcess(messagesToProcess.length)
+    cancelRequestedRef.current = false
+    
+    try {
+      for (let i = 0; i < messagesToProcess.length; i++) {
+        if (cancelRequestedRef.current) {
+          console.log('Batch processing cancelled by user')
+          break
+        }
+        
+        const message = messagesToProcess[i]
+        await generateAIResponse(message)
+        setProcessedCount(i + 1)
+        
+        // Small delay between requests to avoid rate limiting
+        if (i < messagesToProcess.length - 1 && !cancelRequestedRef.current) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+    } catch (error) {
+      console.error('Error processing batch:', error)
+    } finally {
+      setIsProcessingBatch(false)
+      setProcessedCount(0)
+      setTotalToProcess(0)
+      cancelRequestedRef.current = false
+    }
+  }, [messages, generateAIResponse])
+
+  const cancelBatchProcessing = useCallback(() => {
+    cancelRequestedRef.current = true
+  }, [])
 
   const addMessage = (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "autoReviewed">) => {
     const newMessage: CustomerMessage = {
@@ -461,6 +509,10 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     currentMessageIndex,
     stats,
     isLoading,
+    isProcessingBatch,
+    processedCount,
+    totalToProcess,
+    cancelBatchProcessing,
     addMessage,
     updateMessage,
     updateMessageCategory,
@@ -471,6 +523,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     moveToNextMessage,
     moveToPreviousMessage,
     generateAIResponse,
+    processBatch,
     getMessagesByStatus,
     getRecentActivity,
   }
