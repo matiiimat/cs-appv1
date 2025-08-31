@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
+import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save, HelpCircle } from "lucide-react"
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
+import { Tooltip } from "@/components/ui/tooltip"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
@@ -129,7 +130,7 @@ export function SettingsPage() {
             <Button 
               onClick={handleSaveSettings}
               disabled={isLoading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shadow-sm dark:shadow-md dark:shadow-white/20"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -214,8 +215,23 @@ export function SettingsPage() {
         <TabsContent value="configuration" className="space-y-6">
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
-              <div className="mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">AI Provider Configuration</h3>
+                <Button
+                  onClick={handleTestConnection}
+                  disabled={testingConnection || (!settings.aiConfig.apiKey && settings.aiConfig.provider !== 'local')}
+                  variant="outline"
+                  className="flex items-center gap-2 shadow-sm dark:shadow-md dark:shadow-white/20"
+                >
+                  {testingConnection ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : connectionResult?.success ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : connectionResult?.success === false ? (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  ) : null}
+                  Test Connection
+                </Button>
               </div>
               <div className="space-y-6">
               <div className="space-y-4">
@@ -296,31 +312,13 @@ export function SettingsPage() {
               {settings.aiConfig.provider !== 'local' && (
                 <div className="space-y-2">
                   <Label htmlFor="api-key">API Key</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="api-key"
-                      type="password"
-                      value={settings.aiConfig.apiKey}
-                      onChange={(e) => handleApiKeyChange(e.target.value)}
-                      placeholder="Enter your API key"
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleTestConnection}
-                      disabled={testingConnection || !settings.aiConfig.apiKey}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      {testingConnection ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : connectionResult?.success ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : connectionResult?.success === false ? (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      ) : null}
-                      Test
-                    </Button>
-                  </div>
+                  <Input
+                    id="api-key"
+                    type="password"
+                    value={settings.aiConfig.apiKey}
+                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    placeholder="Enter your API key"
+                  />
                   {connectionResult && (
                     <div className={`text-sm p-2 rounded ${
                       connectionResult.success 
@@ -335,38 +333,6 @@ export function SettingsPage() {
                 </div>
               )}
 
-              {settings.aiConfig.provider === 'local' && (
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleTestConnection}
-                      disabled={testingConnection || (!settings.aiConfig.apiKey && !settings.aiConfig.localEndpoint)}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      {testingConnection ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : connectionResult?.success ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : connectionResult?.success === false ? (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      ) : null}
-                      Test Connection
-                    </Button>
-                  </div>
-                  {connectionResult && (
-                    <div className={`text-sm p-2 rounded ${
-                      connectionResult.success 
-                        ? 'bg-green-50 text-green-700 border border-green-200' 
-                        : 'bg-red-50 text-red-700 border border-red-200'
-                    }`}>
-                      {connectionResult.success 
-                        ? connectionResult.error || 'Connection successful!' 
-                        : connectionResult.error || 'Connection failed'}
-                    </div>
-                  )}
-                </div>
-              )}
 
 
 
@@ -418,8 +384,18 @@ export function SettingsPage() {
 
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
-              <div className="mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Message Categories</h3>
+                <Button
+                  variant="outline"
+                  onClick={() => addCategory({ 
+                    name: "New Category", 
+                    color: '#3b82f6' 
+                  })}
+                  className="text-sm shadow-sm dark:shadow-md dark:shadow-white/20"
+                >
+                  Add Category
+                </Button>
               </div>
               <div className="space-y-4">
               {settings.categories.length === 0 && (
@@ -458,17 +434,6 @@ export function SettingsPage() {
                   )}
                 </div>
               ))}
-              
-              <Button
-                variant="outline"
-                onClick={() => addCategory({ 
-                  name: "New Category", 
-                  color: '#3b82f6' 
-                })}
-                className="w-full"
-              >
-                Add Category
-              </Button>
               </div>
             </div>
           </div>
@@ -476,21 +441,15 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
+                  <Tooltip content="Include your most common support scenarios, product features, policies, and troubleshooting steps. Focus on frequently asked questions and key information - the AI will automatically find and use relevant sections when responding to customers. Keep it under 50,000 characters for optimal performance.">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </Tooltip>
+                </div>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-end">
-                  <span className={`text-sm ${
-                    settings.companyKnowledge.length > 50000 
-                      ? 'text-red-500' 
-                      : settings.companyKnowledge.length > 40000 
-                      ? 'text-yellow-500' 
-                      : 'text-muted-foreground'
-                  }`}>
-                    {settings.companyKnowledge.length.toLocaleString()} / 50,000 characters
-                  </span>
-                </div>
                 <Textarea
                   id="companyKnowledge"
                   value={settings.companyKnowledge}
@@ -503,10 +462,15 @@ export function SettingsPage() {
                   className="font-mono text-sm h-[300px] resize-y overflow-y-auto"
                   maxLength={50000}
                 />
-              </div>
-              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="font-medium mb-1">💡 Pro tip:</p>
-                <p>Include your most common support scenarios, product features, policies, and troubleshooting steps. Focus on frequently asked questions and key information - the AI will automatically find and use relevant sections when responding to customers. Keep it under 50,000 characters for optimal performance.</p>
+                <p className={`text-xs ${
+                  settings.companyKnowledge.length > 50000 
+                    ? 'text-red-500' 
+                    : settings.companyKnowledge.length > 40000 
+                    ? 'text-yellow-500' 
+                    : 'text-muted-foreground'
+                }`}>
+                  {settings.companyKnowledge.length.toLocaleString()}/50,000 characters
+                </p>
               </div>
               </div>
             </div>
@@ -515,18 +479,24 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">AI Assistant Instructions</h3>
+                <h3 className="text-lg font-semibold">Custom Instructions</h3>
               </div>
               <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="aiInstructions">Custom Instructions</Label>
                 <Textarea
                   id="aiInstructions"
                   value={settings.aiInstructions}
-                  onChange={(e) => updateSettings({ aiInstructions: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 500) // Limit to 500 chars
+                    updateSettings({ aiInstructions: value })
+                  }}
                   placeholder="Enter custom instructions for the AI assistant"
                   rows={6}
+                  maxLength={500}
                 />
+                <p className="text-xs text-muted-foreground">
+                  {settings.aiInstructions.length}/500 characters
+                </p>
               </div>
               </div>
             </div>
@@ -535,7 +505,12 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">Quick Actions</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">Quick Actions</h3>
+                  <Tooltip content="These quick actions will appear as buttons in the Messages to Review page. Click them to instantly apply AI modifications to responses.">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </Tooltip>
+                </div>
               </div>
               <div className="space-y-4">
               {settings.quickActions.map((action, index) => (
@@ -545,7 +520,7 @@ export function SettingsPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Title (Button Label)</Label>
+                      <Label className="text-sm">Title</Label>
                       <Input
                         value={action.title}
                         onChange={(e) => {
@@ -557,29 +532,30 @@ export function SettingsPage() {
                         className="text-sm"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {action.title.length}/12 characters (button label)
+                        {action.title.length}/12 characters
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm">AI Instruction</Label>
                       <Textarea
                         value={action.action}
-                        onChange={(e) => updateQuickAction(action.id, { action: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value.slice(0, 500) // Limit to 500 chars
+                          updateQuickAction(action.id, { action: value })
+                        }}
                         placeholder="e.g. Translate the response to Spanish"
                         rows={3}
                         className="text-sm"
+                        maxLength={500}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        {action.action.length}/500 characters
+                      </p>
                     </div>
                   </div>
                 </div>
               ))}
 
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  These quick actions will appear as buttons in the Messages to Review page.
-                  Click them to instantly apply AI modifications to responses.
-                </p>
-              </div>
               </div>
             </div>
           </div>
