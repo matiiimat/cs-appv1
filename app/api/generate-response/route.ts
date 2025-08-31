@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { AIService } from "@/lib/ai-providers"
 import { type AIProviderConfig, type Category } from "@/lib/settings-context"
+import { searchCompanyKnowledge } from "@/lib/knowledge-search"
 
 interface GenerateResponseRequest {
   customerName: string
@@ -13,6 +14,7 @@ interface GenerateResponseRequest {
   categories?: Category[]
   quickActionInstruction?: string // For quick actions
   currentResponse?: string // Existing response to modify
+  companyKnowledge?: string // Company knowledge base
 }
 
 interface GenerateResponseResponse {
@@ -30,7 +32,7 @@ function getNormalizedCategories(userCategories?: Category[]): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories, quickActionInstruction, currentResponse }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
 
     if (!aiConfig || !aiConfig.apiKey) {
       return NextResponse.json(
@@ -104,6 +106,11 @@ Message: ${message}`
       parsedCategoryPriority = { category: "General Inquiry", priority: "medium" }
     }
 
+    // Search for relevant company knowledge
+    const relevantKnowledge = companyKnowledge 
+      ? searchCompanyKnowledge(`${subject} ${message}`, companyKnowledge)
+      : ''
+
     // Generate AI response
     const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
@@ -120,7 +127,14 @@ Guidelines:
 - End your response with this exact signature: "${agentSignature}"
 
 The message category is: ${parsedCategoryPriority.category}
-The priority level is: ${parsedCategoryPriority.priority}`
+The priority level is: ${parsedCategoryPriority.priority}
+
+${relevantKnowledge ? `
+IMPORTANT: Use the following company-specific information to provide accurate responses:
+
+${relevantKnowledge}
+
+Base your response on this company knowledge when applicable. If the customer's question relates to information in the knowledge base, use that information to provide the most accurate and helpful response.` : ''}`
 
     const aiResponsePrompt = `Customer: ${customerName}
 Email: ${customerEmail}

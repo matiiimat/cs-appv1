@@ -83,16 +83,16 @@ const mockIncomingMessages: Omit<
   {
     customerName: "Alex Thompson",
     customerEmail: "alex.thompson@techcorp.com",
-    subject: "Payment processing error",
+    subject: "Plans",
     message:
-      "I'm trying to upgrade my subscription but keep getting a payment error. I've tried three different cards and they all fail. This is urgent as my current plan expires tomorrow. Can you help?",
+      "Can you give me an overview of the plans available?",
   },
   {
     customerName: "Maria Santos",
     customerEmail: "maria.santos@design.co",
-    subject: "Data export functionality",
+    subject: "Enterprise Plan",
     message:
-      "I need to export all my project data for compliance reasons. I can't find the export option in the dashboard. Is this feature available? If so, where can I access it?",
+      "What can I do with the Enterprise Plan",
   },
   {
     customerName: "James Wilson",
@@ -175,6 +175,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           agentName: settings.agentName || "Support Agent",
           agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
           categories: settings.categories,
+          companyKnowledge: settings.companyKnowledge,
         }),
       })
 

@@ -493,6 +493,47 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
+                <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
+                <p className="text-sm text-muted-foreground">Add your company's documentation, FAQs, policies, and support information</p>
+              </div>
+              <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="companyKnowledge">Company Documentation</Label>
+                  <span className={`text-sm ${
+                    settings.companyKnowledge.length > 50000 
+                      ? 'text-red-500' 
+                      : settings.companyKnowledge.length > 40000 
+                      ? 'text-yellow-500' 
+                      : 'text-muted-foreground'
+                  }`}>
+                    {settings.companyKnowledge.length.toLocaleString()} / 50,000 characters
+                  </span>
+                </div>
+                <Textarea
+                  id="companyKnowledge"
+                  value={settings.companyKnowledge}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 50000) // Hard limit at 50k chars
+                    updateSettings({ companyKnowledge: value })
+                  }}
+                  placeholder="Paste your company's support documentation, FAQs, policies, troubleshooting guides, product information, etc. The AI will use this information to provide accurate, company-specific responses to customer inquiries."
+                  rows={12}
+                  className="font-mono text-sm"
+                  maxLength={50000}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="font-medium mb-1">💡 Pro tip:</p>
+                <p>Include your most common support scenarios, product features, policies, and troubleshooting steps. Focus on frequently asked questions and key information - the AI will automatically find and use relevant sections when responding to customers. Keep it under 50,000 characters for optimal performance.</p>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
                 <h3 className="text-lg font-semibold">AI Assistant Instructions</h3>
                 <p className="text-sm text-muted-foreground">Customize how the AI assistant behaves and responds</p>
               </div>

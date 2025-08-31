@@ -33,6 +33,7 @@ export interface Settings {
   categories: Category[]
   quickActions: QuickAction[]
   aiConfig: AIProviderConfig
+  companyKnowledge: string
 }
 
 interface SettingsContextType {
@@ -81,6 +82,7 @@ const defaultSettings: Settings = {
     temperature: 0.7,
     maxTokens: 1000,
   },
+  companyKnowledge: "",
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'

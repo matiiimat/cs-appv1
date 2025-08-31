@@ -48,6 +48,7 @@ export function ReviewQueue() {
           categories: settings.categories,
           quickActionInstruction: actionInstruction, // Add the quick action instruction
           currentResponse: message.aiSuggestedResponse, // Include current response for modification
+          companyKnowledge: settings.companyKnowledge,
         }),
       })
 
