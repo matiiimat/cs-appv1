@@ -11,6 +11,7 @@ import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText } from "@/lib/utils"
 import { CategorySelector } from "@/components/ui/category-selector"
+import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
 
 interface ChatMessage {
@@ -21,13 +22,22 @@ interface ChatMessage {
 }
 
 export function DetailedReviewInterface() {
-  const { messages, updateMessage, updateMessageCategory } = useMessageManager()
+  const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
   const { settings } = useSettings()
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
-  const [replyText, setReplyText] = useState("")
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  
+  // Get current draft reply for selected message
+  const replyText = selectedMessageId ? getDraftReply(selectedMessageId) : ""
+  
+  // Function to update reply text
+  const setReplyText = (text: string) => {
+    if (selectedMessageId) {
+      updateDraftReply(selectedMessageId, text)
+    }
+  }
 
   const reviewMessages = messages
     .filter((msg) => msg.status === "review")
@@ -41,10 +51,14 @@ export function DetailedReviewInterface() {
   }, [reviewMessages, selectedMessageId])
 
   useEffect(() => {
-    if (selectedMessage?.aiSuggestedResponse) {
-      setReplyText(formatEmailText(selectedMessage.aiSuggestedResponse))
+    if (selectedMessage?.aiSuggestedResponse && selectedMessageId) {
+      // Only set draft if no existing draft exists
+      const existingDraft = getDraftReply(selectedMessageId)
+      if (!existingDraft) {
+        updateDraftReply(selectedMessageId, formatEmailText(selectedMessage.aiSuggestedResponse))
+      }
     }
-  }, [selectedMessage])
+  }, [selectedMessage, selectedMessageId, getDraftReply, updateDraftReply])
 
   const handleApprove = useCallback(() => {
     if (selectedMessage) {
@@ -66,10 +80,9 @@ export function DetailedReviewInterface() {
         setSelectedMessageId(null)
       }
 
-      setReplyText("")
       setChatMessages([])
     }
-  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setSelectedMessageId, setReplyText, setChatMessages])
+  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setChatMessages])
 
 
 
@@ -283,27 +296,34 @@ Provide an improved version that can be sent directly to the customer.`
               <h3 className="text-sm font-semibold">Cases to Review ({reviewMessages.length})</h3>
             </div>
             <div className="p-0 flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto p-3">
+              <div className="h-full overflow-y-auto overflow-x-visible p-3">
                 <div className="space-y-2">
                   {reviewMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedMessageId === message.id ? "bg-accent border-accent-foreground" : "hover:bg-muted"
-                      }`}
-                      onClick={() => setSelectedMessageId(message.id)}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="h-3 w-3 flex-shrink-0" />
-                        <span className="text-xs font-medium truncate">{message.customerName}</span>
+                    <div key={message.id} className="w-full">
+                      <Tooltip 
+                        content={message.message} 
+                        delay={1000}
+                        className="text-xs whitespace-pre-wrap"
+                      >
+                      <div
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors w-full ${
+                          selectedMessageId === message.id ? "bg-accent border-accent-foreground" : "hover:bg-muted"
+                        }`}
+                        onClick={() => setSelectedMessageId(message.id)}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <User className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-xs font-medium truncate">{message.customerName}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs mb-1">
+                          {message.category}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{new Date(message.timestamp).toLocaleTimeString()}</span>
+                        </div>
                       </div>
-                      <Badge variant="outline" className="text-xs mb-1">
-                        {message.category}
-                      </Badge>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{new Date(message.timestamp).toLocaleTimeString()}</span>
-                      </div>
+                      </Tooltip>
                     </div>
                   ))}
                 </div>

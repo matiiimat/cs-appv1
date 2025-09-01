@@ -88,6 +88,11 @@ interface MessageManagerContextType {
     timestamp: string
     agentId?: string
   }>
+  // Draft persistence functionality
+  draftReplies: Record<string, string>
+  updateDraftReply: (messageId: string, draft: string) => void
+  clearDraftReply: (messageId: string) => void
+  getDraftReply: (messageId: string) => string
 }
 
 const MessageManagerContext = createContext<MessageManagerContextType | undefined>(undefined)
@@ -152,6 +157,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const [processedCount, setProcessedCount] = useState(0)
   const [totalToProcess, setTotalToProcess] = useState(0)
   const cancelRequestedRef = useRef(false)
+  const [draftReplies, setDraftReplies] = useState<Record<string, string>>({})
 
   // Load from localStorage after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -172,6 +178,20 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           console.error('Failed to parse saved messages:', error)
         }
       }
+      
+      // Load draft replies from localStorage
+      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
+      const savedDrafts = localStorage.getItem('supportai-drafts-v1')
+      if (savedDrafts) {
+        try {
+          const parsedDrafts = JSON.parse(savedDrafts)
+          setDraftReplies(parsedDrafts)
+          console.log('Loaded', Object.keys(parsedDrafts).length, 'draft replies from localStorage')
+        } catch (error) {
+          console.error('Failed to parse saved draft replies:', error)
+        }
+      }
+      
       setHasLoadedFromStorage(true)
     }
   }, [hasLoadedFromStorage])
@@ -355,6 +375,9 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         autoReviewed: false, // Reset for potential customer replies
       })
 
+      // Clear draft reply when message is approved
+      clearDraftReply(id)
+
       setRecentActivity((prev) => [
         {
           id,
@@ -475,6 +498,50 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     return recentActivity
   }
 
+  // Draft management functions
+  const updateDraftReply = useCallback((messageId: string, draft: string) => {
+    setDraftReplies(prev => {
+      const updated = { ...prev, [messageId]: draft }
+      
+      // Save to localStorage with debouncing
+      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
+      if (typeof window !== 'undefined') {
+        // Clear any existing timeout for this message
+        const timeoutKey = `draft-timeout-${messageId}`
+        const existingTimeout = (window as any)[timeoutKey]
+        if (existingTimeout) {
+          clearTimeout(existingTimeout)
+        }
+        
+        // Set new timeout to save after 500ms of no changes
+        (window as any)[timeoutKey] = setTimeout(() => {
+          localStorage.setItem('supportai-drafts-v1', JSON.stringify(updated))
+          delete (window as any)[timeoutKey]
+        }, 500)
+      }
+      
+      return updated
+    })
+  }, [])
+
+  const clearDraftReply = useCallback((messageId: string) => {
+    setDraftReplies(prev => {
+      const { [messageId]: _, ...rest } = prev
+      
+      // Save updated drafts to localStorage immediately
+      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('supportai-drafts-v1', JSON.stringify(rest))
+      }
+      
+      return rest
+    })
+  }, [])
+
+  const getDraftReply = useCallback((messageId: string): string => {
+    return draftReplies[messageId] || ''
+  }, [draftReplies])
+
   // Calculate stats
   const stats: MessageStats = {
     totalMessages: messages.length,
@@ -549,6 +616,11 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     processBatch,
     getMessagesByStatus,
     getRecentActivity,
+    // Draft persistence functionality
+    draftReplies,
+    updateDraftReply,
+    clearDraftReply,
+    getDraftReply,
   }
 
   return <MessageManagerContext.Provider value={contextValue}>{children}</MessageManagerContext.Provider>
