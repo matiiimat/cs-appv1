@@ -508,15 +508,16 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined') {
         // Clear any existing timeout for this message
         const timeoutKey = `draft-timeout-${messageId}`
-        const existingTimeout = (window as any)[timeoutKey]
+        const windowWithTimeouts = window as unknown as Window & Record<string, NodeJS.Timeout>
+        const existingTimeout = windowWithTimeouts[timeoutKey]
         if (existingTimeout) {
           clearTimeout(existingTimeout)
         }
         
         // Set new timeout to save after 500ms of no changes
-        (window as any)[timeoutKey] = setTimeout(() => {
+        windowWithTimeouts[timeoutKey] = setTimeout(() => {
           localStorage.setItem('supportai-drafts-v1', JSON.stringify(updated))
-          delete (window as any)[timeoutKey]
+          delete windowWithTimeouts[timeoutKey]
         }, 500)
       }
       
@@ -526,7 +527,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const clearDraftReply = useCallback((messageId: string) => {
     setDraftReplies(prev => {
-      const { [messageId]: _, ...rest } = prev
+      const { [messageId]: _removed, ...rest } = prev
+      // _removed is intentionally unused - we're extracting it to remove from the object
       
       // Save updated drafts to localStorage immediately
       // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
