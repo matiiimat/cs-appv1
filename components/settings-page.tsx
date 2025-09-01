@@ -8,9 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save, HelpCircle } from "lucide-react"
+import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
-import { Tooltip } from "@/components/ui/tooltip"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
@@ -485,9 +484,6 @@ export function SettingsPage() {
               <div className="mb-6">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold">Company Knowledge Base</h3>
-                  <Tooltip content="Include your most common support scenarios, product features, policies, and troubleshooting steps. Focus on frequently asked questions and key information - the AI will automatically find and use relevant sections when responding to customers. Keep it under 50,000 characters for optimal performance.">
-                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </Tooltip>
                 </div>
               </div>
               <div className="space-y-4">
@@ -549,9 +545,6 @@ export function SettingsPage() {
               <div className="mb-6">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold">Quick Actions</h3>
-                  <Tooltip content="These quick actions will appear as buttons in the Messages to Review page. Click them to instantly apply AI modifications to responses.">
-                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </Tooltip>
                 </div>
               </div>
               <div className="space-y-4">
