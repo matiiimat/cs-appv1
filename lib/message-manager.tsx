@@ -527,8 +527,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const clearDraftReply = useCallback((messageId: string) => {
     setDraftReplies(prev => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [messageId]: _removed, ...rest } = prev
-      // _removed is intentionally unused - we're extracting it to remove from the object
       
       // Save updated drafts to localStorage immediately
       // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
