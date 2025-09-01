@@ -312,7 +312,7 @@ Provide an improved version that can be sent directly to the customer.`
           </div>
         </div>
 
-        <div className="w-3/6 flex flex-col gap-4">
+        <div className="w-2/4 flex flex-col gap-4">
           {selectedMessage && (
             <>
               <div className="flex-1 bg-card rounded-lg shadow-md">
@@ -366,7 +366,7 @@ Provide an improved version that can be sent directly to the customer.`
           )}
         </div>
 
-        <div className="w-2/6">
+        <div className="w-1/3">
           <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
             <div className="pb-3 p-6">
               <h3 className="text-sm font-semibold flex items-center gap-2">
