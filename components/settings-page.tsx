@@ -222,7 +222,7 @@ export function SettingsPage() {
                   <Button
                     variant={settings.theme === "dark" ? "default" : "outline"}
                     onClick={() => handleThemeChange("dark")}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shadow-sm dark:shadow-md dark:shadow-white/20 dark:bg-black dark:text-white dark:hover:bg-gray-900"
                   >
                     <Moon className="h-4 w-4" />
                     Dark

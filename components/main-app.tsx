@@ -53,7 +53,7 @@ export function MainApp() {
                     variant={currentView === "dashboard" ? "default" : "ghost"}
                     size="sm"
                     onClick={switchToDashboard}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "dashboard" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <BarChart3 className="h-4 w-4" />
                     Dashboard
@@ -62,7 +62,7 @@ export function MainApp() {
                     variant={currentView === "swipe" ? "default" : "ghost"}
                     size="sm"
                     onClick={switchToSwipe}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "swipe" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <MessageSquare className="h-4 w-4" />
                     Review Messages
@@ -71,7 +71,7 @@ export function MainApp() {
                     variant={currentView === "detailed-review" ? "default" : "ghost"}
                     size="sm"
                     onClick={switchToDetailedReview}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "detailed-review" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <FileText className="h-4 w-4" />
                     Messages to Review
@@ -80,7 +80,7 @@ export function MainApp() {
                     variant={currentView === "settings" ? "default" : "ghost"}
                     size="sm"
                     onClick={switchToSettings}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "settings" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <Settings className="h-4 w-4" />
                     Settings
