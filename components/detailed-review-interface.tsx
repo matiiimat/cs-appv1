@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
-import { formatEmailText, getMessageUrgency, getUrgencyBgClass } from "@/lib/utils"
+import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
@@ -321,7 +321,7 @@ Provide an improved version that can be sent directly to the customer.`
                         <div className="flex items-center gap-1 text-xs">
                           <Clock className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
                           <span className={`px-2 py-1 rounded text-xs font-medium truncate ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
-                            {new Date(message.timestamp).toLocaleTimeString()}
+                            {formatFriendlyDate(message.timestamp)}
                           </span>
                         </div>
                       </div>
@@ -357,7 +357,7 @@ Provide an improved version that can be sent directly to the customer.`
                       <Separator orientation="vertical" className="h-4" />
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className={`px-2 py-1 rounded text-sm font-medium ${getUrgencyBgClass(getMessageUrgency(selectedMessage.timestamp, settings.messageAgeThresholds))}`}>
-                        {new Date(selectedMessage.timestamp).toLocaleString()}
+                        {formatFriendlyDate(selectedMessage.timestamp)}
                       </span>
                     </div>
                     <div className="p-4 bg-muted rounded-lg">

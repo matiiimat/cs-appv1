@@ -75,3 +75,22 @@ export function getUrgencyBgClass(urgency: MessageUrgency): string {
       return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
   }
 }
+
+export function formatFriendlyDate(timestamp: string): string {
+  const date = new Date(timestamp)
+  
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ]
+  
+  const month = monthNames[date.getMonth()]
+  const day = date.getDate()
+  const time = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  
+  return `${month} ${day}, ${time}`
+}
