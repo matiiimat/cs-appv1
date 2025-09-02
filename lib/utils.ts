@@ -43,3 +43,35 @@ export function formatRelativeTime(timestamp: string): string {
   if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
   return 'just now'
 }
+
+export type MessageUrgency = 'green' | 'yellow' | 'red'
+
+export function getMessageUrgency(
+  timestamp: string,
+  thresholds: { greenHours: number; yellowHours: number; redHours: number }
+): MessageUrgency {
+  const now = new Date()
+  const messageDate = new Date(timestamp)
+  const diffInMs = now.getTime() - messageDate.getTime()
+  const hoursOld = diffInMs / (1000 * 60 * 60)
+  
+  // Debug logging (remove in production)
+  if (typeof window !== 'undefined') {
+    console.log('Timestamp:', timestamp, 'Hours old:', hoursOld.toFixed(2), 'Thresholds:', thresholds)
+  }
+  
+  if (hoursOld <= thresholds.greenHours) return 'green'
+  if (hoursOld <= thresholds.yellowHours) return 'yellow'
+  return 'red'
+}
+
+export function getUrgencyBgClass(urgency: MessageUrgency): string {
+  switch (urgency) {
+    case 'green':
+      return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+    case 'yellow':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+    case 'red':
+      return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+  }
+}

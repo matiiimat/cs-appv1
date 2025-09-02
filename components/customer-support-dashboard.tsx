@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
-import { formatEmailText } from "@/lib/utils"
+import { formatEmailText, getMessageUrgency, getUrgencyBgClass } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, Clock, User, Loader2, RotateCcw } from "lucide-react"
 
@@ -212,7 +212,9 @@ export function CustomerSupportDashboard() {
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                 <Clock className="h-4 w-4" />
-                {currentMessage.timestamp}
+                <span className={`px-2 py-1 rounded text-sm font-medium ${getUrgencyBgClass(getMessageUrgency(currentMessage.timestamp, settings.messageAgeThresholds))}`}>
+                  {new Date(currentMessage.timestamp).toLocaleString()}
+                </span>
               </div>
             </div>
             <div className="px-6 pb-6 h-full overflow-y-auto">

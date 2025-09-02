@@ -34,6 +34,11 @@ export interface Settings {
   quickActions: QuickAction[]
   aiConfig: AIProviderConfig
   companyKnowledge: string
+  messageAgeThresholds: {
+    greenHours: number
+    yellowHours: number
+    redHours: number
+  }
 }
 
 interface SettingsContextType {
@@ -87,6 +92,11 @@ const defaultSettings: Settings = {
     maxTokens: 1000,
   },
   companyKnowledge: "",
+  messageAgeThresholds: {
+    greenHours: 20,
+    yellowHours: 24,
+    redHours: 48,
+  },
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'

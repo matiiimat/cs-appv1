@@ -543,6 +543,88 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
+                <h3 className="text-lg font-semibold">SLA</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="greenHours" className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
+                      Green (Fresh)
+                    </Label>
+                    <Input
+                      id="greenHours"
+                      type="number"
+                      min="1"
+                      max="168"
+                      value={settings.messageAgeThresholds.greenHours}
+                      onChange={(e) => {
+                        const value = Math.max(1, Math.min(168, parseInt(e.target.value) || 1))
+                        const newThresholds = { ...settings.messageAgeThresholds, greenHours: value }
+                        // Ensure green <= yellow <= red
+                        if (value > newThresholds.yellowHours) {
+                          newThresholds.yellowHours = value
+                        }
+                        if (newThresholds.yellowHours > newThresholds.redHours) {
+                          newThresholds.redHours = newThresholds.yellowHours
+                        }
+                        updateSettings({ messageAgeThresholds: newThresholds })
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">Up to {settings.messageAgeThresholds.greenHours} hours</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="yellowHours" className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-300"></div>
+                      Yellow (Aging)
+                    </Label>
+                    <Input
+                      id="yellowHours"
+                      type="number"
+                      min={settings.messageAgeThresholds.greenHours}
+                      max="168"
+                      value={settings.messageAgeThresholds.yellowHours}
+                      onChange={(e) => {
+                        const value = Math.max(settings.messageAgeThresholds.greenHours, Math.min(168, parseInt(e.target.value) || settings.messageAgeThresholds.greenHours))
+                        const newThresholds = { ...settings.messageAgeThresholds, yellowHours: value }
+                        // Ensure yellow <= red
+                        if (value > newThresholds.redHours) {
+                          newThresholds.redHours = value
+                        }
+                        updateSettings({ messageAgeThresholds: newThresholds })
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">Up to {settings.messageAgeThresholds.yellowHours} hours</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="redHours" className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-red-100 border border-red-300"></div>
+                      Red (Overdue)
+                    </Label>
+                    <Input
+                      id="redHours"
+                      type="number"
+                      min={settings.messageAgeThresholds.yellowHours}
+                      max="168"
+                      value={settings.messageAgeThresholds.redHours}
+                      onChange={(e) => {
+                        const value = Math.max(settings.messageAgeThresholds.yellowHours, Math.min(168, parseInt(e.target.value) || settings.messageAgeThresholds.yellowHours))
+                        updateSettings({ messageAgeThresholds: { ...settings.messageAgeThresholds, redHours: value } })
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">{settings.messageAgeThresholds.redHours}+ hours</p>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold">Quick Actions</h3>
                 </div>
