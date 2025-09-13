@@ -2,30 +2,45 @@
 
 import { useState, useEffect, createContext, useContext, useCallback, useRef, type ReactNode } from "react"
 import { useSettings } from "./settings-context"
+import { apiClient, type ApiMessage, type ApiStats, type ApiActivity } from "./api-client"
 
-// Ticket ID generation utility
-function generateTicketId(): string {
-  const TICKET_COUNTER_KEY = 'supportai-ticket-counter'
-  
-  // Get current counter from localStorage
-  let counter = 1
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(TICKET_COUNTER_KEY)
-    if (saved) {
-      counter = parseInt(saved, 10) + 1
-    }
-    
-    // Save incremented counter
-    localStorage.setItem(TICKET_COUNTER_KEY, counter.toString())
+// Convert API message to frontend format
+function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
+  return {
+    id: apiMessage.id,
+    ticketId: apiMessage.ticket_id,
+    customerName: apiMessage.customer_name || "",
+    customerEmail: apiMessage.customer_email || "",
+    subject: apiMessage.subject || "",
+    message: apiMessage.message || "",
+    category: apiMessage.category || undefined,
+    timestamp: apiMessage.created_at,
+    aiSuggestedResponse: apiMessage.ai_suggested_response || undefined,
+    isGenerating: apiMessage.is_generating,
+    autoReviewed: apiMessage.auto_reviewed,
+    status: apiMessage.status,
+    agentId: apiMessage.agent_id || undefined,
+    processedAt: apiMessage.processed_at || undefined,
+    responseTime: apiMessage.response_time_ms || undefined,
+    editHistory: apiMessage.edit_history || [],
   }
-  
-  // Format as #000001
-  return `#${counter.toString().padStart(6, '0')}`
+}
+
+// Convert frontend message to API format
+function convertToApiMessage(message: Partial<CustomerMessage>) {
+  return {
+    customer_name: message.customerName,
+    customer_email: message.customerEmail,
+    subject: message.subject,
+    message: message.message,
+    category: message.category,
+    metadata: {},
+  }
 }
 
 export interface CustomerMessage {
   id: string
-  ticketId: string // Unique ticket ID like "#000001"
+  ticketId: string
   customerName: string
   customerEmail: string
   subject: string
@@ -34,8 +49,8 @@ export interface CustomerMessage {
   timestamp: string
   aiSuggestedResponse?: string
   isGenerating?: boolean
-  autoReviewed: boolean // Flag to track if AI has analyzed this message
-  status: "pending" | "approved" | "rejected" | "edited" | "sent" | "review" // Added "review" status
+  autoReviewed: boolean
+  status: "pending" | "approved" | "rejected" | "edited" | "sent" | "review"
   agentId?: string
   processedAt?: string
   responseTime?: number
@@ -54,7 +69,7 @@ export interface MessageStats {
   rejectedMessages: number
   editedMessages: number
   sentMessages: number
-  reviewMessages: number // Added review messages count
+  reviewMessages: number
   avgResponseTime: number
   approvalRate: number
   todayProcessed: number
@@ -69,13 +84,13 @@ interface MessageManagerContextType {
   processedCount: number
   totalToProcess: number
   cancelBatchProcessing: () => void
-  addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp">) => void
-  updateMessage: (id: string, updates: Partial<CustomerMessage>) => void
-  updateMessageCategory: (id: string, category: string) => void
-  approveMessage: (id: string, agentId: string) => void
-  rejectMessage: (id: string, agentId: string, reason?: string) => void
-  sendToReview: (id: string, agentId: string, reason?: string) => void // Added sendToReview function
-  editMessage: (id: string, editedResponse: string, reason: string, agentId: string) => void
+  addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "autoReviewed">) => Promise<void>
+  updateMessage: (id: string, updates: Partial<CustomerMessage>) => Promise<void>
+  updateMessageCategory: (id: string, category: string) => Promise<void>
+  approveMessage: (id: string, agentId: string) => Promise<void>
+  rejectMessage: (id: string, agentId: string, reason?: string) => Promise<void>
+  sendToReview: (id: string, agentId: string, reason?: string) => Promise<void>
+  editMessage: (id: string, editedResponse: string, reason: string, agentId: string) => Promise<void>
   moveToNextMessage: () => void
   moveToPreviousMessage: () => void
   generateAIResponse: (message: CustomerMessage) => Promise<void>
@@ -83,12 +98,13 @@ interface MessageManagerContextType {
   getMessagesByStatus: (status: CustomerMessage["status"]) => CustomerMessage[]
   getRecentActivity: () => Array<{
     id: string
-    type: "approved" | "rejected" | "edited" | "received" | "review" // Added "review" type
+    type: "approved" | "rejected" | "edited" | "received" | "review"
     message: CustomerMessage
     timestamp: string
     agentId?: string
   }>
-  // Draft persistence functionality
+  refreshData: () => Promise<void>
+  // Draft persistence (keep in localStorage)
   draftReplies: Record<string, string>
   updateDraftReply: (messageId: string, draft: string) => void
   clearDraftReply: (messageId: string) => void
@@ -105,112 +121,158 @@ export function useMessageManager() {
   return context
 }
 
-// Mock incoming messages for demo
-const mockIncomingMessages: Omit<
-  CustomerMessage,
-  "id" | "ticketId" | "status" | "timestamp" | "category" | "aiSuggestedResponse" | "autoReviewed" | "isGenerating" | "agentId" | "processedAt" | "responseTime" | "editHistory"
->[] = [
-  {
-    customerName: "Alex Thompson",
-    customerEmail: "alex.thompson@techcorp.com",
-    subject: "Plans",
-    message:
-      "Can you give me an overview of the plans available?",
-  },
-  {
-    customerName: "Maria Santos",
-    customerEmail: "maria.santos@design.co",
-    subject: "Enterprise Plan",
-    message:
-      "What can I do with the Enterprise Plan",
-  },
-  {
-    customerName: "James Wilson",
-    customerEmail: "james.wilson@freelance.net",
-    subject: "Two-factor authentication not working",
-    message:
-      "I enabled 2FA yesterday but now I can't log in. The authentication codes from my phone aren't being accepted. I've tried syncing the time but it still doesn't work. Please help.",
-  },
-  {
-    customerName: "Rachel Green",
-    customerEmail: "rachel.green@marketing.pro",
-    subject: "Team collaboration features missing",
-    message:
-      "Our team upgraded to the business plan specifically for the collaboration tools mentioned on your pricing page. However, we can't find these features in our account. Were they rolled out yet?",
-  },
-  {
-    customerName: "Kevin Park",
-    customerEmail: "kevin.park@startup.dev",
-    subject: "API rate limiting too restrictive",
-    message:
-      "Our application is hitting the API rate limits during peak hours, causing service disruptions for our users. Can we discuss increasing our limits or moving to a higher tier?",
-  },
-]
-
 export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const { settings } = useSettings()
   const [messages, setMessages] = useState<CustomerMessage[]>([])
-  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+  const [stats, setStats] = useState<MessageStats>({
+    totalMessages: 0,
+    pendingMessages: 0,
+    approvedMessages: 0,
+    rejectedMessages: 0,
+    editedMessages: 0,
+    sentMessages: 0,
+    reviewMessages: 0,
+    avgResponseTime: 0,
+    approvalRate: 0,
+    todayProcessed: 0,
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessingBatch, setIsProcessingBatch] = useState(false)
   const [processedCount, setProcessedCount] = useState(0)
   const [totalToProcess, setTotalToProcess] = useState(0)
+  const [recentActivity, setRecentActivity] = useState<ApiActivity[]>([])
   const cancelRequestedRef = useRef(false)
+
+  // Draft replies - keep in localStorage as requested
   const [draftReplies, setDraftReplies] = useState<Record<string, string>>({})
 
-  // Load from localStorage after hydration to avoid SSR mismatch
+  // Load draft replies from localStorage on mount
   useEffect(() => {
-    if (!hasLoadedFromStorage) {
-      const saved = localStorage.getItem('supportai-processed-messages')
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved)
-          const hasAIResponses = parsed.some((msg: CustomerMessage) => msg.aiSuggestedResponse)
-          if (hasAIResponses) {
-            console.log('Loaded', parsed.length, 'processed messages from localStorage')
-            setMessages(parsed)
-            setIsLoading(false)
-            setHasLoadedFromStorage(true)
-            return
-          }
-        } catch (error) {
-          console.error('Failed to parse saved messages:', error)
-        }
+    const savedDrafts = localStorage.getItem('supportai-drafts-v1')
+    if (savedDrafts) {
+      try {
+        const parsedDrafts = JSON.parse(savedDrafts)
+        setDraftReplies(parsedDrafts)
+      } catch (error) {
+        console.error('Failed to parse saved draft replies:', error)
       }
-      
-      // Load draft replies from localStorage
-      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
-      const savedDrafts = localStorage.getItem('supportai-drafts-v1')
-      if (savedDrafts) {
-        try {
-          const parsedDrafts = JSON.parse(savedDrafts)
-          setDraftReplies(parsedDrafts)
-          console.log('Loaded', Object.keys(parsedDrafts).length, 'draft replies from localStorage')
-        } catch (error) {
-          console.error('Failed to parse saved draft replies:', error)
-        }
-      }
-      
-      setHasLoadedFromStorage(true)
     }
-  }, [hasLoadedFromStorage])
-  const [recentActivity, setRecentActivity] = useState<
-    Array<{
-      id: string
-      type: "approved" | "rejected" | "edited" | "received" | "review" // Added "review" type
-      message: CustomerMessage
-      timestamp: string
-      agentId?: string
-    }>
-  >([])
+  }, [])
+
+  // Fetch data from database
+  const refreshData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+
+      // Fetch all data in parallel
+      const [messagesResponse, statsResponse, activityResponse] = await Promise.all([
+        apiClient.getMessages({ limit: 100 }),
+        apiClient.getStats(),
+        apiClient.getActivity(10)
+      ])
+
+      // Convert API messages to frontend format
+      const convertedMessages = messagesResponse.messages.map(convertApiMessage)
+
+      setMessages(convertedMessages)
+      setStats(statsResponse.stats)
+      setRecentActivity(activityResponse.activities)
+
+    } catch (error) {
+      console.error('Failed to fetch data from database:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // Load data on mount
+  useEffect(() => {
+    refreshData()
+  }, [refreshData])
+
+  const addMessage = async (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "autoReviewed">) => {
+    try {
+      const apiData = convertToApiMessage(messageData)
+      const response = await apiClient.createMessage(apiData)
+      const newMessage = convertApiMessage(response.message)
+
+      setMessages(prev => [newMessage, ...prev])
+      await refreshData() // Refresh to get updated stats
+    } catch (error) {
+      console.error('Failed to add message:', error)
+      throw error
+    }
+  }
+
+  const updateMessage = async (id: string, updates: Partial<CustomerMessage>) => {
+    try {
+      const apiUpdates: any = {}
+
+      // Map frontend fields to API fields
+      if (updates.category !== undefined) apiUpdates.category = updates.category
+      if (updates.aiSuggestedResponse !== undefined) apiUpdates.ai_suggested_response = updates.aiSuggestedResponse
+      if (updates.status !== undefined) apiUpdates.status = updates.status
+      if (updates.agentId !== undefined) apiUpdates.agent_id = updates.agentId
+      if (updates.autoReviewed !== undefined) apiUpdates.auto_reviewed = updates.autoReviewed
+      if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
+
+      const response = await apiClient.updateMessage(id, apiUpdates)
+      const updatedMessage = convertApiMessage(response.message)
+
+      setMessages(prev => prev.map(m => m.id === id ? updatedMessage : m))
+      await refreshData() // Refresh to get updated stats
+    } catch (error) {
+      console.error('Failed to update message:', error)
+      throw error
+    }
+  }
+
+  const updateMessageCategory = async (id: string, category: string) => {
+    await updateMessage(id, { category })
+  }
+
+  const approveMessage = async (id: string, agentId: string) => {
+    await updateMessage(id, { status: "approved", agentId })
+    clearDraftReply(id)
+  }
+
+  const rejectMessage = async (id: string, agentId: string, reason?: string) => {
+    await updateMessage(id, { status: "rejected", agentId })
+  }
+
+  const sendToReview = async (id: string, agentId: string, reason?: string) => {
+    await updateMessage(id, { status: "review", agentId })
+  }
+
+  const editMessage = async (id: string, editedResponse: string, reason: string, agentId: string) => {
+    const message = messages.find(m => m.id === id)
+    if (!message || !message.aiSuggestedResponse) return
+
+    const editEntry = {
+      timestamp: new Date().toISOString(),
+      originalResponse: message.aiSuggestedResponse,
+      editedResponse,
+      reason,
+    }
+
+    await updateMessage(id, {
+      aiSuggestedResponse: editedResponse,
+      status: "edited",
+      agentId,
+      editHistory: [...(message.editHistory || []), editEntry],
+    })
+  }
 
   const generateAIResponse = useCallback(async (message: CustomerMessage) => {
     try {
-      // Update message to show generating state
-      setMessages((prev) =>
-        prev.map((m) => (m.id === message.id ? { ...m, isGenerating: true, aiSuggestedResponse: undefined } : m)),
+      // Update local state to show generating
+      setMessages(prev =>
+        prev.map(m => m.id === message.id ? { ...m, isGenerating: true, aiSuggestedResponse: undefined } : m)
       )
+
+      // Update database to show generating
+      await updateMessage(message.id, { isGenerating: true })
 
       const response = await fetch("/api/generate-response", {
         method: "POST",
@@ -230,73 +292,53 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || `Failed to generate response (${response.status})`
-        throw new Error(errorMessage)
+        throw new Error(errorData.error || `Failed to generate response (${response.status})`)
       }
 
       const data = await response.json()
 
-      // Update message with AI response
-      setMessages((prev) => {
-        const updated = prev.map((m) =>
-          m.id === message.id
-            ? {
-                ...m,
-                category: data.category,
-                aiSuggestedResponse: data.aiSuggestedResponse,
-                autoReviewed: true, // Mark as AI reviewed
-                isGenerating: false,
-              }
-            : m,
-        )
-        
-        // Save to localStorage whenever messages are updated with AI responses
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('supportai-processed-messages', JSON.stringify(updated))
-        }
-        
-        return updated
+      // Update database with AI response
+      await updateMessage(message.id, {
+        category: data.category,
+        aiSuggestedResponse: data.aiSuggestedResponse,
+        autoReviewed: true,
+        isGenerating: false,
       })
+
     } catch (error) {
-      console.error("[v0] Error generating AI response:", error)
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === message.id
-            ? {
-                ...m,
-                category: "General Inquiry",
-                aiSuggestedResponse:
-                  "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
-                autoReviewed: true, // Mark as reviewed even with error response
-                isGenerating: false,
-              }
-            : m,
-        ),
-      )
+      console.error("Error generating AI response:", error)
+
+      // Update with error response
+      await updateMessage(message.id, {
+        category: "General Inquiry",
+        aiSuggestedResponse: "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
+        autoReviewed: true,
+        isGenerating: false,
+      })
     }
-  }, [settings.aiConfig, settings.agentName, settings.agentSignature, settings.categories, settings.companyKnowledge, setMessages])
+  }, [settings, updateMessage])
 
   const processBatch = useCallback(async (batchSize: number) => {
     const unprocessedMessages = messages.filter(m => !m.autoReviewed && m.status === 'pending')
     const messagesToProcess = unprocessedMessages.slice(0, batchSize)
-    
+
     setIsProcessingBatch(true)
     setProcessedCount(0)
     setTotalToProcess(messagesToProcess.length)
     cancelRequestedRef.current = false
-    
+
     try {
       for (let i = 0; i < messagesToProcess.length; i++) {
         if (cancelRequestedRef.current) {
           console.log('Batch processing cancelled by user')
           break
         }
-        
+
         const message = messagesToProcess[i]
         await generateAIResponse(message)
         setProcessedCount(i + 1)
-        
-        // Small delay between requests to avoid rate limiting
+
+        // Small delay between requests
         if (i < messagesToProcess.length - 1 && !cancelRequestedRef.current) {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
@@ -315,168 +357,6 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     cancelRequestedRef.current = true
   }, [])
 
-  const addMessage = (messageData: Omit<CustomerMessage, "id" | "ticketId" | "status" | "timestamp" | "autoReviewed">) => {
-    const newMessage: CustomerMessage = {
-      ...messageData,
-      id: Date.now().toString(),
-      ticketId: generateTicketId(),
-      status: "pending",
-      timestamp: new Date().toLocaleString(),
-      autoReviewed: false, // New messages need AI review
-      isGenerating: true,
-    }
-
-    setMessages((prev) => [...prev, newMessage])
-
-    // Add to recent activity
-    setRecentActivity((prev) => [
-      {
-        id: newMessage.id,
-        type: "received",
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-      },
-      ...prev.slice(0, 9),
-    ])
-
-    // Generate AI response
-    generateAIResponse(newMessage)
-  }
-
-  const updateMessage = (id: string, updates: Partial<CustomerMessage>) => {
-    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)))
-  }
-
-  const updateMessageCategory = (id: string, category: string) => {
-    setMessages((prev) => {
-      const updated = prev.map((m) => (m.id === id ? { ...m, category } : m))
-      
-      // Save to localStorage whenever messages are updated
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('supportai-processed-messages', JSON.stringify(updated))
-      }
-      
-      return updated
-    })
-  }
-
-  const approveMessage = (id: string, agentId: string) => {
-    const processedAt = new Date().toISOString()
-    const message = messages.find((m) => m.id === id)
-
-    if (message) {
-      const responseTime = Date.now() - new Date(message.timestamp).getTime()
-
-      updateMessage(id, {
-        status: "approved",
-        agentId,
-        processedAt,
-        responseTime,
-        autoReviewed: false, // Reset for potential customer replies
-      })
-
-      // Clear draft reply when message is approved
-      clearDraftReply(id)
-
-      setRecentActivity((prev) => [
-        {
-          id,
-          type: "approved",
-          message: message,
-          timestamp: processedAt,
-          agentId,
-        },
-        ...prev.slice(0, 9),
-      ])
-
-    }
-  }
-
-  const rejectMessage = (id: string, agentId: string) => {
-    const processedAt = new Date().toISOString()
-    const message = messages.find((m) => m.id === id)
-
-    if (message) {
-      const responseTime = Date.now() - new Date(message.timestamp).getTime()
-
-      updateMessage(id, {
-        status: "rejected",
-        agentId,
-        processedAt,
-        responseTime,
-      })
-
-      setRecentActivity((prev) => [
-        {
-          id,
-          type: "rejected",
-          message: message,
-          timestamp: processedAt,
-          agentId,
-        },
-        ...prev.slice(0, 9),
-      ])
-    }
-  }
-
-  const sendToReview = (id: string, agentId: string) => {
-    const processedAt = new Date().toISOString()
-    const message = messages.find((m) => m.id === id)
-
-    if (message) {
-      const responseTime = Date.now() - new Date(message.timestamp).getTime()
-
-      updateMessage(id, {
-        status: "review",
-        agentId,
-        processedAt,
-        responseTime,
-      })
-
-      setRecentActivity((prev) => [
-        {
-          id,
-          type: "review",
-          message: message,
-          timestamp: processedAt,
-          agentId,
-        },
-        ...prev.slice(0, 9),
-      ])
-
-    }
-  }
-
-  const editMessage = (id: string, editedResponse: string, reason: string, agentId: string) => {
-    const message = messages.find((m) => m.id === id)
-    if (!message || !message.aiSuggestedResponse) return
-
-    const editEntry = {
-      timestamp: new Date().toISOString(),
-      originalResponse: message.aiSuggestedResponse,
-      editedResponse,
-      reason,
-    }
-
-    updateMessage(id, {
-      aiSuggestedResponse: editedResponse,
-      status: "edited",
-      agentId,
-      editHistory: [...(message.editHistory || []), editEntry],
-    })
-
-    setRecentActivity((prev) => [
-      {
-        id,
-        type: "edited",
-        message: message,
-        timestamp: editEntry.timestamp,
-        agentId,
-      },
-      ...prev.slice(0, 9),
-    ])
-  }
-
   const moveToNextMessage = () => {
     const pendingMessages = messages.filter(m => m.status === 'pending' && m.autoReviewed)
     if (currentMessageIndex < pendingMessages.length - 1) {
@@ -491,51 +371,51 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const getMessagesByStatus = (status: CustomerMessage["status"]) => {
-    return messages.filter((m) => m.status === status)
+    return messages.filter(m => m.status === status)
   }
 
   const getRecentActivity = () => {
-    return recentActivity
+    return recentActivity.map(activity => ({
+      id: activity.id,
+      type: activity.type as any,
+      message: convertApiMessage(activity.message),
+      timestamp: activity.timestamp,
+      agentId: activity.agentId,
+    }))
   }
 
-  // Draft management functions
+  // Draft management functions (keep localStorage as requested)
   const updateDraftReply = useCallback((messageId: string, draft: string) => {
     setDraftReplies(prev => {
       const updated = { ...prev, [messageId]: draft }
-      
+
       // Save to localStorage with debouncing
-      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
       if (typeof window !== 'undefined') {
-        // Clear any existing timeout for this message
         const timeoutKey = `draft-timeout-${messageId}`
         const windowWithTimeouts = window as unknown as Window & Record<string, NodeJS.Timeout>
         const existingTimeout = windowWithTimeouts[timeoutKey]
         if (existingTimeout) {
           clearTimeout(existingTimeout)
         }
-        
-        // Set new timeout to save after 500ms of no changes
+
         windowWithTimeouts[timeoutKey] = setTimeout(() => {
           localStorage.setItem('supportai-drafts-v1', JSON.stringify(updated))
           delete windowWithTimeouts[timeoutKey]
         }, 500)
       }
-      
+
       return updated
     })
   }, [])
 
   const clearDraftReply = useCallback((messageId: string) => {
     setDraftReplies(prev => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [messageId]: _removed, ...rest } = prev
-      
-      // Save updated drafts to localStorage immediately
-      // NOTE: Draft persistence uses localStorage for testing - keep this as localStorage even when moving messages to database
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('supportai-drafts-v1', JSON.stringify(rest))
       }
-      
+
       return rest
     })
   }, [])
@@ -543,48 +423,6 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const getDraftReply = useCallback((messageId: string): string => {
     return draftReplies[messageId] || ''
   }, [draftReplies])
-
-  // Calculate stats
-  const stats: MessageStats = {
-    totalMessages: messages.length,
-    pendingMessages: messages.filter((m) => m.status === "pending").length,
-    approvedMessages: messages.filter((m) => m.status === "approved").length,
-    rejectedMessages: messages.filter((m) => m.status === "rejected").length,
-    editedMessages: messages.filter((m) => m.status === "edited").length,
-    sentMessages: messages.filter((m) => m.status === "sent").length,
-    reviewMessages: messages.filter((m) => m.status === "review").length, // Added review messages count
-    avgResponseTime:
-      messages.filter((m) => m.responseTime).reduce((acc, m) => acc + (m.responseTime || 0), 0) /
-      Math.max(1, messages.filter((m) => m.responseTime).length) /
-      1000 /
-      60, // in minutes
-    approvalRate:
-      messages.length > 0 ? (messages.filter((m) => m.status === "approved").length / messages.length) * 100 : 0,
-    todayProcessed: messages.filter((m) => {
-      const today = new Date().toDateString()
-      return m.processedAt && new Date(m.processedAt).toDateString() === today
-    }).length,
-  }
-
-  // Initialize with mock data only if no localStorage data was loaded
-  useEffect(() => {
-    if (!hasLoadedFromStorage) return // Wait for localStorage check
-
-    // Only initialize if no messages were loaded from localStorage
-    if (messages.length === 0) {
-      const initialMessages = mockIncomingMessages.map((mockMessage, index) => ({
-        ...mockMessage,
-        id: Date.now().toString() + index,
-        ticketId: generateTicketId(),
-        status: "pending" as const,
-        timestamp: new Date(Date.now() - Math.random() * 3600000).toLocaleString(),
-        autoReviewed: false, // Messages need AI review via queue button
-      }))
-
-      setMessages(initialMessages)
-      setIsLoading(false)
-    }
-  }, [hasLoadedFromStorage, messages.length])
 
   // Adjust currentMessageIndex when pending messages change
   useEffect(() => {
@@ -610,7 +448,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     updateMessageCategory,
     approveMessage,
     rejectMessage,
-    sendToReview, // Added sendToReview to context
+    sendToReview,
     editMessage,
     moveToNextMessage,
     moveToPreviousMessage,
@@ -618,7 +456,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     processBatch,
     getMessagesByStatus,
     getRecentActivity,
-    // Draft persistence functionality
+    refreshData,
+    // Draft persistence functionality (localStorage)
     draftReplies,
     updateDraftReply,
     clearDraftReply,
