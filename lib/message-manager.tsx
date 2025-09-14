@@ -27,12 +27,23 @@ function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
 }
 
 // Convert frontend message to API format
-function convertToApiMessage(message: Partial<CustomerMessage>) {
+function convertToApiMessage(message: Partial<CustomerMessage>): {
+  customer_name: string;
+  customer_email: string;
+  subject: string;
+  message: string;
+  category?: string;
+  metadata: Record<string, any>;
+} {
+  if (!message.customerName || !message.customerEmail || !message.subject || !message.message) {
+    throw new Error('Missing required message fields');
+  }
+
   return {
-    customer_name: message.customerName,
-    customer_email: message.customerEmail,
-    subject: message.subject,
-    message: message.message,
+    customer_name: message.customerName!,
+    customer_email: message.customerEmail!,
+    subject: message.subject!,
+    message: message.message!,
     category: message.category,
     metadata: {},
   }
