@@ -14,7 +14,7 @@ const DatabaseConfigSchema = z.object({
   connectionTimeoutMillis: z.number().int().min(1000).default(10000),
 });
 
-type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
+// type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>; // Currently unused
 
 class DatabaseConnection {
   private static instance: DatabaseConnection;
@@ -66,7 +66,7 @@ class DatabaseConnection {
    * Setup database event handlers
    */
   private setupEventHandlers(): void {
-    this.pool.on('connect', (client) => {
+    this.pool.on('connect', () => {
       console.log('🔗 New database client connected');
       this.isConnected = true;
     });
@@ -108,7 +108,7 @@ class DatabaseConnection {
   /**
    * Execute a query with automatic client handling
    */
-  async query<T = any>(text: string, params?: any[]): Promise<{ rows: T[]; rowCount: number }> {
+  async query<T = unknown>(text: string, params?: unknown[]): Promise<{ rows: T[]; rowCount: number }> {
     const client = await this.getClient();
     try {
       const result = await client.query(text, params);
@@ -142,10 +142,10 @@ class DatabaseConnection {
   /**
    * Check database health
    */
-  async healthCheck(): Promise<{ healthy: boolean; details: any }> {
+  async healthCheck(): Promise<{ healthy: boolean; details: Record<string, unknown> }> {
     try {
       const start = Date.now();
-      const result = await this.query('SELECT 1 as health_check, NOW() as timestamp');
+      const result = await this.query<{ health_check: number; timestamp: string }>('SELECT 1 as health_check, NOW() as timestamp');
       const latency = Date.now() - start;
 
       return {
@@ -207,7 +207,7 @@ export class DatabaseUtils {
   /**
    * Build WHERE clause with tenant isolation
    */
-  static buildTenantWhereClause(organizationId: string, additionalConditions?: string): { clause: string; params: any[] } {
+  static buildTenantWhereClause(organizationId: string, additionalConditions?: string): { clause: string; params: unknown[] } {
     const params = [organizationId];
     let clause = 'organization_id = $1';
 
@@ -221,8 +221,9 @@ export class DatabaseUtils {
   /**
    * Add tenant filter to any query
    */
-  static addTenantFilter(query: string, organizationId: string): { query: string; params: any[] } {
-    const tenantParam = '$' + (query.match(/\$\d+/g)?.length + 1 || 1);
+  static addTenantFilter(query: string, organizationId: string): { query: string; params: unknown[] } {
+    const matches = query.match(/\$\d+/g);
+    const tenantParam = '$' + ((matches?.length ?? 0) + 1);
 
     // Find WHERE clause or add one
     const whereIndex = query.toLowerCase().indexOf('where');
@@ -255,7 +256,7 @@ export class DatabaseUtils {
    * Generate next ticket ID for organization
    */
   static async generateTicketId(organizationId: string): Promise<string> {
-    const result = await db.query(
+    const result = await db.query<{ ticket_id: string }>(
       'SELECT generate_ticket_id($1) as ticket_id',
       [organizationId]
     );

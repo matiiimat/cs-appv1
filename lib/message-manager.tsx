@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, useCallback, useRef, type ReactNode } from "react"
 import { useSettings } from "./settings-context"
-import { apiClient, type ApiMessage, type ApiStats, type ApiActivity } from "./api-client"
+import { apiClient, type ApiMessage, type ApiActivity } from "./api-client"
 
 // Convert API message to frontend format
 function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
@@ -33,7 +33,7 @@ function convertToApiMessage(message: Partial<CustomerMessage>): {
   subject: string;
   message: string;
   category?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 } {
   if (!message.customerName || !message.customerEmail || !message.subject || !message.message) {
     throw new Error('Missing required message fields');
@@ -218,7 +218,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const updateMessage = async (id: string, updates: Partial<CustomerMessage>) => {
     try {
-      const apiUpdates: any = {}
+      const apiUpdates: Record<string, unknown> = {}
 
       // Map frontend fields to API fields
       if (updates.category !== undefined) apiUpdates.category = updates.category
@@ -248,11 +248,11 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     clearDraftReply(id)
   }
 
-  const rejectMessage = async (id: string, agentId: string, reason?: string) => {
+  const rejectMessage = async (id: string, agentId: string) => {
     await updateMessage(id, { status: "rejected", agentId })
   }
 
-  const sendToReview = async (id: string, agentId: string, reason?: string) => {
+  const sendToReview = async (id: string, agentId: string) => {
     await updateMessage(id, { status: "review", agentId })
   }
 
@@ -388,7 +388,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const getRecentActivity = () => {
     return recentActivity.map(activity => ({
       id: activity.id,
-      type: activity.type as any,
+      type: activity.type as "approved" | "rejected" | "edited" | "received" | "review",
       message: convertApiMessage(activity.message),
       timestamp: activity.timestamp,
       agentId: activity.agentId,
@@ -421,7 +421,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const clearDraftReply = useCallback((messageId: string) => {
     setDraftReplies(prev => {
-      const { [messageId]: _removed, ...rest } = prev
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [messageId]: _, ...rest } = prev
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('supportai-drafts-v1', JSON.stringify(rest))

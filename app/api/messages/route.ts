@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
 
     const options = {
-      ...(status && { status: status as any }),
+      ...(status && { status: status as 'pending' | 'approved' | 'rejected' | 'edited' | 'sent' | 'review' }),
       limit,
       offset: (page - 1) * limit,
       orderBy: 'created_at' as const,

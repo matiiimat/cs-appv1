@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { db, PoolClient } from '@/lib/database';
+import { db } from '@/lib/database';
 import { PIIEncryption, DatabaseEncryption } from '@/lib/encryption';
 
 // Message status enum
@@ -60,7 +60,7 @@ export class MessageModel {
    * Get organization's encryption key
    */
   private static async getOrganizationKey(organizationId: string): Promise<string> {
-    const result = await db.query(
+    const result = await db.query<{ encrypted_data_key: string }>(
       'SELECT encrypted_data_key FROM organizations WHERE id = $1',
       [organizationId]
     );
@@ -75,7 +75,7 @@ export class MessageModel {
   /**
    * Encrypt message data before storage
    */
-  private static encryptMessageData(messageData: any, organizationKey: string): any {
+  private static encryptMessageData(messageData: Record<string, unknown>, organizationKey: string): Record<string, unknown> {
     const encryptedFields = PIIEncryption.encryptMessageData(messageData, organizationKey);
 
     return {
@@ -87,7 +87,7 @@ export class MessageModel {
   /**
    * Decrypt message data after retrieval
    */
-  private static decryptMessageData(dbRow: any, organizationKey: string): any {
+  private static decryptMessageData(dbRow: Record<string, unknown>, organizationKey: string): Message {
     const fieldsToDecrypt = {
       customer_name: dbRow.customer_name,
       customer_email: dbRow.customer_email,
@@ -99,7 +99,7 @@ export class MessageModel {
     const decryptedFields: Record<string, string | null> = {};
 
     for (const [key, value] of Object.entries(fieldsToDecrypt)) {
-      if (value) {
+      if (value && typeof value === 'string') {
         try {
           decryptedFields[key] = DatabaseEncryption.decryptFromStorage(value, organizationKey);
         } catch (error) {
@@ -114,7 +114,7 @@ export class MessageModel {
     return {
       ...dbRow,
       ...decryptedFields,
-    };
+    } as Message;
   }
 
   /**
@@ -124,7 +124,7 @@ export class MessageModel {
     const organizationKey = await this.getOrganizationKey(organizationId);
 
     // Generate ticket ID
-    const counterResult = await db.query(`
+    const counterResult = await db.query<{ counter: number }>(`
       SELECT COALESCE(MAX(CAST(SUBSTRING(ticket_id FROM 2) AS INTEGER)), 0) + 1 as counter
       FROM messages
       WHERE organization_id = $1
@@ -155,7 +155,7 @@ export class MessageModel {
     ]);
 
     const dbRow = result.rows[0];
-    return this.decryptMessageData(dbRow, organizationKey);
+    return this.decryptMessageData(dbRow as Record<string, unknown>, organizationKey);
   }
 
   /**
@@ -173,7 +173,7 @@ export class MessageModel {
       return null;
     }
 
-    return this.decryptMessageData(result.rows[0], organizationKey);
+    return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
   }
 
   /**
@@ -200,7 +200,7 @@ export class MessageModel {
     } = options;
 
     let whereClause = 'WHERE organization_id = $1';
-    const params: any[] = [organizationId];
+    const params: unknown[] = [organizationId];
 
     if (status) {
       whereClause += ' AND status = $2';
@@ -208,7 +208,7 @@ export class MessageModel {
     }
 
     // Get total count
-    const countResult = await db.query(
+    const countResult = await db.query<{ total: string }>(
       `SELECT COUNT(*) as total FROM messages ${whereClause}`,
       params
     );
@@ -222,7 +222,7 @@ export class MessageModel {
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `, [...params, limit, offset]);
 
-    const messages = result.rows.map(row => this.decryptMessageData(row, organizationKey));
+    const messages = result.rows.map(row => this.decryptMessageData(row as Record<string, unknown>, organizationKey));
 
     return { messages, total };
   }
@@ -241,7 +241,7 @@ export class MessageModel {
     const encryptedUpdates = this.encryptMessageData(updates, organizationKey);
 
     const setClause: string[] = [];
-    const params: any[] = [organizationId, messageId];
+    const params: unknown[] = [organizationId, messageId];
 
     Object.entries(encryptedUpdates).forEach(([key, value], index) => {
       if (value !== undefined) {
@@ -265,7 +265,7 @@ export class MessageModel {
       return null;
     }
 
-    return this.decryptMessageData(result.rows[0], organizationKey);
+    return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
   }
 
   /**
@@ -295,7 +295,17 @@ export class MessageModel {
     approvalRate: number;
     todayProcessed: number;
   }> {
-    const result = await db.query(`
+    const result = await db.query<{
+      total_messages: string;
+      pending_messages: string;
+      approved_messages: string;
+      rejected_messages: string;
+      edited_messages: string;
+      sent_messages: string;
+      review_messages: string;
+      avg_response_time_ms: string | null;
+      today_processed: string;
+    }>(`
       SELECT
         COUNT(*) as total_messages,
         COUNT(*) FILTER (WHERE status = 'pending') as pending_messages,
@@ -322,7 +332,7 @@ export class MessageModel {
       editedMessages: parseInt(row.edited_messages) || 0,
       sentMessages: parseInt(row.sent_messages) || 0,
       reviewMessages: parseInt(row.review_messages) || 0,
-      avgResponseTime: row.avg_response_time_ms ? Math.round(row.avg_response_time_ms / 1000 / 60) : 0, // Convert to minutes
+      avgResponseTime: row.avg_response_time_ms ? Math.round(parseFloat(row.avg_response_time_ms) / 1000 / 60) : 0, // Convert to minutes
       approvalRate: totalMessages > 0 ? Math.round((approvedMessages / totalMessages) * 100) : 0,
       todayProcessed: parseInt(row.today_processed) || 0,
     };
@@ -336,7 +346,7 @@ export class MessageModel {
     messageId: string,
     userId: string | null,
     activityType: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ): Promise<void> {
     await db.query(`
       INSERT INTO activity_log (organization_id, user_id, message_id, activity_type, details)
@@ -373,10 +383,10 @@ export class MessageModel {
       LIMIT $2
     `, [organizationId, limit]);
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: Record<string, unknown>) => ({
       id: row.id,
       type: row.type,
-      message: this.decryptMessageData(row, organizationKey),
+      message: this.decryptMessageData(row as Record<string, unknown>, organizationKey),
       timestamp: row.timestamp,
       agentId: row.agent_id,
     }));

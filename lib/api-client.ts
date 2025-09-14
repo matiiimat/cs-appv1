@@ -19,8 +19,13 @@ export interface ApiMessage {
   response_time_ms: number | null;
   auto_reviewed: boolean;
   is_generating: boolean;
-  edit_history: any[];
-  metadata: Record<string, any>;
+  edit_history: Array<{
+    timestamp: string;
+    originalResponse: string;
+    editedResponse: string;
+    reason: string;
+  }>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -52,7 +57,7 @@ export interface CreateMessageInput {
   subject: string;
   message: string;
   category?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateMessageInput {
@@ -62,8 +67,13 @@ export interface UpdateMessageInput {
   agent_id?: string;
   auto_reviewed?: boolean;
   is_generating?: boolean;
-  edit_history?: any[];
-  metadata?: Record<string, any>;
+  edit_history?: Array<{
+    timestamp: string;
+    originalResponse: string;
+    editedResponse: string;
+    reason: string;
+  }>;
+  metadata?: Record<string, unknown>;
 }
 
 class ApiClient {
