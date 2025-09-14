@@ -216,7 +216,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updateMessage = async (id: string, updates: Partial<CustomerMessage>) => {
+  const updateMessage = useCallback(async (id: string, updates: Partial<CustomerMessage>) => {
     try {
       const apiUpdates: Record<string, unknown> = {}
 
@@ -237,7 +237,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       console.error('Failed to update message:', error)
       throw error
     }
-  }
+  }, [refreshData])
 
   const updateMessageCategory = async (id: string, category: string) => {
     await updateMessage(id, { category })

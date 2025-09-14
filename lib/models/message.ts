@@ -383,12 +383,15 @@ export class MessageModel {
       LIMIT $2
     `, [organizationId, limit]);
 
-    return result.rows.map((row: Record<string, unknown>) => ({
-      id: row.id,
-      type: row.type,
-      message: this.decryptMessageData(row as Record<string, unknown>, organizationKey),
-      timestamp: row.timestamp,
-      agentId: row.agent_id,
-    }));
+    return result.rows.map((row) => {
+      const typedRow = row as Record<string, unknown>;
+      return {
+        id: typedRow.id as string,
+        type: typedRow.type as string,
+        message: this.decryptMessageData(typedRow, organizationKey),
+        timestamp: typedRow.timestamp as string,
+        agentId: typedRow.agent_id as string | undefined,
+      };
+    });
   }
 }

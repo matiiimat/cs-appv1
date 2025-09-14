@@ -8,7 +8,6 @@ const DatabaseConfigSchema = z.object({
   database: z.string().min(1),
   user: z.string().min(1),
   password: z.string().min(1),
-  ssl: z.boolean().optional(),
   max: z.number().int().min(1).max(100).default(20),
   idleTimeoutMillis: z.number().int().min(1000).default(30000),
   connectionTimeoutMillis: z.number().int().min(1000).default(10000),
@@ -41,13 +40,14 @@ class DatabaseConnection {
    * Parse and validate database configuration from environment
    */
   private parseConfig(): PoolConfig {
+    const sslConfig = process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false;
+
     const rawConfig = {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       max: process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX) : undefined,
       idleTimeoutMillis: process.env.DB_IDLE_TIMEOUT ? parseInt(process.env.DB_IDLE_TIMEOUT) : undefined,
       connectionTimeoutMillis: process.env.DB_CONNECTION_TIMEOUT ? parseInt(process.env.DB_CONNECTION_TIMEOUT) : undefined,
@@ -58,7 +58,7 @@ class DatabaseConnection {
 
     return {
       ...parsed,
-      ssl: rawConfig.ssl,
+      ssl: sslConfig,
     };
   }
 
