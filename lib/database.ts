@@ -42,6 +42,24 @@ class DatabaseConnection {
   private parseConfig(): PoolConfig {
     const sslConfig = process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false;
 
+    // Prefer DATABASE_URL when available (e.g., Vercel/Neon)
+    const connectionString = process.env.DATABASE_URL;
+    if (connectionString) {
+      const cfg: PoolConfig = {
+        connectionString,
+        // Neon typically uses sslmode=require in the URL; we still set ssl for prod
+        ssl: sslConfig,
+      };
+
+      // Optional pool tuning from env
+      if (process.env.DB_POOL_MAX) cfg.max = parseInt(process.env.DB_POOL_MAX);
+      if (process.env.DB_IDLE_TIMEOUT) cfg.idleTimeoutMillis = parseInt(process.env.DB_IDLE_TIMEOUT);
+      if (process.env.DB_CONNECTION_TIMEOUT) cfg.connectionTimeoutMillis = parseInt(process.env.DB_CONNECTION_TIMEOUT);
+
+      return cfg;
+    }
+
+    // Fallback to individual DB_* variables (local/dev)
     const rawConfig = {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
