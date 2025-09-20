@@ -21,7 +21,6 @@ export function CustomerSupportDashboard() {
   const { settings } = useSettings()
 
   // Get agent ID - use demo agent for demo organization, otherwise require auth
-  const DEMO_ORG_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21" // Demo organization ID
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
 
   // Production-ready: agent ID should come from user session/auth
