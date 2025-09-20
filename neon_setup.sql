@@ -56,3 +56,15 @@ CREATE TABLE activity_log (
 -- Insert demo organization
 INSERT INTO organizations (id, name, encrypted_data_key) VALUES 
 ('82ef6e9f-e0b2-419f-82e3-2468ae4c1d21', 'Demo Organization', 'demo_encryption_key_32_chars_long');
+
+-- Insert demo agent user for the demo organization
+-- Fixed UUID intended for local/demo and docs; use in NEXT_PUBLIC_DEMO_AGENT_ID
+INSERT INTO users (id, organization_id, name, email, role, is_active)
+VALUES (
+  '5c2a2f72-1f16-4b76-9c74-1e2f2c88d8a1',
+  '82ef6e9f-e0b2-419f-82e3-2468ae4c1d21',
+  'Demo Agent',
+  'agent@example.com',
+  'agent',
+  true
+);

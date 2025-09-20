@@ -20,6 +20,9 @@ export function CustomerSupportDashboard() {
   
   const { settings } = useSettings()
 
+  // Use demo agent UUID if provided (in demo mode, no auth yet)
+  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
+
   // Filter to only show messages that are AI-reviewed and pending human review
   const pendingMessages = messages.filter(message => message.status === 'pending' && message.autoReviewed)
   const currentMessage = pendingMessages[currentMessageIndex]
@@ -41,12 +44,22 @@ export function CustomerSupportDashboard() {
 
   const handleApprove = useCallback(() => {
     if (!currentMessage) return
-    approveMessage(currentMessage.id, "agent-1")
+    if (!DEMO_AGENT_ID) {
+      console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot approve without agent context')
+      alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
+      return
+    }
+    approveMessage(currentMessage.id, DEMO_AGENT_ID)
   }, [currentMessage, approveMessage])
 
   const handleSendToReview = useCallback(() => {
     if (!currentMessage) return
-    sendToReview(currentMessage.id, "agent-1", "Needs manual review")
+    if (!DEMO_AGENT_ID) {
+      console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot send to review without agent context')
+      alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
+      return
+    }
+    sendToReview(currentMessage.id, DEMO_AGENT_ID, "Needs manual review")
   }, [currentMessage, sendToReview])
 
   const handleKeyboardApprove = useCallback(() => {

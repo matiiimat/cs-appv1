@@ -45,10 +45,12 @@ class DatabaseConnection {
     // Prefer DATABASE_URL when available (e.g., Vercel/Neon)
     const connectionString = process.env.DATABASE_URL;
     if (connectionString) {
+      // For Neon/managed databases, always use SSL regardless of environment
+      const isNeonOrManagedDB = connectionString.includes('neon.tech') || connectionString.includes('supabase.co') || connectionString.includes('amazonaws.com');
       const cfg: PoolConfig = {
         connectionString,
-        // Neon typically uses sslmode=require in the URL; we still set ssl for prod
-        ssl: sslConfig,
+        // Neon and other managed databases require SSL
+        ssl: isNeonOrManagedDB ? { rejectUnauthorized: false } : sslConfig,
       };
 
       // Optional pool tuning from env

@@ -86,6 +86,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Message ID is required" }, { status: 400 })
     }
 
+    console.log('PUT /api/messages - updates received:', updates)
+
     // Validate update data
     const validatedUpdates = UpdateMessageSchema.parse(updates)
 
@@ -101,6 +103,7 @@ export async function PUT(request: NextRequest) {
     console.error('Error updating message:', error)
 
     if (error instanceof z.ZodError) {
+      console.log('Validation error details:', error.errors)
       return NextResponse.json(
         { error: "Invalid update data", details: error.errors },
         { status: 400 }

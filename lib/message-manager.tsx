@@ -224,15 +224,20 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       if (updates.category !== undefined) apiUpdates.category = updates.category
       if (updates.aiSuggestedResponse !== undefined) apiUpdates.ai_suggested_response = updates.aiSuggestedResponse
       if (updates.status !== undefined) apiUpdates.status = updates.status
-      if (updates.agentId !== undefined) apiUpdates.agent_id = updates.agentId
+      // Only include agent_id if it's a valid UUID
+      if (typeof updates.agentId === 'string') {
+        const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+        if (UUID_RE.test(updates.agentId)) {
+          apiUpdates.agent_id = updates.agentId
+        }
+      }
       if (updates.autoReviewed !== undefined) apiUpdates.auto_reviewed = updates.autoReviewed
       if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
 
       const response = await apiClient.updateMessage(id, apiUpdates)
-      const updatedMessage = convertApiMessage(response.message)
 
-      setMessages(prev => prev.map(m => m.id === id ? updatedMessage : m))
-      await refreshData() // Refresh to get updated stats
+      // Just refresh from database - don't double-update state to avoid conflicts
+      await refreshData()
     } catch (error) {
       console.error('Failed to update message:', error)
       throw error
@@ -244,15 +249,27 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const approveMessage = async (id: string, agentId: string) => {
+    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+    if (!UUID_RE.test(agentId)) {
+      throw new Error('approveMessage requires a valid agent UUID')
+    }
     await updateMessage(id, { status: "approved", agentId })
     clearDraftReply(id)
   }
 
   const rejectMessage = async (id: string, agentId: string) => {
+    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+    if (!UUID_RE.test(agentId)) {
+      throw new Error('rejectMessage requires a valid agent UUID')
+    }
     await updateMessage(id, { status: "rejected", agentId })
   }
 
   const sendToReview = async (id: string, agentId: string) => {
+    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+    if (!UUID_RE.test(agentId)) {
+      throw new Error('sendToReview requires a valid agent UUID')
+    }
     await updateMessage(id, { status: "review", agentId })
   }
 

@@ -24,6 +24,7 @@ interface ChatMessage {
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
   const { settings } = useSettings()
+  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
@@ -60,29 +61,30 @@ export function DetailedReviewInterface() {
     }
   }, [selectedMessage, selectedMessageId, getDraftReply, updateDraftReply])
 
-  const handleApprove = useCallback(() => {
+  const handleApprove = useCallback(async () => {
     if (selectedMessage) {
-      updateMessage(selectedMessage.id, { status: "approved" })
+      if (!DEMO_AGENT_ID) {
+        console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot approve without agent context')
+        alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
+        return
+      }
+      await updateMessage(selectedMessage.id, { status: "approved", agentId: DEMO_AGENT_ID })
+      setChatMessages([])
+      // Navigation will be handled by useEffect when reviewMessages updates
+    }
+  }, [selectedMessage, updateMessage, setChatMessages])
 
-      const remainingMessages = reviewMessages.filter((msg) => msg.id !== selectedMessage.id)
-
-      if (remainingMessages.length > 0) {
-        // Find the next message after the current one
-        const currentIndex = reviewMessages.findIndex((msg) => msg.id === selectedMessageId)
-        const nextMessage =
-          remainingMessages.find((msg) => {
-            const originalIndex = reviewMessages.findIndex((original) => original.id === msg.id)
-            return originalIndex > currentIndex
-          }) || remainingMessages[0]
-
-        setSelectedMessageId(nextMessage.id)
+  // Auto-navigate when reviewMessages changes (after approve/etc)
+  useEffect(() => {
+    if (selectedMessageId && !reviewMessages.find(msg => msg.id === selectedMessageId)) {
+      // Current message was removed, select the first available message
+      if (reviewMessages.length > 0) {
+        setSelectedMessageId(reviewMessages[0].id)
       } else {
         setSelectedMessageId(null)
       }
-
-      setChatMessages([])
     }
-  }, [selectedMessage, updateMessage, reviewMessages, selectedMessageId, setChatMessages])
+  }, [reviewMessages, selectedMessageId])
 
 
 
