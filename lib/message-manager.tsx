@@ -234,7 +234,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       if (updates.autoReviewed !== undefined) apiUpdates.auto_reviewed = updates.autoReviewed
       if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
 
-      const response = await apiClient.updateMessage(id, apiUpdates)
+      await apiClient.updateMessage(id, apiUpdates)
 
       // Just refresh from database - don't double-update state to avoid conflicts
       await refreshData()

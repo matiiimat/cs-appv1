@@ -24,7 +24,25 @@ interface ChatMessage {
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
   const { settings } = useSettings()
+
+  // Get agent ID - use demo agent for demo organization, otherwise require auth
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
+
+  const getAgentId = () => {
+    // TODO: Replace with real user authentication
+    // const { user } = useAuth()
+    // return user?.id
+
+    // For demo organization, use demo agent
+    if (DEMO_AGENT_ID) {
+      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      return DEMO_AGENT_ID
+    }
+
+    throw new Error('No agent context available. Implement user authentication.')
+  }
+
+  const agentId = getAgentId()
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
@@ -63,16 +81,16 @@ export function DetailedReviewInterface() {
 
   const handleApprove = useCallback(async () => {
     if (selectedMessage) {
-      if (!DEMO_AGENT_ID) {
-        console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot approve without agent context')
-        alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
-        return
+      try {
+        await updateMessage(selectedMessage.id, { status: "approved", agentId })
+        setChatMessages([])
+        // Navigation will be handled by useEffect when reviewMessages updates
+      } catch (error) {
+        console.error('Failed to approve message:', error)
+        alert('Authentication required. Please implement user login.')
       }
-      await updateMessage(selectedMessage.id, { status: "approved", agentId: DEMO_AGENT_ID })
-      setChatMessages([])
-      // Navigation will be handled by useEffect when reviewMessages updates
     }
-  }, [selectedMessage, updateMessage, setChatMessages])
+  }, [selectedMessage, updateMessage, setChatMessages, agentId])
 
   // Auto-navigate when reviewMessages changes (after approve/etc)
   useEffect(() => {

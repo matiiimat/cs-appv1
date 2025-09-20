@@ -20,8 +20,27 @@ export function CustomerSupportDashboard() {
   
   const { settings } = useSettings()
 
-  // Use demo agent UUID if provided (in demo mode, no auth yet)
+  // Get agent ID - use demo agent for demo organization, otherwise require auth
+  const DEMO_ORG_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21" // Demo organization ID
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
+
+  // Production-ready: agent ID should come from user session/auth
+  // For now, use demo agent only for demo organization
+  const getAgentId = () => {
+    // TODO: Replace with real user authentication
+    // const { user } = useAuth()
+    // return user?.id
+
+    // For demo organization, use demo agent
+    if (DEMO_AGENT_ID) {
+      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      return DEMO_AGENT_ID
+    }
+
+    throw new Error('No agent context available. Implement user authentication.')
+  }
+
+  const agentId = getAgentId()
 
   // Filter to only show messages that are AI-reviewed and pending human review
   const pendingMessages = messages.filter(message => message.status === 'pending' && message.autoReviewed)
@@ -44,23 +63,23 @@ export function CustomerSupportDashboard() {
 
   const handleApprove = useCallback(() => {
     if (!currentMessage) return
-    if (!DEMO_AGENT_ID) {
-      console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot approve without agent context')
-      alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
-      return
+    try {
+      approveMessage(currentMessage.id, agentId)
+    } catch (error) {
+      console.error('Failed to approve message:', error)
+      alert('Authentication required. Please implement user login.')
     }
-    approveMessage(currentMessage.id, DEMO_AGENT_ID)
-  }, [currentMessage, approveMessage])
+  }, [currentMessage, approveMessage, agentId])
 
   const handleSendToReview = useCallback(() => {
     if (!currentMessage) return
-    if (!DEMO_AGENT_ID) {
-      console.error('Missing NEXT_PUBLIC_DEMO_AGENT_ID; cannot send to review without agent context')
-      alert('Missing demo agent. Set NEXT_PUBLIC_DEMO_AGENT_ID in .env.local and restart.')
-      return
+    try {
+      sendToReview(currentMessage.id, agentId, "Needs manual review")
+    } catch (error) {
+      console.error('Failed to send to review:', error)
+      alert('Authentication required. Please implement user login.')
     }
-    sendToReview(currentMessage.id, DEMO_AGENT_ID, "Needs manual review")
-  }, [currentMessage, sendToReview])
+  }, [currentMessage, sendToReview, agentId])
 
   const handleKeyboardApprove = useCallback(() => {
     if (!currentMessage) return
