@@ -165,8 +165,6 @@ export function DetailedReviewInterface() {
     setAiChatInput("")
 
     try {
-      const aiService = new AIService(settings.aiConfig)
-      
       // Build conversation context for the AI
       const conversationContext = chatMessages
         .map(msg => `${msg.sender === "agent" ? "Agent" : "AI"}: ${msg.content}`)
@@ -198,7 +196,22 @@ Agent's latest input: ${aiChatInput}
 
 Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue. The response should be ready to send to the customer directly.`
 
-      const response = await aiService.generateText(systemPrompt, aiChatInput)
+      // Call server route to avoid browser CORS and keep keys server-side
+      const resp = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aiConfig: settings.aiConfig,
+          system: systemPrompt,
+          prompt: aiChatInput,
+        })
+      })
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data?.error || `AI chat failed (${resp.status})`)
+      }
+      const data = await resp.json()
+      const response = data.content as string
       
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -247,8 +260,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
     setChatMessages((prev) => [...prev, userMessage])
 
     try {
-      const aiService = new AIService(settings.aiConfig)
-      
+      // Use existing server route to modify a response via quick actions
       const systemPrompt = `You are helping improve a customer support response. The customer's original issue was:
 
 Customer: ${selectedMessage.customerName}
@@ -262,7 +274,29 @@ Your task: ${actionInstruction}
 
 Provide an improved version that can be sent directly to the customer.`
 
-      const response = await aiService.generateText(systemPrompt, actionInstruction)
+      const resp = await fetch('/api/generate-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: selectedMessage.customerName,
+          customerEmail: selectedMessage.customerEmail,
+          subject: selectedMessage.subject,
+          message: selectedMessage.message,
+          aiConfig: settings.aiConfig,
+          agentName: settings.agentName || 'Support Agent',
+          agentSignature: settings.agentSignature || 'Best regards,\nSupport Team',
+          categories: settings.categories,
+          quickActionInstruction: actionInstruction,
+          currentResponse: currentResponse,
+          companyKnowledge: settings.companyKnowledge,
+        })
+      })
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}))
+        throw new Error(err?.error || `Quick action failed (${resp.status})`)
+      }
+      const data = await resp.json()
+      const response = data.aiSuggestedResponse as string
       
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),

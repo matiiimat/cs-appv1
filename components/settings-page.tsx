@@ -36,14 +36,18 @@ export function SettingsPage() {
   }
 
   const handleProviderChange = (provider: string) => {
-    const providerModels = AI_PROVIDERS[provider]?.models || []
-    const defaultModel = providerModels[0] || ""
-    
+    // Simple defaults per provider; user can override in text field
+    const defaultModel = provider === 'openai'
+      ? 'gpt-4o-mini'
+      : provider === 'anthropic'
+      ? 'claude-3-5-haiku-20241022'
+      : settings.aiConfig.model
+
     updateSettings({
       aiConfig: {
         ...settings.aiConfig,
         provider: provider as "openai" | "anthropic" | "local",
-        model: defaultModel,
+        model: defaultModel || '',
       }
     })
     setConnectionResult(null)
@@ -98,32 +102,52 @@ export function SettingsPage() {
     setConnectionResult(null)
 
     try {
-      const aiService = new AIService(settings.aiConfig)
-      
-      // Add 10-second timeout for connection test
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timed out after 10 seconds')), 10000)
-      })
-      
-      const result = await Promise.race([
-        aiService.testConnection(),
-        timeoutPromise
-      ])
-      
-      setConnectionResult(result)
+      // Use server route for OpenAI/Anthropic to avoid browser CORS and secret exposure
+      if (settings.aiConfig.provider === 'openai' || settings.aiConfig.provider === 'anthropic') {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 10000)
+        try {
+          const resp = await fetch('/api/ai/test-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              provider: settings.aiConfig.provider,
+              apiKey: settings.aiConfig.apiKey,
+              model: settings.aiConfig.model,
+            }),
+            signal: controller.signal,
+          })
+          clearTimeout(timer)
+          const data = await resp.json().catch(() => ({ success: false, error: 'Invalid server response' }))
+          setConnectionResult(data)
+        } catch (e) {
+          const msg = e instanceof Error ? (e.name === 'AbortError' ? 'Connection test timed out after 10 seconds' : e.message) : 'Connection failed'
+          setConnectionResult({ success: false, error: msg })
+        }
+      } else {
+        // Keep local provider path unchanged
+        const aiService = new AIService(settings.aiConfig)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Connection test timed out after 10 seconds')), 10000)
+        })
+        const result = await Promise.race([
+          aiService.testConnection(),
+          timeoutPromise
+        ])
+        setConnectionResult(result)
+      }
     } catch (error) {
       setConnectionResult({
         success: false,
-        error: error instanceof Error ? error.message : "Connection failed"
+        error: error instanceof Error ? error.message : 'Connection failed'
       })
     } finally {
       setTestingConnection(false)
     }
   }
 
-  const getAvailableModels = () => {
-    return AI_PROVIDERS[settings.aiConfig.provider]?.models || []
-  }
+  // No remote model listing; we use simple defaults and a text field
+  const getAvailableModels = () => []
 
   const handleSaveSettings = async () => {
     setSaveResult(null)
@@ -316,22 +340,18 @@ export function SettingsPage() {
                 ) : (
                   <div className="space-y-2">
                     <Label htmlFor="ai-model">Model</Label>
-                    <Select
+                    <Input
+                      id="ai-model"
                       value={settings.aiConfig.model}
-                      onValueChange={handleModelChange}
-                      disabled={getAvailableModels().length === 0}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableModels().map((model) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={(e) => handleModelChange(e.target.value)}
+                      placeholder={
+                        settings.aiConfig.provider === 'openai'
+                          ? 'gpt-4o-mini'
+                          : settings.aiConfig.provider === 'anthropic'
+                          ? 'claude-3-5-haiku-20241022'
+                          : 'model'
+                      }
+                    />
                   </div>
                 )}
               </div>
