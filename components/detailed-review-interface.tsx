@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
-import { AIService } from "@/lib/ai-providers"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
 import { CategorySelector } from "@/components/ui/category-selector"
@@ -261,19 +260,6 @@ Generate a customer-ready response that addresses the agent's input while helpin
 
     try {
       // Use existing server route to modify a response via quick actions
-      const systemPrompt = `You are helping improve a customer support response. The customer's original issue was:
-
-Customer: ${selectedMessage.customerName}
-Issue: ${selectedMessage.message}
-Category: ${selectedMessage.category}
-
-Current response draft:
-${currentResponse}
-
-Your task: ${actionInstruction}
-
-Provide an improved version that can be sent directly to the customer.`
-
       const resp = await fetch('/api/generate-response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

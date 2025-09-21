@@ -147,7 +147,6 @@ export function SettingsPage() {
   }
 
   // No remote model listing; we use simple defaults and a text field
-  const getAvailableModels = () => []
 
   const handleSaveSettings = async () => {
     setSaveResult(null)
