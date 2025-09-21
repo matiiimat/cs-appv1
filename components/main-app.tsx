@@ -72,7 +72,7 @@ export function MainApp() {
                     className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "swipe" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <MessageSquare className="h-4 w-4" />
-                    Review Messages
+                    Triage
                   </Button>
                   <Button
                     variant={currentView === "detailed-review" ? "default" : "ghost"}
@@ -81,7 +81,7 @@ export function MainApp() {
                     className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "detailed-review" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
                     <FileText className="h-4 w-4" />
-                    Messages to Review
+                    Review Queue
                   </Button>
                   <Button
                     variant={currentView === "settings" ? "default" : "ghost"}
@@ -137,7 +137,7 @@ export function MainApp() {
                           className="justify-start gap-2"
                         >
                           <MessageSquare className="h-4 w-4" />
-                          Review Messages
+                          Triage
                         </Button>
                         <Button
                           variant={currentView === "detailed-review" ? "default" : "ghost"}
@@ -145,7 +145,7 @@ export function MainApp() {
                           className="justify-start gap-2"
                         >
                           <FileText className="h-4 w-4" />
-                          Messages to Review
+                          Review Queue
                         </Button>
                         <Button
                           variant={currentView === "settings" ? "default" : "ghost"}

@@ -186,7 +186,7 @@ export function SwipeableCard({
               dragOffset.x > 0 ? "bg-green-500 text-white opacity-100" : "opacity-0"
             }`}
           >
-            APPROVE
+            SEND
           </div>
           <div
             className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${

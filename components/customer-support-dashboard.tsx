@@ -157,7 +157,7 @@ export function CustomerSupportDashboard() {
         <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
             <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-              <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">A</kbd> Approve</span>
+              <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">A</kbd> Send</span>
               <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">R</kbd> Review</span>
               <span><kbd className="px-1 py-0.5 text-xs font-mono bg-muted rounded">U</kbd> Undo</span>
             </div>
@@ -287,7 +287,7 @@ export function CustomerSupportDashboard() {
                     keyboardFeedback === 'approve' ? "bg-green-500 text-white opacity-100" : "opacity-0"
                   }`}
                 >
-                  APPROVE
+                  SEND
                 </div>
                 <div
                   className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${

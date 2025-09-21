@@ -446,7 +446,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
                   <div className="flex gap-2">
                     <Button onClick={handleApprove} className="w-full">
                       <Send className="h-4 w-4 mr-2" />
-                      Approve & Send
+                      Send
                     </Button>
                   </div>
                 </div>
