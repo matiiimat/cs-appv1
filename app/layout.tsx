@@ -21,7 +21,7 @@ const customFont = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "aidly",
+  title: "Aidly",
   description: "Grow your business, not your support costs, with intelligent automation that delivers faster, smarter support at lower cost.",
 };
 

@@ -9,7 +9,7 @@ import { MessageManagerProvider } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { BarChart3, MessageSquare, FileText, Settings, Menu } from "lucide-react"
+import { BarChart3, Zap, Inbox, Settings, Menu } from "lucide-react"
 import Image from "next/image"
 
 type ViewMode = "dashboard" | "swipe" | "detailed-review" | "settings"
@@ -71,7 +71,7 @@ export function MainApp() {
                     onClick={switchToSwipe}
                     className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "swipe" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <Zap className="h-4 w-4" />
                     Triage
                   </Button>
                   <Button
@@ -80,8 +80,8 @@ export function MainApp() {
                     onClick={switchToDetailedReview}
                     className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "detailed-review" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
                   >
-                    <FileText className="h-4 w-4" />
-                    Review Queue
+                    <Inbox className="h-4 w-4" />
+                    Inbox
                   </Button>
                   <Button
                     variant={currentView === "settings" ? "default" : "ghost"}
@@ -111,7 +111,7 @@ export function MainApp() {
                     onClick={switchToSwipe}
                     className="p-2"
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <Zap className="h-4 w-4" />
                   </Button>
 
                   {/* Burger menu for additional options */}
@@ -136,7 +136,7 @@ export function MainApp() {
                           onClick={switchToSwipe}
                           className="justify-start gap-2"
                         >
-                          <MessageSquare className="h-4 w-4" />
+                          <Zap className="h-4 w-4" />
                           Triage
                         </Button>
                         <Button
@@ -144,8 +144,8 @@ export function MainApp() {
                           onClick={switchToDetailedReview}
                           className="justify-start gap-2"
                         >
-                          <FileText className="h-4 w-4" />
-                          Review Queue
+                          <Inbox className="h-4 w-4" />
+                          Inbox
                         </Button>
                         <Button
                           variant={currentView === "settings" ? "default" : "ghost"}
