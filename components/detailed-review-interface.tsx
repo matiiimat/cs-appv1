@@ -47,6 +47,19 @@ export function DetailedReviewInterface() {
   const [aiChatInput, setAiChatInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   
+  // Generate unique IDs for chat items to avoid key collisions
+  const genId = () => {
+    try {
+      // Prefer cryptographically-strong UUIDs when available
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const g: any = globalThis as any
+      if (g?.crypto?.randomUUID) return g.crypto.randomUUID()
+    } catch {
+      // ignore
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  }
+  
   // Get current draft reply for selected message
   const replyText = selectedMessageId ? getDraftReply(selectedMessageId) : ""
   
@@ -128,13 +141,13 @@ export function DetailedReviewInterface() {
       updateMessageCategory(selectedMessage.id, newCategory)
       
       const confirmMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: genId(),
         content: `✅ Category changed to "${newCategory}" for this message.`,
         sender: "ai",
         timestamp: new Date(),
       }
       setChatMessages((prev) => [...prev, 
-        { id: Date.now().toString(), content: aiChatInput, sender: "agent", timestamp: new Date() },
+        { id: genId(), content: aiChatInput, sender: "agent", timestamp: new Date() },
         confirmMessage
       ])
       setAiChatInput("")
@@ -144,7 +157,7 @@ export function DetailedReviewInterface() {
     // Check if AI is configured
     if (!settings.aiConfig.apiKey) {
       const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: genId(),
         content: "Please configure your AI settings first to use the AI assistant.",
         sender: "ai",
         timestamp: new Date(),
@@ -154,7 +167,7 @@ export function DetailedReviewInterface() {
     }
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: genId(),
       content: aiChatInput,
       sender: "agent",
       timestamp: new Date(),
@@ -213,7 +226,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
       const response = data.content as string
       
       const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: genId(),
         content: response,
         sender: "ai",
         timestamp: new Date(),
@@ -225,7 +238,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
       console.error("AI chat error:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
       const errorResponse: ChatMessage = {
-        id: Date.now().toString(),
+        id: genId(),
         content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration and try again.`,
         sender: "ai", 
         timestamp: new Date(),
@@ -240,7 +253,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
     const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
     if (!currentResponse) {
       const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: genId(),
         content: "Please have some content in the draft reply first to use quick actions.",
         sender: "ai",
         timestamp: new Date(),
@@ -250,7 +263,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
     }
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: genId(),
       content: `Quick Action: ${actionTitle}`,
       sender: "agent",
       timestamp: new Date(),
@@ -285,7 +298,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
       const response = data.aiSuggestedResponse as string
       
       const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: genId(),
         content: response,
         sender: "ai",
         timestamp: new Date(),
@@ -297,7 +310,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
       console.error("Quick action error:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
       const errorResponse: ChatMessage = {
-        id: Date.now().toString(),
+        id: genId(),
         content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration.`,
         sender: "ai",
         timestamp: new Date(),

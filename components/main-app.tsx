@@ -46,12 +46,12 @@ export function MainApp() {
                 <div className="flex items-center gap-2">
                   <Image
                     src="/logo-60x.png"
-                    alt="Aidly Logo"
+                    alt="aidly Logo"
                     width={20}
                     height={20}
                     className="h-5 w-5"
                   />
-                  <span className="text-lg font-bold hidden sm:block">Aidly</span>
+                  <span className="text-lg font-bold hidden sm:block font-custom">Aidly</span>
                 </div>
 
                 {/* Desktop Navigation */}
