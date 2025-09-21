@@ -137,12 +137,24 @@ export function DetailedReviewInterface() {
     const categoryMatch = aiChatInput.match(categoryChangeRegex)
     
     if (categoryMatch) {
-      const newCategory = categoryMatch[1].trim().replace(/['"]/g, '')
-      updateMessageCategory(selectedMessage.id, newCategory)
+      const requested = categoryMatch[1].trim().replace(/['"]/g, '')
+      const available = settings.categories || []
+      const match = available.find(c => c.name.toLowerCase() === requested.toLowerCase())
+
+      if (!match) {
+        console.info(
+          `Category change ignored: "${requested}" not found. Available: ${available.map(c => c.name).join(', ')}`
+        )
+        // Do nothing else per requirement (no UI change)
+        return
+      }
+
+      // Use canonical category name from settings
+      updateMessageCategory(selectedMessage.id, match.name)
       
       const confirmMessage: ChatMessage = {
         id: genId(),
-        content: `✅ Category changed to "${newCategory}" for this message.`,
+        content: `✅ Category changed to "${match.name}" for this message.`,
         sender: "ai",
         timestamp: new Date(),
       }
