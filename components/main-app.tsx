@@ -10,6 +10,7 @@ import { SettingsProvider } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { BarChart3, MessageSquare, FileText, Settings, Menu } from "lucide-react"
+import Image from "next/image"
 
 type ViewMode = "dashboard" | "swipe" | "detailed-review" | "settings"
 
@@ -43,8 +44,14 @@ export function MainApp() {
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-accent" />
-                  <span className="text-lg font-bold hidden sm:block">SupportAI</span>
+                  <Image
+                    src="/logo-60x.png"
+                    alt="Aidly Logo"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5"
+                  />
+                  <span className="text-lg font-bold hidden sm:block">Aidly</span>
                 </div>
 
                 {/* Desktop Navigation */}
