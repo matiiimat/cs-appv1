@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
-import { MessageSquare, Clock, Zap, PlayCircle, Target, Loader2, AlertCircle } from "lucide-react"
+import { MessageSquare, Clock, Zap, PlayCircle, Loader2, AlertCircle } from "lucide-react"
+import { PieChart } from "@/components/ui/pie-chart"
+import { useSettings } from "@/lib/settings-context"
 import { useState } from "react"
 
 export function AgentDashboard() {
@@ -27,6 +29,28 @@ export function AgentDashboard() {
   const handleProcessQueue = async () => {
     await processBatch(selectedBatchSize)
   }
+
+  // Category distribution for pie chart
+  const categoryCounts = messages.reduce<Record<string, number>>((acc, m) => {
+    const key = (m.category && m.category.trim()) || 'Uncategorized'
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+
+  // Use configured category colors when available; fallback palette otherwise
+  const { settings: uiSettings } = useSettings()
+  const palette = ['#3b82f6','#22c55e','#ef4444','#f59e0b','#a855f7','#06b6d4','#84cc16','#f97316']
+  const categoryColorMap: Record<string, string> = {}
+  uiSettings.categories.forEach((c, idx) => {
+    categoryColorMap[c.name] = c.color || palette[idx % palette.length]
+  })
+  // Ensure "Uncategorized" has a color
+  if (!categoryColorMap['Uncategorized']) categoryColorMap['Uncategorized'] = '#6b7280'
+  const pieData = Object.entries(categoryCounts).map(([label, value], idx) => ({
+    label,
+    value,
+    color: categoryColorMap[label] || palette[idx % palette.length],
+  }))
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -152,14 +176,7 @@ export function AgentDashboard() {
           </p>
         </div>
 
-        <div className="p-6 bg-card rounded-lg shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm font-medium">Approval Rate</div>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold mb-2">{stats.approvalRate.toFixed(1)}%</div>
-          <Progress value={stats.approvalRate} className="mt-2" />
-        </div>
+        
 
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
@@ -185,6 +202,23 @@ export function AgentDashboard() {
               <div className="text-2xl font-bold mb-2 text-muted-foreground">None</div>
               <p className="text-xs text-muted-foreground">No pending tickets</p>
             </>
+          )}
+        </div>
+      </div>
+
+      {/* Category Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="p-6 bg-card rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-medium">Cases by Category</div>
+          </div>
+          {pieData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No cases yet.</p>
+          ) : (
+            <PieChart data={pieData} totalLabel="Total" />
+          )}
+          {uiSettings.categories.length === 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">No categories configured — using detected categories from cases.</p>
           )}
         </div>
       </div>

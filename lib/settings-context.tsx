@@ -106,20 +106,46 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  // Load settings from localStorage on mount
+  // Load settings from database on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings)
-setSettings({ ...defaultSettings, ...parsed })
-          setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
-        } catch (error) {
-          console.error('Failed to parse saved settings:', error)
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/organization/settings')
+        if (response.ok) {
+          const data = await response.json()
+          setSettings({ ...defaultSettings, ...data })
+          setLastSaved(data.lastSaved ? new Date(data.lastSaved) : null)
+        } else {
+          console.error('Failed to load settings from database')
+          // Fallback to localStorage if API fails
+          const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
+          if (savedSettings) {
+            try {
+              const parsed = JSON.parse(savedSettings)
+              setSettings({ ...defaultSettings, ...parsed })
+              setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+            } catch (error) {
+              console.error('Failed to parse saved settings:', error)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error)
+        // Fallback to localStorage if API fails
+        const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings)
+            setSettings({ ...defaultSettings, ...parsed })
+            setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+          } catch (error) {
+            console.error('Failed to parse saved settings:', error)
+          }
         }
       }
     }
+
+    loadSettings()
   }, [])
 
   // Apply theme to document whenever settings change
@@ -174,15 +200,43 @@ setSettings({ ...defaultSettings, ...parsed })
         ...settings,
         lastSaved: new Date().toISOString()
       }
-      
+
+      // Save to database
+      const response = await fetch('/api/organization/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settingsWithTimestamp),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings to database')
+      }
+
+      const result = await response.json()
+
+      // Also save to localStorage as a backup
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
       setLastSaved(new Date())
-      
-      // Simulate a small delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 300))
+
+      console.log('Settings saved successfully', result)
     } catch (error) {
       console.error('Failed to save settings:', error)
-      throw error
+
+      // Fallback to localStorage only if database save fails
+      try {
+        const settingsWithTimestamp = {
+          ...settings,
+          lastSaved: new Date().toISOString()
+        }
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
+        setLastSaved(new Date())
+        console.warn('Settings saved to localStorage as fallback')
+      } catch (localError) {
+        console.error('Failed to save to localStorage as well:', localError)
+        throw error
+      }
     } finally {
       setIsLoading(false)
     }
