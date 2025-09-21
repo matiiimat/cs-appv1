@@ -43,6 +43,10 @@ export function MainApp() {
           <nav className="border-b border-border bg-card">
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center justify-between">
+                {/* Empty left space for balance */}
+                <div className="flex-1"></div>
+
+                {/* Centered Logo and Company Name */}
                 <div className="flex items-center gap-2">
                   <Image
                     src="/logo-60x.png"
@@ -51,11 +55,11 @@ export function MainApp() {
                     height={20}
                     className="h-5 w-5"
                   />
-                  <span className="text-lg font-bold hidden sm:block font-custom">Aidly</span>
+                  <span className="text-lg font-bold font-custom">Aidly</span>
                 </div>
 
                 {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-1 flex-1 justify-end">
                   <Button
                     variant={currentView === "dashboard" ? "default" : "ghost"}
                     size="sm"
