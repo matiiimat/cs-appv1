@@ -255,7 +255,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     if (!UUID_RE.test(agentId)) {
       throw new Error('approveMessage requires a valid agent UUID')
     }
-    await updateMessage(id, { status: "to_send_queue", agentId })
+    await updateMessage(id, { status: "sent", agentId })
     clearDraftReply(id)
   }
 

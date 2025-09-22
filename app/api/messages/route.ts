@@ -112,6 +112,11 @@ export async function PUT(request: NextRequest) {
     // Validate update data
     const validatedUpdates = UpdateMessageSchema.parse(updates)
 
+    // If transitioning to 'sent' and no processed_at provided, stamp it server-side
+    if ((validatedUpdates as any).status === 'sent' && (validatedUpdates as any).processed_at === undefined) {
+      (validatedUpdates as any).processed_at = new Date().toISOString()
+    }
+
     // Update message in database
     const updatedMessage = await MessageModel.update(DEMO_ORGANIZATION_ID, id, validatedUpdates)
 

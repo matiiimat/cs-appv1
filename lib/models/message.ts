@@ -46,6 +46,7 @@ export const UpdateMessageSchema = z.object({
   ai_suggested_response: z.string().optional(),
   status: MessageStatus.optional(),
   agent_id: z.string().uuid().optional(),
+  processed_at: z.union([z.string(), z.date()]).optional(),
   ai_reviewed: z.boolean().optional(),
   is_generating: z.boolean().optional(),
   edit_history: z.array(z.any()).optional(),

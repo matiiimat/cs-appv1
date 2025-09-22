@@ -94,7 +94,7 @@ export function DetailedReviewInterface() {
   const handleApprove = useCallback(async () => {
     if (selectedMessage) {
       try {
-        await updateMessage(selectedMessage.id, { status: "to_send_queue", agentId })
+        await updateMessage(selectedMessage.id, { status: "sent", agentId })
         setChatMessages([])
         // Navigation will be handled by useEffect when reviewMessages updates
       } catch (error) {

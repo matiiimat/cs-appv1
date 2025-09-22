@@ -203,9 +203,9 @@ export function AgentDashboard() {
           <p className="text-xs text-muted-foreground">Processing efficiency</p>
         </div>
 
-        <div className="p-6 bg-card rounded-lg shadow-md lg:col-span-2">
+        <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <div className="text-sm font-medium">SLA (Sent Only)</div>
+            <div className="text-sm font-medium">SLA</div>
           </div>
           {totalSent === 0 ? (
             <p className="text-sm text-muted-foreground">No sent messages yet.</p>
@@ -216,8 +216,8 @@ export function AgentDashboard() {
                 <div className="h-full bg-red-500" style={{ width: `${pctOut}%` }} />
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="text-green-600">Green {pctIn}% ({inSLA}/{totalSent})</span>
-                <span className="text-red-600">Red {pctOut}% ({outSLA}/{totalSent})</span>
+                <span className="text-green-600">{pctIn}% ({inSLA}/{totalSent})</span>
+                <span className="text-red-600">{pctOut}% ({outSLA}/{totalSent})</span>
               </div>
             </div>
           )}
