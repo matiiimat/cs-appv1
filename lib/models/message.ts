@@ -323,16 +323,16 @@ export class MessageModel {
 
     const row = result.rows[0];
     const totalMessages = parseInt(row.total_messages) || 0;
-    const approvedMessages = parseInt((row as any).to_send_queue_messages) || 0;
+    const approvedMessages = parseInt(row.to_send_queue_messages) || 0;
     
     return {
       totalMessages,
-      pendingMessages: parseInt((row as any).new_messages) || 0,
+      pendingMessages: parseInt(row.new_messages) || 0,
       approvedMessages,
       rejectedMessages: parseInt(row.rejected_messages) || 0,
       editedMessages: parseInt(row.edited_messages) || 0,
       sentMessages: parseInt(row.sent_messages) || 0,
-      reviewMessages: parseInt((row as any).to_review_queue_messages) || 0,
+      reviewMessages: parseInt(row.to_review_queue_messages) || 0,
       avgResponseTime: row.avg_response_time_ms ? Math.round(parseFloat(row.avg_response_time_ms) / 1000 / 60) : 0, // Convert to minutes
       approvalRate: totalMessages > 0 ? Math.round((approvedMessages / totalMessages) * 100) : 0,
       todayProcessed: parseInt(row.today_processed) || 0,

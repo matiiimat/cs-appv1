@@ -72,9 +72,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const err = error as any
-    const code = err?.code as string | undefined // PG error code if present
-    const message = err?.message as string | undefined
+    let code: string | undefined
+    let message: string | undefined
+    if (typeof error === 'object' && error !== null) {
+      const e = error as Record<string, unknown>
+      if (typeof e.code === 'string') code = e.code
+      if (typeof e.message === 'string') message = e.message
+    }
 
     // Heuristic hints
     let hint: string | undefined
@@ -113,8 +117,8 @@ export async function PUT(request: NextRequest) {
     const validatedUpdates = UpdateMessageSchema.parse(updates)
 
     // If transitioning to 'sent' and no processed_at provided, stamp it server-side
-    if ((validatedUpdates as any).status === 'sent' && (validatedUpdates as any).processed_at === undefined) {
-      (validatedUpdates as any).processed_at = new Date().toISOString()
+    if (validatedUpdates.status === 'sent' && validatedUpdates.processed_at === undefined) {
+      validatedUpdates.processed_at = new Date().toISOString()
     }
 
     // Update message in database
@@ -136,9 +140,13 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const err = error as any
-    const code = err?.code as string | undefined
-    const message = err?.message as string | undefined
+    let code: string | undefined
+    let message: string | undefined
+    if (typeof error === 'object' && error !== null) {
+      const e = error as Record<string, unknown>
+      if (typeof e.code === 'string') code = e.code
+      if (typeof e.message === 'string') message = e.message
+    }
 
     let hint: string | undefined
     if (message?.includes('violates check constraint')) {
