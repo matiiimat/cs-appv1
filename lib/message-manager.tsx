@@ -204,7 +204,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     refreshData()
   }, [refreshData])
 
-  const addMessage = async (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "autoReviewed">) => {
+  const addMessage = async (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => {
     try {
       const apiData = convertToApiMessage(messageData)
       const response = await apiClient.createMessage(apiData)
