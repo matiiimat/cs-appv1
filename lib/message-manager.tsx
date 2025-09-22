@@ -17,11 +17,12 @@ function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
     timestamp: apiMessage.created_at,
     aiSuggestedResponse: apiMessage.ai_suggested_response || undefined,
     isGenerating: apiMessage.is_generating,
-    autoReviewed: apiMessage.auto_reviewed,
+    aiReviewed: apiMessage.ai_reviewed,
     status: apiMessage.status,
     agentId: apiMessage.agent_id || undefined,
     processedAt: apiMessage.processed_at || undefined,
     responseTime: apiMessage.response_time_ms || undefined,
+    updatedAt: apiMessage.updated_at,
     editHistory: apiMessage.edit_history || [],
   }
 }
@@ -60,11 +61,12 @@ export interface CustomerMessage {
   timestamp: string
   aiSuggestedResponse?: string
   isGenerating?: boolean
-  autoReviewed: boolean
-  status: "pending" | "approved" | "rejected" | "edited" | "sent" | "review"
+  aiReviewed: boolean
+  status: "new" | "to_send_queue" | "rejected" | "edited" | "sent" | "to_review_queue"
   agentId?: string
   processedAt?: string
   responseTime?: number
+  updatedAt?: string
   editHistory?: Array<{
     timestamp: string
     originalResponse: string
@@ -95,7 +97,7 @@ interface MessageManagerContextType {
   processedCount: number
   totalToProcess: number
   cancelBatchProcessing: () => void
-  addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "autoReviewed">) => Promise<void>
+  addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => Promise<void>
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => Promise<void>
   updateMessageCategory: (id: string, category: string) => Promise<void>
   approveMessage: (id: string, agentId: string) => Promise<void>
@@ -231,7 +233,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
           apiUpdates.agent_id = updates.agentId
         }
       }
-      if (updates.autoReviewed !== undefined) apiUpdates.auto_reviewed = updates.autoReviewed
+      if (updates.aiReviewed !== undefined) apiUpdates.ai_reviewed = updates.aiReviewed
       if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
 
       await apiClient.updateMessage(id, apiUpdates)
@@ -253,7 +255,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     if (!UUID_RE.test(agentId)) {
       throw new Error('approveMessage requires a valid agent UUID')
     }
-    await updateMessage(id, { status: "approved", agentId })
+    await updateMessage(id, { status: "to_send_queue", agentId })
     clearDraftReply(id)
   }
 
@@ -270,7 +272,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     if (!UUID_RE.test(agentId)) {
       throw new Error('sendToReview requires a valid agent UUID')
     }
-    await updateMessage(id, { status: "review", agentId })
+    await updateMessage(id, { status: "to_review_queue", agentId })
   }
 
   const editMessage = async (id: string, editedResponse: string, reason: string, agentId: string) => {
@@ -329,7 +331,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       await updateMessage(message.id, {
         category: data.category,
         aiSuggestedResponse: data.aiSuggestedResponse,
-        autoReviewed: true,
+        aiReviewed: true,
         isGenerating: false,
       })
 
@@ -340,14 +342,14 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       await updateMessage(message.id, {
         category: "General Inquiry",
         aiSuggestedResponse: "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
-        autoReviewed: true,
+        aiReviewed: true,
         isGenerating: false,
       })
     }
   }, [settings, updateMessage])
 
   const processBatch = useCallback(async (batchSize: number) => {
-    const unprocessedMessages = messages.filter(m => !m.autoReviewed && m.status === 'pending')
+    const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
     const messagesToProcess = unprocessedMessages.slice(0, batchSize)
 
     setIsProcessingBatch(true)
@@ -386,7 +388,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const moveToNextMessage = () => {
-    const pendingMessages = messages.filter(m => m.status === 'pending' && m.autoReviewed)
+    const pendingMessages = messages.filter(m => m.status === 'new' && m.aiReviewed)
     if (currentMessageIndex < pendingMessages.length - 1) {
       setCurrentMessageIndex(currentMessageIndex + 1)
     }
@@ -455,7 +457,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   // Adjust currentMessageIndex when pending messages change
   useEffect(() => {
-    const pendingMessages = messages.filter(m => m.status === 'pending' && m.autoReviewed)
+    const pendingMessages = messages.filter(m => m.status === 'new' && m.aiReviewed)
     if (currentMessageIndex >= pendingMessages.length && pendingMessages.length > 0) {
       setCurrentMessageIndex(Math.max(0, pendingMessages.length - 1))
     } else if (pendingMessages.length === 0) {

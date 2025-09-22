@@ -11,7 +11,7 @@ export function ReviewQueue() {
   const { getMessagesByStatus, updateMessage } = useMessageManager()
   const { settings } = useSettings()
 
-  const reviewMessages = getMessagesByStatus("review")
+  const reviewMessages = getMessagesByStatus("to_review_queue")
 
   const handleQuickAction = async (messageId: string, actionTitle: string, actionInstruction: string) => {
     const message = reviewMessages.find(m => m.id === messageId)

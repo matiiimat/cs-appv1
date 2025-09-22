@@ -3,7 +3,7 @@ import { db } from '@/lib/database';
 import { PIIEncryption, DatabaseEncryption } from '@/lib/encryption';
 
 // Message status enum
-export const MessageStatus = z.enum(['pending', 'approved', 'rejected', 'edited', 'sent', 'review']);
+export const MessageStatus = z.enum(['new', 'to_send_queue', 'rejected', 'edited', 'sent', 'to_review_queue']);
 export type MessageStatusType = z.infer<typeof MessageStatus>;
 
 // Message schema for validation
@@ -21,7 +21,7 @@ export const MessageSchema = z.object({
   agent_id: z.string().uuid().nullable(),
   processed_at: z.date().nullable(),
   response_time_ms: z.number().int().nullable(),
-  auto_reviewed: z.boolean().default(false),
+  ai_reviewed: z.boolean().default(false),
   is_generating: z.boolean().default(false),
   edit_history: z.array(z.any()).default([]),
   metadata: z.record(z.any()).default({}),
@@ -46,7 +46,7 @@ export const UpdateMessageSchema = z.object({
   ai_suggested_response: z.string().optional(),
   status: MessageStatus.optional(),
   agent_id: z.string().uuid().optional(),
-  auto_reviewed: z.boolean().optional(),
+  ai_reviewed: z.boolean().optional(),
   is_generating: z.boolean().optional(),
   edit_history: z.array(z.any()).optional(),
   metadata: z.record(z.any()).optional(),
@@ -138,7 +138,7 @@ export class MessageModel {
     const result = await db.query(`
       INSERT INTO messages (
         organization_id, ticket_id, customer_name, customer_email,
-        subject, message, category, metadata, status, auto_reviewed
+        subject, message, category, metadata, status, ai_reviewed
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `, [
@@ -150,7 +150,7 @@ export class MessageModel {
       encryptedData.message || null,
       messageData.category || null,
       JSON.stringify(messageData.metadata || {}),
-      'pending',
+      'new',
       false
     ]);
 
@@ -297,23 +297,23 @@ export class MessageModel {
   }> {
     const result = await db.query<{
       total_messages: string;
-      pending_messages: string;
-      approved_messages: string;
+      new_messages: string;
+      to_send_queue_messages: string;
       rejected_messages: string;
       edited_messages: string;
       sent_messages: string;
-      review_messages: string;
+      to_review_queue_messages: string;
       avg_response_time_ms: string | null;
       today_processed: string;
     }>(`
       SELECT
         COUNT(*) as total_messages,
-        COUNT(*) FILTER (WHERE status = 'pending') as pending_messages,
-        COUNT(*) FILTER (WHERE status = 'approved') as approved_messages,
+        COUNT(*) FILTER (WHERE status = 'new') as new_messages,
+        COUNT(*) FILTER (WHERE status = 'to_send_queue') as to_send_queue_messages,
         COUNT(*) FILTER (WHERE status = 'rejected') as rejected_messages,
         COUNT(*) FILTER (WHERE status = 'edited') as edited_messages,
         COUNT(*) FILTER (WHERE status = 'sent') as sent_messages,
-        COUNT(*) FILTER (WHERE status = 'review') as review_messages,
+        COUNT(*) FILTER (WHERE status = 'to_review_queue') as to_review_queue_messages,
         AVG(response_time_ms) FILTER (WHERE response_time_ms IS NOT NULL) as avg_response_time_ms,
         COUNT(*) FILTER (WHERE processed_at::date = CURRENT_DATE) as today_processed
       FROM messages
@@ -322,16 +322,16 @@ export class MessageModel {
 
     const row = result.rows[0];
     const totalMessages = parseInt(row.total_messages) || 0;
-    const approvedMessages = parseInt(row.approved_messages) || 0;
-
+    const approvedMessages = parseInt((row as any).to_send_queue_messages) || 0;
+    
     return {
       totalMessages,
-      pendingMessages: parseInt(row.pending_messages) || 0,
+      pendingMessages: parseInt((row as any).new_messages) || 0,
       approvedMessages,
       rejectedMessages: parseInt(row.rejected_messages) || 0,
       editedMessages: parseInt(row.edited_messages) || 0,
       sentMessages: parseInt(row.sent_messages) || 0,
-      reviewMessages: parseInt(row.review_messages) || 0,
+      reviewMessages: parseInt((row as any).to_review_queue_messages) || 0,
       avgResponseTime: row.avg_response_time_ms ? Math.round(parseFloat(row.avg_response_time_ms) / 1000 / 60) : 0, // Convert to minutes
       approvalRate: totalMessages > 0 ? Math.round((approvedMessages / totalMessages) * 100) : 0,
       todayProcessed: parseInt(row.today_processed) || 0,

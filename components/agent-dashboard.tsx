@@ -14,12 +14,12 @@ export function AgentDashboard() {
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   
   // Calculate queue metrics
-  const unprocessedMessages = messages.filter(m => !m.autoReviewed && m.status === 'pending')
+  const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
   const processingMessages = messages.filter(m => m.isGenerating)
-  const readyForReview = messages.filter(m => m.autoReviewed && m.status === 'pending')
+  const readyForReview = messages.filter(m => m.aiReviewed && m.status === 'new')
   
   // Find oldest pending ticket (includes both pending and review status)
-  const pendingMessages = messages.filter(m => m.status === 'pending' || m.status === 'review')
+  const pendingMessages = messages.filter(m => m.status === 'new' || m.status === 'to_review_queue')
   const oldestTicket = pendingMessages.length > 0 
     ? pendingMessages.reduce((oldest, current) => 
         new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest
@@ -51,6 +51,22 @@ export function AgentDashboard() {
     value,
     color: categoryColorMap[label] || palette[idx % palette.length],
   }))
+
+  // SLA bar (sent only): Green (in SLA) vs Red (out of SLA)
+  const sentEligible = messages.filter(m => m.status === 'sent')
+  const slaHours = uiSettings.messageAgeThresholds.yellowHours // Yellow counts within SLA
+  const inSLA = sentEligible.filter(m => {
+    const created = new Date(m.timestamp).getTime()
+    const sentAt = m.processedAt
+      ? new Date(m.processedAt).getTime()
+      : (m.updatedAt ? new Date(m.updatedAt).getTime() : Date.now())
+    const elapsedHours = Math.max(0, (sentAt - created) / (1000 * 60 * 60))
+    return elapsedHours <= slaHours
+  }).length
+  const totalSent = sentEligible.length
+  const outSLA = Math.max(0, totalSent - inSLA)
+  const pctIn = totalSent > 0 ? Math.round((inSLA / totalSent) * 100) : 0
+  const pctOut = totalSent > 0 ? 100 - pctIn : 0
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -185,6 +201,26 @@ export function AgentDashboard() {
           </div>
           <div className="text-2xl font-bold mb-2">{stats.avgResponseTime.toFixed(1)} min</div>
           <p className="text-xs text-muted-foreground">Processing efficiency</p>
+        </div>
+
+        <div className="p-6 bg-card rounded-lg shadow-md lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-medium">SLA (Sent Only)</div>
+          </div>
+          {totalSent === 0 ? (
+            <p className="text-sm text-muted-foreground">No sent messages yet.</p>
+          ) : (
+            <div>
+              <div className="w-full h-4 bg-muted rounded overflow-hidden flex">
+                <div className="h-full bg-green-500" style={{ width: `${pctIn}%` }} />
+                <div className="h-full bg-red-500" style={{ width: `${pctOut}%` }} />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="text-green-600">Green {pctIn}% ({inSLA}/{totalSent})</span>
+                <span className="text-red-600">Red {pctOut}% ({outSLA}/{totalSent})</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-6 bg-card rounded-lg shadow-md">

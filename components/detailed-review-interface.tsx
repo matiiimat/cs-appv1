@@ -71,7 +71,7 @@ export function DetailedReviewInterface() {
   }
 
   const reviewMessages = messages
-    .filter((msg) => msg.status === "review")
+    .filter((msg) => msg.status === "to_review_queue")
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort by date, oldest first
   const selectedMessage = reviewMessages.find((msg) => msg.id === selectedMessageId)
 
@@ -94,7 +94,7 @@ export function DetailedReviewInterface() {
   const handleApprove = useCallback(async () => {
     if (selectedMessage) {
       try {
-        await updateMessage(selectedMessage.id, { status: "approved", agentId })
+        await updateMessage(selectedMessage.id, { status: "to_send_queue", agentId })
         setChatMessages([])
         // Navigation will be handled by useEffect when reviewMessages updates
       } catch (error) {

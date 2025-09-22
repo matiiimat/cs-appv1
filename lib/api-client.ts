@@ -13,11 +13,11 @@ export interface ApiMessage {
   message: string | null;
   category: string | null;
   ai_suggested_response: string | null;
-  status: 'pending' | 'approved' | 'rejected' | 'edited' | 'sent' | 'review';
+  status: 'new' | 'to_send_queue' | 'rejected' | 'edited' | 'sent' | 'to_review_queue';
   agent_id: string | null;
   processed_at: string | null;
   response_time_ms: number | null;
-  auto_reviewed: boolean;
+  ai_reviewed: boolean;
   is_generating: boolean;
   edit_history: Array<{
     timestamp: string;
@@ -65,7 +65,7 @@ export interface UpdateMessageInput {
   ai_suggested_response?: string;
   status?: ApiMessage['status'];
   agent_id?: string;
-  auto_reviewed?: boolean;
+  ai_reviewed?: boolean;
   is_generating?: boolean;
   edit_history?: Array<{
     timestamp: string;

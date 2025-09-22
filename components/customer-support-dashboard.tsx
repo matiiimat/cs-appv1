@@ -42,7 +42,7 @@ export function CustomerSupportDashboard() {
   const agentId = getAgentId()
 
   // Filter to only show messages that are AI-reviewed and pending human review
-  const pendingMessages = messages.filter(message => message.status === 'pending' && message.autoReviewed)
+  const pendingMessages = messages.filter(message => message.status === 'new' && message.aiReviewed)
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
 
