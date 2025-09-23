@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
-import { MessageSquare, Clock, Zap, PlayCircle, Loader2, AlertCircle } from "lucide-react"
+import { Zap, PlayCircle, Loader2 } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
 import { useSettings } from "@/lib/settings-context"
 import { useState } from "react"
+import { getMessageUrgency } from "@/lib/utils"
 
 export function AgentDashboard() {
   const { stats, messages, isProcessingBatch, processedCount, totalToProcess, processBatch, cancelBatchProcessing } = useMessageManager()
@@ -184,7 +185,6 @@ export function AgentDashboard() {
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Total Messages</div>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold mb-2">{stats.totalMessages}</div>
           <p className="text-xs text-muted-foreground">
@@ -197,7 +197,6 @@ export function AgentDashboard() {
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Avg Response Time</div>
-            <Clock className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold mb-2">{stats.avgResponseTime.toFixed(1)} min</div>
           <p className="text-xs text-muted-foreground">Processing efficiency</p>
@@ -226,12 +225,22 @@ export function AgentDashboard() {
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Oldest Pending Ticket</div>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </div>
           {oldestTicket ? (
             <>
               <div className="text-2xl font-bold mb-2">{oldestTicket.ticketId}</div>
-              <p className="text-xs text-muted-foreground">{formatRelativeTime(oldestTicket.timestamp)}</p>
+              <p
+                className={`text-xs ${(() => {
+                  const urgency = getMessageUrgency(oldestTicket.timestamp, uiSettings.messageAgeThresholds)
+                  return urgency === 'red'
+                    ? 'text-red-600'
+                    : urgency === 'yellow'
+                    ? 'text-yellow-600'
+                    : 'text-green-600'
+                })()}`}
+              >
+                {formatRelativeTime(oldestTicket.timestamp)}
+              </p>
             </>
           ) : (
             <>

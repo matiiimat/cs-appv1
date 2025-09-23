@@ -49,7 +49,7 @@ export function PieChart({ data, totalLabel = "Total" }: { data: PieDatum[]; tot
           </text>
         </g>
       </svg>
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="flex-1 grid grid-cols-1 gap-2">
         {data.map((d, idx) => (
           <div key={idx} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 min-w-0">
@@ -63,4 +63,3 @@ export function PieChart({ data, totalLabel = "Total" }: { data: PieDatum[]; tot
     </div>
   )
 }
-
