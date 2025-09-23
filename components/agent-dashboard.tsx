@@ -110,7 +110,7 @@ export function AgentDashboard() {
           
           {unprocessedMessages.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-card rounded-lg shadow-md">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-card rounded-lg shadow-md">
                 <div className="flex-1">
                   <p className="font-medium mb-2">Process messages in batches</p>
                   <div className="flex items-center gap-3">
@@ -131,11 +131,11 @@ export function AgentDashboard() {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <Button 
                     onClick={handleProcessQueue}
                     disabled={isProcessingBatch || unprocessedMessages.length === 0}
-                    className="bg-accent hover:bg-accent/90"
+                    className="bg-accent hover:bg-accent/90 w-full sm:w-auto"
                     size="lg"
                   >
                     {isProcessingBatch ? (
@@ -155,7 +155,7 @@ export function AgentDashboard() {
                       onClick={cancelBatchProcessing}
                       variant="outline"
                       size="lg"
-                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      className="border-red-200 text-red-600 hover:bg-red-50 w-full sm:w-auto"
                     >
                       Cancel
                     </Button>

@@ -42,12 +42,12 @@ export function MainApp() {
           {/* Navigation Bar */}
           <nav className="border-b border-border bg-card">
             <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center justify-between">
-                {/* Empty left space for balance */}
-                <div className="flex-1"></div>
+              <div className="grid grid-cols-3 items-center md:flex md:items-center md:justify-between">
+                {/* Empty left space for balance (desktop only) */}
+                <div className="hidden md:block md:flex-1"></div>
 
                 {/* Centered Logo and Company Name */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-self-center md:justify-self-auto">
                   <Image
                     src="/logo-60x.png"
                     alt="aidly Logo"
@@ -99,7 +99,7 @@ export function MainApp() {
                 </div>
 
                 {/* Mobile Navigation - Icon buttons and burger menu */}
-                <div className="flex md:hidden items-center gap-1">
+                <div className="flex md:hidden items-center gap-1 justify-self-end">
                   {/* Quick access icon buttons for main functions */}
                   <Button
                     variant={currentView === "dashboard" ? "default" : "ghost"}
