@@ -13,6 +13,21 @@ import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
+  const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
+  useEffect(() => {
+    const loadMailbox = async () => {
+      try {
+        const resp = await fetch('/api/organization/mailbox')
+        if (resp.ok) {
+          const data = await resp.json()
+          setMailbox({ forwardToAddress: data.forwardToAddress })
+        }
+      } catch {
+        // ignore in MVP
+      }
+    }
+    loadMailbox()
+  }, [])
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
@@ -173,6 +188,14 @@ export function SettingsPage() {
             <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
           </div>
         </div>
+
+        {mailbox && (
+          <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+            <h3 className="text-sm font-semibold mb-2">Mailbox (MVP)</h3>
+            <p className="text-sm text-muted-foreground mb-2">Forward your support address to this alias to receive emails:</p>
+            <code className="text-sm px-2 py-1 bg-background border rounded inline-block">{mailbox.forwardToAddress}</code>
+          </div>
+        )}
 
 
         {saveResult && (

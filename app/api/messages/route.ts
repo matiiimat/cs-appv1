@@ -128,6 +128,33 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 })
     }
 
+    // MVP: if transitioned to sent, trigger outbound email
+    if (validatedUpdates.status === 'sent') {
+      try {
+        const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
+        const replyTo = makeOrgForwardAddress(DEMO_ORGANIZATION_ID)
+        const to = updatedMessage.customer_email || ''
+        const subject = `Re: ${updatedMessage.subject || ''}`.trim()
+        const text = updatedMessage.ai_suggested_response || ''
+
+        if (to && text) {
+          const result = await EmailService.send({ to, subject, text, replyTo })
+          await MessageModel.addActivity(
+            DEMO_ORGANIZATION_ID,
+            updatedMessage.id,
+            validatedUpdates.agent_id ?? null,
+            'approved',
+            { channel: 'email', provider: 'sendgrid', ok: result.ok, providerMessageId: result.providerMessageId }
+          )
+        } else {
+          console.warn('Skipping email send: missing recipient or body')
+        }
+      } catch (sendErr) {
+        console.error('Failed to send outbound email:', sendErr)
+        // Do not fail the PUT response; sending can be retried later
+      }
+    }
+
     return NextResponse.json({ message: updatedMessage })
   } catch (error) {
     console.error('Error updating message:', error)
