@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+// No Next.js imports needed here
 
 export interface OutboundEmail {
   to: string
@@ -101,13 +101,21 @@ export class EmailService {
       body: JSON.stringify(payload),
     })
 
-    const data = await resp.json().catch(() => ({} as any))
+    let data: unknown
+    let fallbackText = ''
+    try {
+      data = await resp.json()
+    } catch {
+      fallbackText = await resp.text().catch(() => '')
+    }
     if (!resp.ok) {
-      const message = typeof data?.Message === 'string' ? data.Message : await resp.text().catch(() => '')
+      const maybe = (data as { Message?: string } | undefined)
+      const message = (maybe && typeof maybe.Message === 'string') ? maybe.Message : fallbackText
       return { ok: false, error: `Postmark error ${resp.status}: ${message}` }
     }
 
-    const messageId = typeof data?.MessageID === 'string' ? data.MessageID : undefined
+    const maybeOk = (data as { MessageID?: string } | undefined)
+    const messageId = (maybeOk && typeof maybeOk.MessageID === 'string') ? maybeOk.MessageID : undefined
     return { ok: true, providerMessageId: messageId }
   }
 }

@@ -11,7 +11,7 @@ export async function GET() {
       mode: 'forwarded',
       forwardToAddress: address,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Mailbox configuration not available' }, { status: 500 })
   }
 }

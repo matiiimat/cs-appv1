@@ -37,12 +37,20 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Fallback JSON (for local testing)
-      const body = await request.json().catch(() => ({})) as any
-      to = body.to || ''
-      from = body.from || ''
-      subject = body.subject || ''
-      text = body.text || ''
-      headers = body.headers || {}
+      interface InboundBody {
+        to?: string
+        from?: string
+        subject?: string
+        text?: string
+        headers?: Record<string, string>
+      }
+      const raw: unknown = await request.json().catch(() => ({}))
+      const body = (raw || {}) as InboundBody
+      to = body.to ?? ''
+      from = body.from ?? ''
+      subject = body.subject ?? ''
+      text = body.text ?? ''
+      headers = body.headers ?? {}
     }
 
     const orgId = parseOrgIdFromRecipient(to) || DEMO_ORGANIZATION_ID
@@ -78,4 +86,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to process inbound email' }, { status: 500 })
   }
 }
-
