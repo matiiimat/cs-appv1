@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MessageModel } from '@/lib/models/message'
 import { parseOrgIdFromRecipient } from '@/lib/email'
+import { db } from '@/lib/database'
+import { DataEncryption } from '@/lib/encryption'
 
 // MVP inbound handler for SendGrid Inbound Parse
 // Expects multipart/form-data with fields: to, from, subject, text, headers
@@ -35,6 +37,20 @@ export async function POST(request: NextRequest) {
             .map(([k, ...rest]) => [k.trim().toLowerCase(), rest.join(':').trim()])
         )
       }
+      // Fallback to Parse envelope JSON if 'to' missing
+      if (!to) {
+        const envStr = (form.get('envelope') as string) || ''
+        try {
+          const env = JSON.parse(envStr) as { to?: string[] }
+          if (Array.isArray(env?.to) && env.to.length > 0) {
+            to = env.to[0]
+          }
+        } catch {}
+      }
+      // If comma-separated, take first
+      if (to && to.includes(',')) {
+        to = to.split(',')[0]?.trim() || to
+      }
     } else {
       // Fallback JSON (for local testing)
       interface InboundBody {
@@ -51,9 +67,13 @@ export async function POST(request: NextRequest) {
       subject = body.subject ?? ''
       text = body.text ?? ''
       headers = body.headers ?? {}
+      if (to && to.includes(',')) {
+        to = to.split(',')[0]?.trim() || to
+      }
     }
 
     const orgId = parseOrgIdFromRecipient(to) || DEMO_ORGANIZATION_ID
+    await ensureOrganization(orgId)
 
     // Basic email parsing for name/email
     const fromMatch = (from || '').match(/"?([^"<]*)"?\s*<([^>]+)>/) || []
@@ -84,5 +104,21 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Inbound email error:', error)
     return NextResponse.json({ error: 'Failed to process inbound email' }, { status: 500 })
+  }
+}
+
+async function ensureOrganization(organizationId: string) {
+  try {
+    const { rows } = await db.query<{ id: string }>('SELECT id FROM organizations WHERE id = $1', [organizationId])
+    if (rows.length > 0) return
+    const key = DataEncryption.generateOrganizationKey()
+    await db.query(
+      `INSERT INTO organizations (id, name, plan_type, plan_status, encrypted_data_key)
+       VALUES ($1, $2, 'basic', 'active', $3)`,
+      [organizationId, 'Demo Organization', key]
+    )
+  } catch (e) {
+    // Non-fatal for MVP; creation may fail if permissions restricted
+    console.warn('ensureOrganization skipped:', e)
   }
 }
