@@ -29,7 +29,7 @@ export function SettingsPage() {
             setMailboxError(data?.error || 'Mailbox configuration unavailable')
           }
         }
-      } catch (e) {
+      } catch {
         setMailbox(null)
         setMailboxError('Failed to load mailbox configuration')
       }
@@ -208,7 +208,30 @@ export function SettingsPage() {
                 onFocus={(e) => e.currentTarget.select()}
                 className="text-sm"
               />
-              <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(mailbox.forwardToAddress)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const text = mailbox.forwardToAddress
+                  // Use Clipboard API when available; otherwise fallback
+                  try {
+                    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                      navigator.clipboard.writeText(text)
+                    } else {
+                      const ta = document.createElement('textarea')
+                      ta.value = text
+                      ta.style.position = 'fixed'
+                      ta.style.opacity = '0'
+                      document.body.appendChild(ta)
+                      ta.select()
+                      document.execCommand('copy')
+                      document.body.removeChild(ta)
+                    }
+                  } catch (err) {
+                    console.error('Copy failed:', err)
+                  }
+                }}
+              >
                 Copy
               </Button>
             </div>

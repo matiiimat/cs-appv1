@@ -234,7 +234,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const result = await response.json()
 
       // Also save to localStorage as a backup (omit secrets and theme to avoid hydration mismatches)
-      const { aiConfig, theme: _omitTheme, ...rest } = settingsWithTimestamp as Settings & { lastSaved: string }
+      const copyForLocal: any = { ...settingsWithTimestamp }
+      delete copyForLocal.theme
+      const { aiConfig, ...rest } = copyForLocal
       const safeSettings = { ...rest, aiConfig: { ...aiConfig, apiKey: '' } }
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
       setLastSaved(new Date())
@@ -246,7 +248,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // Fallback to localStorage only if database save fails
       try {
         const settingsWithTimestamp = { ...settings, lastSaved: new Date().toISOString() }
-        const { aiConfig: ai, theme: _omitTheme2, ...rest } = settingsWithTimestamp as Settings & { lastSaved: string }
+        const copyForLocal2: any = { ...settingsWithTimestamp }
+        delete copyForLocal2.theme
+        const { aiConfig: ai, ...rest } = copyForLocal2
         const safeSettings = { ...rest, aiConfig: { ...ai, apiKey: '' } }
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
         setLastSaved(new Date())
