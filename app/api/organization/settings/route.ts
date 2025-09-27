@@ -43,11 +43,12 @@ export async function GET() {
         aiConfig: {
           provider: "local",
           model: "mistralai/devstral-small-2505",
-          apiKey: "http://192.168.1.24:1234",
+          apiKey: "",
           localEndpoint: "http://192.168.1.24:1234",
           temperature: 0.7,
           maxTokens: 1000,
         },
+        aiConfigHasKey: false,
         companyKnowledge: "",
         messageAgeThresholds: {
           greenHours: 20,
@@ -57,7 +58,17 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json(settings)
+    // Sanitize: do not expose API keys in response
+    const hasKey = Boolean(settings?.aiConfig?.apiKey && String(settings.aiConfig.apiKey).trim() !== '')
+    const sanitized = {
+      ...settings,
+      aiConfig: {
+        ...settings.aiConfig,
+        apiKey: ""
+      },
+      aiConfigHasKey: hasKey,
+    }
+    return NextResponse.json(sanitized)
   } catch (error) {
     console.error('Error fetching organization settings:', error)
     return NextResponse.json(
