@@ -7,11 +7,12 @@ export async function GET() {
   try {
     const address = makeOrgForwardAddress(DEMO_ORGANIZATION_ID)
     return NextResponse.json({
-      provider: 'cloudflare-worker',
+      provider: 'sendgrid',
       mode: 'forwarded',
       forwardToAddress: address,
     })
-  } catch {
-    return NextResponse.json({ error: 'Mailbox configuration not available' }, { status: 500 })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Mailbox configuration not available'
+    return NextResponse.json({ forwardToAddress: '', error: message })
   }
 }

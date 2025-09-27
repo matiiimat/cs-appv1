@@ -100,8 +100,10 @@ const defaultSettings: Settings = {
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'
+const THEME_STORAGE_KEY = 'aidly-theme'
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
+  // Keep SSR output stable: initialize with defaults; sync theme after mount
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
@@ -148,6 +150,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     loadSettings()
   }, [])
 
+  // After mount, sync theme from localStorage to avoid hydration mismatch
+  useEffect(() => {
+    try {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null
+      if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark') && storedTheme !== settings.theme) {
+        setSettings(prev => ({ ...prev, theme: storedTheme }))
+      }
+    } catch {}
+    // run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Apply theme to document whenever settings change
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -156,6 +170,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       } else {
         document.documentElement.classList.remove("dark")
       }
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, settings.theme)
+      } catch {}
     }
   }, [settings.theme])
 
@@ -216,8 +233,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       const result = await response.json()
 
-      // Also save to localStorage as a backup
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
+      // Also save to localStorage as a backup (omit secrets and theme to avoid hydration mismatches)
+      const { aiConfig, theme: _omitTheme, ...rest } = settingsWithTimestamp as Settings & { lastSaved: string }
+      const safeSettings = { ...rest, aiConfig: { ...aiConfig, apiKey: '' } }
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
       setLastSaved(new Date())
 
       console.log('Settings saved successfully', result)
@@ -226,11 +245,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // Fallback to localStorage only if database save fails
       try {
-        const settingsWithTimestamp = {
-          ...settings,
-          lastSaved: new Date().toISOString()
-        }
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsWithTimestamp))
+        const settingsWithTimestamp = { ...settings, lastSaved: new Date().toISOString() }
+        const { aiConfig: ai, theme: _omitTheme2, ...rest } = settingsWithTimestamp as Settings & { lastSaved: string }
+        const safeSettings = { ...rest, aiConfig: { ...ai, apiKey: '' } }
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
         setLastSaved(new Date())
         console.warn('Settings saved to localStorage as fallback')
       } catch (localError) {
