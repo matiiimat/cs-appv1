@@ -33,7 +33,7 @@ function getNormalizedCategories(userCategories?: Category[]): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
 
     // Always load AI configuration from the database to access the stored API key.
     // For now we use the demo organization (matches /api/organization/settings route).

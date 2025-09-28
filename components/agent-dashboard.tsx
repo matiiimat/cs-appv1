@@ -49,7 +49,7 @@ export function AgentDashboard() {
         setPreflightError((data.reasons && data.reasons.join('; ')) || 'AI connectivity check failed.')
         return
       }
-    } catch (e) {
+    } catch {
       setPreflightError('Preflight check failed. Please verify your AI settings.')
       return
     } finally {
