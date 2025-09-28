@@ -51,6 +51,8 @@ interface SettingsContextType {
   saveSettings: () => Promise<void>
   isLoading: boolean
   lastSaved: Date | null
+  aiConfigHasKey: boolean
+  hasSavedSettings?: boolean
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -107,6 +109,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [aiConfigHasKey, setAiConfigHasKey] = useState<boolean>(false)
+  const [hasSavedSettings, setHasSavedSettings] = useState<boolean | undefined>(undefined)
 
   // Load settings from database on mount
   useEffect(() => {
@@ -117,6 +121,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           const data = await response.json()
           setSettings({ ...defaultSettings, ...data })
           setLastSaved(data.lastSaved ? new Date(data.lastSaved) : null)
+          if (typeof data.aiConfigHasKey === 'boolean') {
+            setAiConfigHasKey(data.aiConfigHasKey)
+          } else {
+            setAiConfigHasKey(false)
+          }
+          if (typeof data.hasSavedSettings === 'boolean') {
+            setHasSavedSettings(data.hasSavedSettings)
+          }
         } else {
           console.error('Failed to load settings from database')
           // Fallback to localStorage if API fails
@@ -126,6 +138,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
               const parsed = JSON.parse(savedSettings)
               setSettings({ ...defaultSettings, ...parsed })
               setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+              // No secure key status from localStorage fallback
+              setAiConfigHasKey(false)
+              setHasSavedSettings(undefined)
             } catch (error) {
               console.error('Failed to parse saved settings:', error)
             }
@@ -140,6 +155,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             const parsed = JSON.parse(savedSettings)
             setSettings({ ...defaultSettings, ...parsed })
             setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
+            setAiConfigHasKey(false)
+            setHasSavedSettings(undefined)
           } catch (error) {
             console.error('Failed to parse saved settings:', error)
           }
@@ -277,6 +294,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         saveSettings,
         isLoading,
         lastSaved,
+        aiConfigHasKey,
+        hasSavedSettings,
       }}
     >
       {children}

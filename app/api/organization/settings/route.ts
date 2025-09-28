@@ -42,13 +42,14 @@ export async function GET() {
         ],
         aiConfig: {
           provider: "local",
-          model: "mistralai/devstral-small-2505",
+          model: "",
           apiKey: "",
-          localEndpoint: "http://192.168.1.24:1234",
+          localEndpoint: "",
           temperature: 0.7,
           maxTokens: 1000,
         },
         aiConfigHasKey: false,
+        hasSavedSettings: false,
         companyKnowledge: "",
         messageAgeThresholds: {
           greenHours: 20,
@@ -67,6 +68,7 @@ export async function GET() {
         apiKey: ""
       },
       aiConfigHasKey: hasKey,
+      hasSavedSettings: true,
     }
     return NextResponse.json(sanitized)
   } catch (error) {

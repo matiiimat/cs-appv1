@@ -9,6 +9,7 @@ import { PieChart } from "@/components/ui/pie-chart"
 import { useSettings } from "@/lib/settings-context"
 import { useState } from "react"
 import { getMessageUrgency } from "@/lib/utils"
+import { Tooltip } from "@/components/ui/tooltip"
 
 export function AgentDashboard() {
   const { stats, messages, isProcessingBatch, processedCount, totalToProcess, processBatch, cancelBatchProcessing } = useMessageManager()
@@ -27,8 +28,48 @@ export function AgentDashboard() {
       )
     : null
   
+  const [preflightError, setPreflightError] = useState<string | null>(null)
+  const [preflightChecking, setPreflightChecking] = useState(false)
   const handleProcessQueue = async () => {
+    setPreflightError(null)
+    // Optional preflight connectivity check as a backstop
+    try {
+      setPreflightChecking(true)
+      const resp = await fetch('/api/ai/status?checkConnectivity=true', { method: 'GET' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setPreflightError('AI status check failed. Please try again or fix configuration in Settings.')
+        return
+      }
+      if (!data.configured) {
+        setPreflightError((data.reasons && data.reasons.join('; ')) || 'AI is not configured.')
+        return
+      }
+      if (data.connectivityOk === false) {
+        setPreflightError((data.reasons && data.reasons.join('; ')) || 'AI connectivity check failed.')
+        return
+      }
+    } catch (e) {
+      setPreflightError('Preflight check failed. Please verify your AI settings.')
+      return
+    } finally {
+      setPreflightChecking(false)
+    }
+
     await processBatch(selectedBatchSize)
+  }
+
+  // AI configuration status
+  const { settings: uiSettings, aiConfigHasKey } = useSettings()
+  const provider = uiSettings.aiConfig.provider
+  const hasModel = Boolean(uiSettings.aiConfig.model && uiSettings.aiConfig.model.trim() !== '')
+  const isLocalConfigured = provider === 'local' && Boolean((uiSettings.aiConfig.localEndpoint || uiSettings.aiConfig.apiKey))
+  const isRemoteConfigured = (provider === 'openai' || provider === 'anthropic') && aiConfigHasKey && hasModel
+  const isAIConfigured = isLocalConfigured || isRemoteConfigured
+  const goToSettings = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aidly:navigate:settings'))
+    }
   }
 
   // Category distribution for pie chart
@@ -39,7 +80,7 @@ export function AgentDashboard() {
   }, {})
 
   // Use configured category colors when available; fallback palette otherwise
-  const { settings: uiSettings } = useSettings()
+  // Already have uiSettings from useSettings above
   const palette = ['#3b82f6','#22c55e','#ef4444','#f59e0b','#a855f7','#06b6d4','#84cc16','#f97316']
   const categoryColorMap: Record<string, string> = {}
   uiSettings.categories.forEach((c, idx) => {
@@ -81,6 +122,16 @@ export function AgentDashboard() {
       {/* Queue Management Hero Section */}
       <div className="mb-8 bg-gradient-to-r from-accent/5 to-accent/10 rounded-lg shadow-lg">
         <div className="p-6">
+          {/* AI configuration banner */}
+          {!isAIConfigured && (
+            <div className="mb-4 p-4 border rounded-lg bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-200 dark:border-red-800 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">AI isn’t configured. Auto-generated replies will fail.</p>
+                <p className="text-xs opacity-90">Configure your AI provider and model to enable batch processing.</p>
+              </div>
+              <Button onClick={goToSettings} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-200 dark:hover:bg-red-800/30">Fix in Settings</Button>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
@@ -132,24 +183,37 @@ export function AgentDashboard() {
                   </div>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button 
-                    onClick={handleProcessQueue}
-                    disabled={isProcessingBatch || unprocessedMessages.length === 0}
-                    className="bg-accent hover:bg-accent/90 w-full sm:w-auto"
-                    size="lg"
-                  >
-                    {isProcessingBatch ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Process {Math.min(selectedBatchSize, unprocessedMessages.length)} Messages
-                      </>
-                    )}
-                  </Button>
+                  <Tooltip content={!isAIConfigured ? "AI configuration required. Fix in Settings." : (preflightChecking ? "Running preflight connectivity check..." : "Start AI processing for the selected batch size.")} inline>
+                    <div className="w-full sm:w-auto">
+                      <Button 
+                        onClick={handleProcessQueue}
+                        disabled={isProcessingBatch || unprocessedMessages.length === 0 || !isAIConfigured || preflightChecking}
+                        className={`w-full sm:w-auto ${!isAIConfigured ? 'opacity-60 cursor-not-allowed' : 'bg-accent hover:bg-accent/90'}`}
+                        size="lg"
+                      >
+                        {isProcessingBatch || preflightChecking ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            {preflightChecking ? 'Checking...' : 'Processing...'}
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="h-4 w-4 mr-2" />
+                            {isAIConfigured ? (
+                              <>Process {Math.min(selectedBatchSize, unprocessedMessages.length)} Messages</>
+                            ) : (
+                              <>Process (AI unavailable)</>
+                            )}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </Tooltip>
+                  {preflightError && (
+                    <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1 self-center">
+                      {preflightError}
+                    </div>
+                  )}
                   {isProcessingBatch && (
                     <Button 
                       onClick={cancelBatchProcessing}

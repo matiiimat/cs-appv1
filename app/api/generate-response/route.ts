@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { AIService } from "@/lib/ai-providers"
 import { type AIProviderConfig, type Category } from "@/lib/settings-context"
 import { searchCompanyKnowledge } from "@/lib/knowledge-search"
+import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 
 interface GenerateResponseRequest {
   customerName: string
@@ -34,14 +35,31 @@ export async function POST(request: NextRequest) {
   try {
     const { customerName, customerEmail, subject, message, aiConfig, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
 
-    if (!aiConfig || !aiConfig.apiKey) {
-      return NextResponse.json(
-        { error: "AI configuration is required" }, 
-        { status: 400 }
-      )
+    // Always load AI configuration from the database to access the stored API key.
+    // For now we use the demo organization (matches /api/organization/settings route).
+    const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
+    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(DEMO_ORGANIZATION_ID)
+
+    if (!orgSettings || !orgSettings.aiConfig) {
+      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 })
     }
 
-    const aiService = new AIService(aiConfig)
+    // Construct the effective AI config from DB, overriding any client-supplied apiKey.
+    const effectiveAiConfig: AIProviderConfig = {
+      provider: orgSettings.aiConfig.provider,
+      model: orgSettings.aiConfig.model,
+      apiKey: orgSettings.aiConfig.apiKey, // decrypted from DB
+      customEndpoint: orgSettings.aiConfig.customEndpoint,
+      localEndpoint: orgSettings.aiConfig.localEndpoint,
+      temperature: orgSettings.aiConfig.temperature,
+      maxTokens: orgSettings.aiConfig.maxTokens,
+    }
+
+    if (!effectiveAiConfig.apiKey && effectiveAiConfig.provider !== 'local') {
+      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 })
+    }
+
+    const aiService = new AIService(effectiveAiConfig)
 
     // Handle quick actions - modify existing response
     if (quickActionInstruction && currentResponse) {

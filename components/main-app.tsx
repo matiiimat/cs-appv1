@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CustomerSupportDashboard } from "@/components/customer-support-dashboard"
 import { AgentDashboard } from "@/components/agent-dashboard"
 import { DetailedReviewInterface } from "@/components/detailed-review-interface"
@@ -34,6 +34,19 @@ export function MainApp() {
     setCurrentView("settings")
     setIsMenuOpen(false)
   }
+
+  // Listen for cross-component navigation events (e.g., Fix in Settings)
+  useEffect(() => {
+    const handler = () => switchToSettings()
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aidly:navigate:settings', handler as EventListener)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aidly:navigate:settings', handler as EventListener)
+      }
+    }
+  }, [])
 
   return (
     <SettingsProvider>
