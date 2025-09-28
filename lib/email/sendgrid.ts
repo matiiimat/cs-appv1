@@ -8,7 +8,14 @@ if (apiKey) {
 }
 
 export async function sendMagicLinkEmail(to: string, url: string) {
-  if (!apiKey) throw new Error('SENDGRID_API_KEY is required to send emails')
+  if (!apiKey) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[sendgrid] Missing SENDGRID_API_KEY. Dev fallback: logging magic link')
+      console.log(`[magic-link] To: ${to} URL: ${url}`)
+      return
+    }
+    throw new Error('SENDGRID_API_KEY is required to send emails')
+  }
   const msg = {
     to,
     from: fromEmail,
@@ -28,4 +35,3 @@ export async function sendMagicLinkEmail(to: string, url: string) {
   }
   await sgMail.send(msg)
 }
-

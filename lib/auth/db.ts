@@ -11,8 +11,7 @@ export function createKysely() {
     : undefined
 
   const pool = new Pool({ connectionString, ssl })
-  return new Kysely<any>({
+  return new Kysely<unknown>({
     dialect: new PostgresDialect({ pool }),
   })
 }
-

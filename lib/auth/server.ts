@@ -65,10 +65,10 @@ export const auth = betterAuth({
           ]
         },
       },
-      onEvent: async (event) => {
+      onEvent: async (event: Stripe.Event) => {
         try {
           if (event.type === 'checkout.session.completed') {
-            const session = event.data.object as any
+            const session = event.data.object as Stripe.Checkout.Session
             const email: string | undefined = session.customer_details?.email || session.customer_email
             if (email) {
               // Send magic link only after successful payment
