@@ -14,16 +14,24 @@ import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
+  const [mailboxError, setMailboxError] = useState<string | null>(null)
   useEffect(() => {
     const loadMailbox = async () => {
       try {
         const resp = await fetch('/api/organization/mailbox')
         if (resp.ok) {
           const data = await resp.json()
-          setMailbox({ forwardToAddress: data.forwardToAddress })
+          if (data?.forwardToAddress) {
+            setMailbox({ forwardToAddress: data.forwardToAddress })
+            setMailboxError(null)
+          } else {
+            setMailbox(null)
+            setMailboxError(data?.error || 'Mailbox configuration unavailable')
+          }
         }
       } catch {
-        // ignore in MVP
+        setMailbox(null)
+        setMailboxError('Failed to load mailbox configuration')
       }
     }
     loadMailbox()
@@ -189,13 +197,48 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {mailbox && (
-          <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-            <h3 className="text-sm font-semibold mb-2">Mailbox (MVP)</h3>
-            <p className="text-sm text-muted-foreground mb-2">Forward your support address to this alias to receive emails:</p>
-            <code className="text-sm px-2 py-1 bg-background border rounded inline-block">{mailbox.forwardToAddress}</code>
-          </div>
-        )}
+        <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+          <h3 className="text-sm font-semibold mb-2">Mailbox</h3>
+          <p className="text-sm text-muted-foreground mb-2">Forward your support address to this alias to receive emails:</p>
+          {mailbox ? (
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={mailbox.forwardToAddress}
+                onFocus={(e) => e.currentTarget.select()}
+                className="text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const text = mailbox.forwardToAddress
+                  // Use Clipboard API when available; otherwise fallback
+                  try {
+                    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                      navigator.clipboard.writeText(text)
+                    } else {
+                      const ta = document.createElement('textarea')
+                      ta.value = text
+                      ta.style.position = 'fixed'
+                      ta.style.opacity = '0'
+                      document.body.appendChild(ta)
+                      ta.select()
+                      document.execCommand('copy')
+                      document.body.removeChild(ta)
+                    }
+                  } catch (err) {
+                    console.error('Copy failed:', err)
+                  }
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground">{mailboxError ?? 'Mailbox alias not available. Ensure INBOUND_DOMAIN is configured.'}</div>
+          )}
+        </div>
 
 
         {saveResult && (
