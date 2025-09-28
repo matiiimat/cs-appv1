@@ -134,11 +134,29 @@ export async function PUT(request: NextRequest) {
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
         const replyTo = makeOrgForwardAddress(DEMO_ORGANIZATION_ID)
         const to = updatedMessage.customer_email || ''
-        const subject = `Re: ${updatedMessage.subject || ''}`.trim()
-        const text = updatedMessage.ai_suggested_response || ''
+
+        // Build final subject: [CaseID] - Re: <original subject>
+        const originalSubject = (updatedMessage.subject || '').trim()
+        const hasRe = /^re:/i.test(originalSubject)
+        const baseSubject = hasRe ? originalSubject : (originalSubject ? `Re: ${originalSubject}` : 'Re:')
+        const caseId = (updatedMessage.ticket_id || '').trim()
+        const finalSubject = caseId ? `[${caseId}] - ${baseSubject}` : baseSubject
+
+        // Sanitize body: remove any leading "Subject:" line and subsequent blank line(s)
+        const rawText = updatedMessage.ai_suggested_response || ''
+        const lines = rawText.split(/\r?\n/)
+        let startIdx = 0
+        if (lines[0] && /^\s*subject\s*:/i.test(lines[0])) {
+          startIdx = 1
+          // Skip any immediate blank lines after the Subject line
+          while (startIdx < lines.length && /^\s*$/.test(lines[startIdx])) {
+            startIdx++
+          }
+        }
+        const text = lines.slice(startIdx).join('\n')
 
         if (to && text) {
-          const result = await EmailService.send({ to, subject, text, replyTo })
+          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo })
           await MessageModel.addActivity(
             DEMO_ORGANIZATION_ID,
             updatedMessage.id,
