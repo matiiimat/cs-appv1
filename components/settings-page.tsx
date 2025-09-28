@@ -198,7 +198,7 @@ export function SettingsPage() {
         </div>
 
         <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-          <h3 className="text-sm font-semibold mb-2">Mailbox (MVP)</h3>
+          <h3 className="text-sm font-semibold mb-2">Mailbox</h3>
           <p className="text-sm text-muted-foreground mb-2">Forward your support address to this alias to receive emails:</p>
           {mailbox ? (
             <div className="flex items-center gap-2">
