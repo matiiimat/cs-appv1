@@ -236,7 +236,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // Also save to localStorage as a backup (omit secrets and theme to avoid hydration mismatches)
       type SettingsWithTimestamp = Settings & { lastSaved: string }
       const swt = settingsWithTimestamp as SettingsWithTimestamp
-      const { theme: _t, ...restNoTheme } = swt
+      const { theme: _ignoredTheme, ...restNoTheme } = swt
+      void _ignoredTheme
       const safeSettings = { ...restNoTheme, aiConfig: { ...restNoTheme.aiConfig, apiKey: '' } }
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
       setLastSaved(new Date())
@@ -249,7 +250,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       try {
         const settingsWithTimestamp = { ...settings, lastSaved: new Date().toISOString() }
         const swt2 = settingsWithTimestamp as Settings & { lastSaved: string }
-        const { theme: _t2, ...restNoTheme2 } = swt2
+        const { theme: _ignoredTheme2, ...restNoTheme2 } = swt2
+        void _ignoredTheme2
         const safeSettings = { ...restNoTheme2, aiConfig: { ...restNoTheme2.aiConfig, apiKey: '' } }
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings))
         setLastSaved(new Date())
