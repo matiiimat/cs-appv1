@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const session = await stripe.billingPortal.sessions.create({
       customer: customer.id,
       return_url: body.returnUrl || appUrl(),
-      locale: (body.locale as any) || 'auto',
+      locale: (body.locale as Stripe.BillingPortal.SessionCreateParams.Locale) || 'auto',
     })
     return NextResponse.json({ url: session.url })
   } catch (err) {

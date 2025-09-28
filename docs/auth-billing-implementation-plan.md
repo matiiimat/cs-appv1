@@ -33,3 +33,7 @@ This document tracks the concrete steps to integrate Better Auth (magic links) a
 - Tax: enable Stripe Tax for France in dashboard (no code change needed initially).
 - Enterprise plan: use `mailto:sales@aidly.me` for now.
 
+## Migration Runner (optional, recommended for CI)
+- Generate SQL locally with `npx @better-auth/cli generate` and commit under `database/migrations/better-auth/`.
+- Apply in CI or locally with `npm run ba:migrate` (uses `scripts/better-auth-migrate.js`).
+- Tracks applied files in `ba_migrations` table; safe to re-run.
