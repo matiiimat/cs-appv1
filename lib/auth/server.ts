@@ -65,6 +65,26 @@ export const auth = betterAuth({
           ]
         },
       },
+      onEvent: async (event) => {
+        try {
+          if (event.type === 'checkout.session.completed') {
+            const session = event.data.object as any
+            const email: string | undefined = session.customer_details?.email || session.customer_email
+            if (email) {
+              // Send magic link only after successful payment
+              await auth.api.signInMagicLink({
+                body: {
+                  email,
+                  callbackURL: process.env.APP_URL ? `${process.env.APP_URL}/app` : '/app',
+                },
+                headers: {},
+              })
+            }
+          }
+        } catch (err) {
+          console.error('[Stripe onEvent] error handling event', event.type, err)
+        }
+      },
     }),
   ],
 })
