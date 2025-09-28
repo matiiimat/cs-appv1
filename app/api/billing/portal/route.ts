@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const email = body.email
     if (!email) return NextResponse.json({ error: 'email is required' }, { status: 400 })
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-02-24.acacia' })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
     const customers = await stripe.customers.list({ email, limit: 1 })
     const customer = customers.data[0]
     if (!customer) return NextResponse.json({ error: 'No customer found' }, { status: 404 })

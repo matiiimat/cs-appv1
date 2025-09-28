@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const annual = Boolean(body.annual)
     if (!email) return NextResponse.json({ error: 'email is required' }, { status: 400 })
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-02-24.acacia' })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
     const priceId = await resolveProPrice(stripe, annual)
     const successUrl = `${appUrl()}/app/login?paid=1`
     const cancelUrl = `${appUrl()}#pricing`

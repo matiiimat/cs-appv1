@@ -7,9 +7,7 @@ import { stripe as stripePlugin } from '@better-auth/stripe'
 
 const db = createKysely()
 
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-02-24.acacia',
-})
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 async function resolveProPlan() {
   const priceMonthlyEnv = process.env.STRIPE_PRICE_PRO_MONTHLY
