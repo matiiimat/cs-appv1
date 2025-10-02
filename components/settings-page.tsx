@@ -13,6 +13,7 @@ import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
   useEffect(() => {
@@ -316,7 +317,29 @@ export function SettingsPage() {
                     Dark
                   </Button>
                 </div>
+                </div>
               </div>
+
+              <div className="pt-6 mt-6 border-t">
+                <h4 className="text-sm font-semibold mb-3">Profile</h4>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      setIsSigningOut(true)
+                      await fetch('/api/auth/sign-out', { method: 'POST' })
+                    } catch (e) {
+                      // ignore; still navigate away
+                    } finally {
+                      // Ensure navigation regardless of network hiccups
+                      window.location.href = 'https://aidly.me'
+                    }
+                  }}
+                  disabled={isSigningOut}
+                  className="shadow-sm"
+                >
+                  {isSigningOut ? 'Signing out…' : 'Sign out'}
+                </Button>
               </div>
             </div>
           </div>
