@@ -42,9 +42,11 @@ export function SettingsPage() {
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [savedSettings, setSavedSettings] = useState(settings)
 
-  // Detect if there are unsaved changes
+  // Detect if there are unsaved changes (ignore theme to avoid save banner on theme toggle)
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(settings) !== JSON.stringify(savedSettings)
+    const { theme: _t1, ...restSettings } = settings as typeof settings & { theme?: string }
+    const { theme: _t2, ...restSaved } = savedSettings as typeof savedSettings & { theme?: string }
+    return JSON.stringify(restSettings) !== JSON.stringify(restSaved)
   }, [settings, savedSettings])
 
 
