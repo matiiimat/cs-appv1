@@ -39,6 +39,10 @@ async function resolveProPlan() {
 
 export const auth = betterAuth({
   database: { db },
+  session: {
+    // 8 hours in seconds
+    expiresIn: 8 * 60 * 60,
+  },
   // base path defaults to /api/auth via route mounting
   plugins: [
     magicLink({
