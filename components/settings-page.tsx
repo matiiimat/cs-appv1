@@ -16,7 +16,6 @@ export function SettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
-  const [billingEmail, setBillingEmail] = useState<string>("")
   const [portalLoading, setPortalLoading] = useState<boolean>(false)
   const [portalError, setPortalError] = useState<string>("")
   useEffect(() => {
@@ -358,32 +357,17 @@ export function SettingsPage() {
                 <h3 className="text-lg font-semibold">Billing</h3>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="billing-email">Billing Email</Label>
-                  <Input
-                    id="billing-email"
-                    type="email"
-                    value={billingEmail}
-                    onChange={(e) => setBillingEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
-                  <p className="text-xs text-muted-foreground">Used to locate your Stripe customer and open the billing portal.</p>
-                </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-stretch gap-2 max-w-sm">
                   <Button
+                    className="w-full"
                     onClick={async () => {
                       setPortalError("")
-                      if (!billingEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingEmail)) {
-                        setPortalError("Please enter a valid email")
-                        return
-                      }
                       try {
                         setPortalLoading(true)
-                        const resp = await fetch('/api/billing/portal', {
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            email: billingEmail,
                             returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
                           }),
                         })
@@ -404,9 +388,77 @@ export function SettingsPage() {
                       }
                     }}
                     disabled={portalLoading}
-                    className="shadow-sm"
+                    className="shadow-sm w-full"
                   >
                     {portalLoading ? 'Opening…' : 'Manage Billing'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      // Opens the same portal where payment methods can be managed
+                      setPortalError("")
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                  >
+                    Manage Payment Method
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={async () => {
+                      // Opens the portal where invoices and history are available
+                      setPortalError("")
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                  >
+                    View Invoices
                   </Button>
                   {portalError && (
                     <span className="text-sm text-red-600">{portalError}</span>
