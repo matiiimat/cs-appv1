@@ -16,6 +16,9 @@ export function SettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
+  const [billingEmail, setBillingEmail] = useState<string>("")
+  const [portalLoading, setPortalLoading] = useState<boolean>(false)
+  const [portalError, setPortalError] = useState<string>("")
   useEffect(() => {
     const loadMailbox = async () => {
       try {
@@ -258,9 +261,10 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -342,6 +346,72 @@ export function SettingsPage() {
                 >
                   {isSigningOut ? 'Signing out…' : 'Sign out'}
                 </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Billing</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="billing-email">Billing Email</Label>
+                  <Input
+                    id="billing-email"
+                    type="email"
+                    value={billingEmail}
+                    onChange={(e) => setBillingEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground">Used to locate your Stripe customer and open the billing portal.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={async () => {
+                      setPortalError("")
+                      if (!billingEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingEmail)) {
+                        setPortalError("Please enter a valid email")
+                        return
+                      }
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/billing/portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            email: billingEmail,
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                    disabled={portalLoading}
+                    className="shadow-sm"
+                  >
+                    {portalLoading ? 'Opening…' : 'Manage Billing'}
+                  </Button>
+                  {portalError && (
+                    <span className="text-sm text-red-600">{portalError}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

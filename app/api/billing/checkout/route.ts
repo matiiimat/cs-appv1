@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
     const priceId = await resolveProPrice(stripe, annual)
-    const successUrl = `${appUrl()}/app/login?paid=1`
+    const successUrl = `${appUrl()}/app/login/success`
     const cancelUrl = `${appUrl()}#pricing`
 
     const session = await stripe.checkout.sessions.create({
