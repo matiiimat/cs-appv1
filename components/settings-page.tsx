@@ -46,9 +46,11 @@ export function SettingsPage() {
 
   // Detect if there are unsaved changes (ignore theme to avoid save banner on theme toggle)
   const hasUnsavedChanges = useMemo(() => {
-    const { theme: _t1, ...restSettings } = settings as typeof settings & { theme?: string }
-    const { theme: _t2, ...restSaved } = savedSettings as typeof savedSettings & { theme?: string }
-    return JSON.stringify(restSettings) !== JSON.stringify(restSaved)
+    const stripTheme = (obj: typeof settings) => {
+      const entries = Object.entries(obj).filter(([key]) => key !== 'theme')
+      return Object.fromEntries(entries)
+    }
+    return JSON.stringify(stripTheme(settings)) !== JSON.stringify(stripTheme(savedSettings))
   }, [settings, savedSettings])
 
 
@@ -333,7 +335,7 @@ export function SettingsPage() {
                     try {
                       setIsSigningOut(true)
                       await fetch('/api/auth/sign-out', { method: 'POST' })
-                    } catch (e) {
+                    } catch {
                       // ignore; still navigate away
                     } finally {
                       // Ensure navigation regardless of network hiccups
@@ -359,7 +361,7 @@ export function SettingsPage() {
               <div className="space-y-4">
                 <div className="flex flex-col items-stretch gap-2 max-w-sm">
                   <Button
-                    className="w-full"
+                    className="shadow-sm w-full"
                     onClick={async () => {
                       setPortalError("")
                       try {
@@ -388,7 +390,6 @@ export function SettingsPage() {
                       }
                     }}
                     disabled={portalLoading}
-                    className="shadow-sm w-full"
                   >
                     {portalLoading ? 'Opening…' : 'Manage Billing'}
                   </Button>
