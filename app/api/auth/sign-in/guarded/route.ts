@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         body: { email, callbackURL },
         headers: request.headers,
       })
-    } catch (err) {
+    } catch {
       // Direct fetch fallback to Better Auth endpoint using absolute URL
       try {
         const resp = await fetch(`${origin}/api/auth/sign-in/magic-link`, {
