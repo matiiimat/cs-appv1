@@ -13,12 +13,21 @@ export default function LoginPage() {
     setStatus("sending")
     setMessage("")
     try {
-      const res = await fetch("/api/auth/sign-in/magic-link", {
+      const res = await fetch("/api/auth/sign-in/guarded", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, callbackURL: "/app" }),
       })
-      if (!res.ok) throw new Error("Failed to send magic link")
+      if (!res.ok) {
+        let msg = "Failed to send magic link"
+        try {
+          const data = await res.json()
+          if (data?.error === 'no_account') msg = "No account found for this email address."
+          if (data?.error === 'email_required') msg = "Email is required"
+          if (data?.error === 'email_send_failed') msg = "Failed to send magic link. Please try again later."
+        } catch {}
+        throw new Error(msg)
+      }
       setStatus("sent")
       setMessage("Check your email for the sign-in link.")
     } catch (err) {

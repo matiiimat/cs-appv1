@@ -4,6 +4,7 @@ import { createKysely } from './db'
 import { sendMagicLinkEmail } from '@/lib/email/sendgrid'
 import Stripe from 'stripe'
 import { stripe as stripePlugin } from '@better-auth/stripe'
+import { ensureProvisioned } from '@/lib/tenant'
 
 const db = createKysely()
 
@@ -47,6 +48,7 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
+        // Do not gate here; guarded endpoint handles existence check.
         await sendMagicLinkEmail(email, url)
       },
     }),
@@ -75,6 +77,12 @@ export const auth = betterAuth({
               (e): e is string => typeof e === 'string' && e.length > 0
             )
             if (email) {
+              // Ensure user/org exists before sending magic link
+              try {
+                await ensureProvisioned(email)
+              } catch (e) {
+                console.error('[Stripe onEvent] provisioning error', e)
+              }
               // Send magic link only after successful payment
               // Build callback URL using origin only (avoid double /app)
               const raw = process.env.APP_URL || ''
