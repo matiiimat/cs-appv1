@@ -10,8 +10,8 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     return <>{children}</>
   }
 
-  const h = headers()
-  const session = await auth.api.getSession({ headers: h })
+  const h = await headers()
+  const session = await auth.api.getSession({ headers: new Headers(h) })
 
   if (!session) {
     redirect('/app/login')
