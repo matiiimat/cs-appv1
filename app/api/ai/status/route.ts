@@ -1,14 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 
-const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
+async function requireOrgId(headers: Headers): Promise<string> {
+  const session = await auth.api.getSession({ headers })
+  if (!session?.user?.email) throw new Error('UNAUTHORIZED')
+  const orgUser = await getOrgAndUserByEmail(session.user.email)
+  if (!orgUser) throw new Error('ORG_NOT_FOUND')
+  return orgUser.organizationId
+}
 
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const checkConnectivity = url.searchParams.get('checkConnectivity') === 'true'
 
-    const settings = await OrganizationSettingsModel.findByOrganizationId(DEMO_ORGANIZATION_ID)
+    const orgId = await requireOrgId(request.headers)
+    const settings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     const hasSavedSettings = Boolean(settings)
     const provider = settings?.aiConfig?.provider || 'local'
@@ -102,8 +111,13 @@ export async function GET(request: NextRequest) {
       ...(checkConnectivity ? { connectivityOk } : {}),
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ configured: false, reasons: ['Unauthorized'] }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ configured: false, reasons: ['Organization not found'] }, { status: 404 })
+    }
     console.error('AI status error:', error)
     return NextResponse.json({ configured: false, reasons: ['Status check failed'] }, { status: 500 })
   }
 }
-

@@ -1,13 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { MessageModel, CreateMessageSchema, UpdateMessageSchema } from "@/lib/models/message"
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { z } from "zod"
 
-// For now, we'll use the demo organization ID from seeded data
-// In production, this would come from authentication/JWT
-const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
+async function requireOrgId(request: NextRequest): Promise<string> {
+  const session = await auth.api.getSession({ headers: request.headers })
+  if (!session?.user?.email) {
+    throw new Error('UNAUTHORIZED')
+  }
+  const orgUser = await getOrgAndUserByEmail(session.user.email)
+  if (!orgUser) throw new Error('ORG_NOT_FOUND')
+  return orgUser.organizationId
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const orgId = await requireOrgId(request)
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page') || '1')
@@ -21,7 +30,7 @@ export async function GET(request: NextRequest) {
       orderDirection: 'DESC' as const,
     }
 
-    const result = await MessageModel.findByOrganization(DEMO_ORGANIZATION_ID, options)
+    const result = await MessageModel.findByOrganization(orgId, options)
 
     return NextResponse.json({
       messages: result.messages,
@@ -33,6 +42,12 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error('Error fetching messages:', error)
     return NextResponse.json(
       { error: "Failed to fetch messages" },
@@ -43,17 +58,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const orgId = await requireOrgId(request)
     const messageData = await request.json()
 
     // Validate input data
     const validatedData = CreateMessageSchema.parse(messageData)
 
     // Create message in database
-    const newMessage = await MessageModel.create(DEMO_ORGANIZATION_ID, validatedData)
+    const newMessage = await MessageModel.create(orgId, validatedData)
 
     // Log activity
     await MessageModel.addActivity(
-      DEMO_ORGANIZATION_ID,
+      orgId,
       newMessage.id,
       null, // No user context yet
       'received',
@@ -63,6 +79,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: newMessage }, { status: 201 })
   } catch (error) {
     // Enhanced diagnostics for easier troubleshooting in dev
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error('Error creating message:', error)
 
     if (error instanceof z.ZodError) {
@@ -105,6 +127,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const orgId = await requireOrgId(request)
     const { id, ...updates } = await request.json()
 
     if (!id) {
@@ -122,7 +145,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update message in database
-    const updatedMessage = await MessageModel.update(DEMO_ORGANIZATION_ID, id, validatedUpdates)
+    const updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
 
     if (!updatedMessage) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 })
@@ -132,7 +155,7 @@ export async function PUT(request: NextRequest) {
     if (validatedUpdates.status === 'sent') {
       try {
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
-        const replyTo = makeOrgForwardAddress(DEMO_ORGANIZATION_ID)
+        const replyTo = makeOrgForwardAddress(orgId)
         const to = updatedMessage.customer_email || ''
 
         // Build final subject: [CaseID] - Re: <original subject>
@@ -158,7 +181,7 @@ export async function PUT(request: NextRequest) {
         if (to && text) {
           const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo })
           await MessageModel.addActivity(
-            DEMO_ORGANIZATION_ID,
+            orgId,
             updatedMessage.id,
             validatedUpdates.agent_id ?? null,
             'approved',
@@ -176,6 +199,12 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: updatedMessage })
   } catch (error) {
     console.error('Error updating message:', error)
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
 
     if (error instanceof z.ZodError) {
       console.log('Validation error details:', error.errors)

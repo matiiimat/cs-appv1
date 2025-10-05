@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 function appUrl() {
-  return process.env.APP_URL || 'http://localhost:3000'
+  const raw = process.env.APP_URL || 'http://localhost:3000'
+  try {
+    const u = new URL(raw)
+    return u.origin
+  } catch {
+    return raw.replace(/\/+$/, '')
+  }
 }
 
 async function resolveProPrice(stripe: Stripe, annual?: boolean) {
@@ -19,9 +25,8 @@ async function resolveProPrice(stripe: Stripe, annual?: boolean) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({})) as { email?: string; annual?: boolean; returnUrl?: string }
-    const email = body.email
+    const email = body.email // optional; Stripe Checkout will collect if absent
     const annual = Boolean(body.annual)
-    if (!email) return NextResponse.json({ error: 'email is required' }, { status: 400 })
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
     const priceId = await resolveProPrice(stripe, annual)
@@ -31,7 +36,7 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: email,
+      ...(email ? { customer_email: email } : {}),
       success_url: successUrl,
       cancel_url: cancelUrl,
       allow_promotion_codes: true,

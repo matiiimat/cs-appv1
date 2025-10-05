@@ -1,14 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { OrganizationSettingsModel, SettingsDataSchema } from "@/lib/models/organization-settings"
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 
-// For now, we'll use the demo organization ID from seeded data
-// In production, this would come from authentication/JWT
-const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
+async function requireOrgId(headers: Headers): Promise<string> {
+  const session = await auth.api.getSession({ headers })
+  if (!session?.user?.email) throw new Error('UNAUTHORIZED')
+  const orgUser = await getOrgAndUserByEmail(session.user.email)
+  if (!orgUser) throw new Error('ORG_NOT_FOUND')
+  return orgUser.organizationId
+}
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log(`Fetching settings for organization: ${DEMO_ORGANIZATION_ID}`)
-    const settings = await OrganizationSettingsModel.findByOrganizationId(DEMO_ORGANIZATION_ID)
+    const orgId = await requireOrgId(request.headers)
+    const settings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     if (!settings) {
       console.log('No settings found, returning defaults')
@@ -72,6 +78,12 @@ export async function GET() {
     }
     return NextResponse.json(sanitized)
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error('Error fetching organization settings:', error)
     return NextResponse.json(
       { error: "Failed to fetch organization settings" },
@@ -82,13 +94,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const orgId = await requireOrgId(request.headers)
     const settingsData = await request.json()
 
     // Validate input data
     const validatedData = SettingsDataSchema.parse(settingsData)
 
     // Save settings to database
-    const result = await OrganizationSettingsModel.upsert(DEMO_ORGANIZATION_ID, validatedData)
+    const result = await OrganizationSettingsModel.upsert(orgId, validatedData)
 
     return NextResponse.json({
       success: true,
@@ -96,6 +109,12 @@ export async function POST(request: NextRequest) {
       lastSaved: validatedData.lastSaved
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error('Error saving organization settings:', error)
     return NextResponse.json(
       { error: "Failed to save organization settings" },

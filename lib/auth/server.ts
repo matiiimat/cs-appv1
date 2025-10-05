@@ -76,10 +76,21 @@ export const auth = betterAuth({
             )
             if (email) {
               // Send magic link only after successful payment
+              // Build callback URL using origin only (avoid double /app)
+              const raw = process.env.APP_URL || ''
+              let callbackURL = '/app'
+              if (raw) {
+                try {
+                  const u = new URL(raw)
+                  callbackURL = `${u.origin}/app`
+                } catch {
+                  callbackURL = `${raw.replace(/\/+$/, '')}/app`
+                }
+              }
               await auth.api.signInMagicLink({
                 body: {
                   email,
-                  callbackURL: process.env.APP_URL ? `${process.env.APP_URL}/app` : '/app',
+                  callbackURL,
                 },
                 headers: {},
               })

@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server'
 import { makeOrgForwardAddress } from '@/lib/email'
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 
-const DEMO_ORGANIZATION_ID = '82ef6e9f-e0b2-419f-82e3-2468ae4c1d21'
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const address = makeOrgForwardAddress(DEMO_ORGANIZATION_ID)
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const orgUser = await getOrgAndUserByEmail(session.user.email)
+    if (!orgUser) {
+      return NextResponse.json({ error: 'Organization not provisioned' }, { status: 404 })
+    }
+    const address = makeOrgForwardAddress(orgUser.organizationId)
     return NextResponse.json({
       provider: 'sendgrid',
       mode: 'forwarded',

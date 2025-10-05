@@ -7,22 +7,18 @@ import { Button } from "@/components/ui/button"
 
 export default function Home() {
   const [annual, setAnnual] = useState<boolean>(true)
-  const [email, setEmail] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
 
   async function startCheckout() {
     setError("")
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email")
-      return
-    }
     try {
       setLoading(true)
       const resp = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, annual })
+        // Let Stripe Checkout collect the email
+        body: JSON.stringify({ annual })
       })
       if (!resp.ok) throw new Error('Failed to start checkout')
       const data = await resp.json()
@@ -137,7 +133,7 @@ export default function Home() {
           </button>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {/* Pro plan */
+          {/* Pro plan */}
           <div className="rounded-lg border bg-card p-6">
             <h3 className="text-lg font-semibold">Pro</h3>
             <p className="mt-1 text-sm text-muted-foreground">Everything you need to run efficient support.</p>
@@ -151,18 +147,11 @@ export default function Home() {
               <li>Email support</li>
             </ul>
             <div className="mt-6 space-y-2">
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              />
               <Button className="w-full" onClick={startCheckout} disabled={loading}>
                 {loading ? 'Starting…' : 'Get started'}
               </Button>
               {error && <div className="text-sm text-red-600">{error}</div>}
-              <p className="text-xs text-muted-foreground">You’ll be redirected to Stripe Checkout. The plan is 0€ in test.</p>
+              <p className="text-xs text-muted-foreground">You’ll be redirected to Stripe Checkout where you’ll enter your email. The plan is 0€ in test.</p>
             </div>
           </div>
 

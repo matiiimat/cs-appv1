@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MessageModel } from '@/lib/models/message'
 import { parseOrgIdFromRecipient } from '@/lib/email'
 import { db } from '@/lib/database'
-import { DataEncryption } from '@/lib/encryption'
 
 // MVP inbound handler for SendGrid Inbound Parse
 // Expects multipart/form-data with fields: to, from, subject, text, headers
 // Attachments are ignored for MVP.
 
-// For demo: fallback org ID (kept consistent with other routes)
-const DEMO_ORGANIZATION_ID = '82ef6e9f-e0b2-419f-82e3-2468ae4c1d21'
+// No demo fallback: require a valid org alias in recipient
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,8 +70,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const orgId = parseOrgIdFromRecipient(to) || DEMO_ORGANIZATION_ID
-    await ensureOrganization(orgId)
+    const orgId = parseOrgIdFromRecipient(to)
+    if (!orgId) {
+      return NextResponse.json({ error: 'Missing or invalid recipient alias' }, { status: 400 })
+    }
+    // Ensure organization exists; if not, return 404 rather than creating implicitly
+    const orgCheck = await db.query<{ id: string }>('SELECT id FROM organizations WHERE id = $1', [orgId])
+    if (orgCheck.rows.length === 0) {
+      return NextResponse.json({ error: 'Unknown organization' }, { status: 404 })
+    }
 
     // Basic email parsing for name/email
     const fromMatch = (from || '').match(/"?([^"<]*)"?\s*<([^>]+)>/) || []
@@ -107,18 +112,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function ensureOrganization(organizationId: string) {
-  try {
-    const { rows } = await db.query<{ id: string }>('SELECT id FROM organizations WHERE id = $1', [organizationId])
-    if (rows.length > 0) return
-    const key = DataEncryption.generateOrganizationKey()
-    await db.query(
-      `INSERT INTO organizations (id, name, plan_type, plan_status, encrypted_data_key)
-       VALUES ($1, $2, 'basic', 'active', $3)`,
-      [organizationId, 'Demo Organization', key]
-    )
-  } catch (e) {
-    // Non-fatal for MVP; creation may fail if permissions restricted
-    console.warn('ensureOrganization skipped:', e)
-  }
-}
+// Removed demo ensure; inbound requires a pre-provisioned org via alias
