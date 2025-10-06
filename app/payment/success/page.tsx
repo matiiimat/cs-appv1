@@ -22,13 +22,13 @@ export default function PaymentSuccessPage() {
             <span className="font-medium text-blue-700">Check your email</span>
           </div>
           <p className="text-sm text-blue-600">
-            We're sending you a secure magic link to access your new workspace.
+            We&apos;re sending you a secure magic link to access your new workspace.
           </p>
         </div>
 
         <div className="text-sm text-gray-600 space-y-2">
           <p>Your organization and workspace are being set up automatically.</p>
-          <p>If you don't see the email, check your spam folder.</p>
+          <p>If you don&apos;t see the email, check your spam folder.</p>
           <p className="mt-4">
             Having trouble? Contact{' '}
             <a href="mailto:support@aidly.me" className="text-blue-600 underline">
