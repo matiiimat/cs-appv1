@@ -76,14 +76,27 @@ export const auth = betterAuth({
             const email = [session.customer_details?.email ?? null, session.customer_email ?? null].find(
               (e): e is string => typeof e === 'string' && e.length > 0
             )
-            if (email) {
-              // Ensure user/org exists before sending magic link
-              try {
-                await ensureProvisioned(email)
-              } catch (e) {
-                console.error('[Stripe onEvent] provisioning error', e)
-              }
-              // Send magic link only after successful payment
+
+            if (!email) {
+              console.error('[Stripe onEvent] No email found in checkout session:', session.id)
+              return
+            }
+
+            console.log(`[Stripe onEvent] Processing checkout completion for email: ${email}`)
+
+            // Ensure user/org exists before sending magic link
+            let provisionResult
+            try {
+              provisionResult = await ensureProvisioned(email)
+              console.log(`[Stripe onEvent] Successfully provisioned org: ${provisionResult.organizationId}, user: ${provisionResult.userId}`)
+            } catch (e) {
+              console.error('[Stripe onEvent] Critical provisioning error for email:', email, e)
+              // Don't send magic link if provisioning failed
+              return
+            }
+
+            // Send magic link only after successful payment and provisioning
+            try {
               // Build callback URL using origin only (avoid double /app)
               const raw = process.env.APP_URL || ''
               let callbackURL = '/app'
@@ -95,6 +108,7 @@ export const auth = betterAuth({
                   callbackURL = `${raw.replace(/\/+$/, '')}/app`
                 }
               }
+
               await auth.api.signInMagicLink({
                 body: {
                   email,
@@ -102,6 +116,10 @@ export const auth = betterAuth({
                 },
                 headers: {},
               })
+
+              console.log(`[Stripe onEvent] Magic link sent successfully to: ${email}`)
+            } catch (magicLinkError) {
+              console.error('[Stripe onEvent] Failed to send magic link to:', email, magicLinkError)
             }
           }
         } catch (err) {
