@@ -119,7 +119,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const response = await fetch('/api/organization/settings')
         if (response.ok) {
           const data = await response.json()
-          setSettings({ ...defaultSettings, ...data })
+          // Prefer theme from localStorage; do not trust API theme
+          let storedTheme: 'light' | 'dark' | null = null
+          try {
+            const t = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null
+            if (t === 'light' || t === 'dark') storedTheme = t
+          } catch {}
+
+          const merged = { ...defaultSettings, ...data }
+          setSettings({ ...merged, theme: storedTheme ?? defaultSettings.theme })
           setLastSaved(data.lastSaved ? new Date(data.lastSaved) : null)
           if (typeof data.aiConfigHasKey === 'boolean') {
             setAiConfigHasKey(data.aiConfigHasKey)
@@ -136,7 +144,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           if (savedSettings) {
             try {
               const parsed = JSON.parse(savedSettings)
-              setSettings({ ...defaultSettings, ...parsed })
+              let storedTheme: 'light' | 'dark' | null = null
+              try {
+                const t = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null
+                if (t === 'light' || t === 'dark') storedTheme = t
+              } catch {}
+              const merged = { ...defaultSettings, ...parsed }
+              setSettings({ ...merged, theme: storedTheme ?? defaultSettings.theme })
               setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
               // No secure key status from localStorage fallback
               setAiConfigHasKey(false)
@@ -153,7 +167,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         if (savedSettings) {
           try {
             const parsed = JSON.parse(savedSettings)
-            setSettings({ ...defaultSettings, ...parsed })
+            let storedTheme: 'light' | 'dark' | null = null
+            try {
+              const t = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null
+              if (t === 'light' || t === 'dark') storedTheme = t
+            } catch {}
+            const merged = { ...defaultSettings, ...parsed }
+            setSettings({ ...merged, theme: storedTheme ?? defaultSettings.theme })
             setLastSaved(parsed.lastSaved ? new Date(parsed.lastSaved) : null)
             setAiConfigHasKey(false)
             setHasSavedSettings(undefined)
@@ -236,12 +256,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
 
       // Save to database
+      type SettingsWithTimestamp = Settings & { lastSaved: string }
+      const swtForApi = settingsWithTimestamp as SettingsWithTimestamp
+      const { theme: _ignoredThemeApi, ...payloadNoTheme } = swtForApi
+      void _ignoredThemeApi
+
       const response = await fetch('/api/organization/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(settingsWithTimestamp),
+        body: JSON.stringify(payloadNoTheme),
       })
 
       if (!response.ok) {
@@ -251,7 +276,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const result = await response.json()
 
       // Also save to localStorage as a backup (omit secrets and theme to avoid hydration mismatches)
-      type SettingsWithTimestamp = Settings & { lastSaved: string }
       const swt = settingsWithTimestamp as SettingsWithTimestamp
       const { theme: _ignoredTheme, ...restNoTheme } = swt
       void _ignoredTheme

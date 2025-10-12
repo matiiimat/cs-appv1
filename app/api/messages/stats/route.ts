@@ -1,14 +1,28 @@
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { MessageModel } from "@/lib/models/message"
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 
-// For now, we'll use the demo organization ID from seeded data
-const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
+async function requireOrgId(headers: Headers): Promise<string> {
+  const session = await auth.api.getSession({ headers })
+  if (!session?.user?.email) throw new Error('UNAUTHORIZED')
+  const orgUser = await getOrgAndUserByEmail(session.user.email)
+  if (!orgUser) throw new Error('ORG_NOT_FOUND')
+  return orgUser.organizationId
+}
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const stats = await MessageModel.getStats(DEMO_ORGANIZATION_ID)
+    const orgId = await requireOrgId(request.headers)
+    const stats = await MessageModel.getStats(orgId)
     return NextResponse.json({ stats })
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error('Error fetching message stats:', error)
     return NextResponse.json(
       { error: "Failed to fetch statistics" },

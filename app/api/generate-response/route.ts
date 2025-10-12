@@ -3,6 +3,8 @@ import { AIService } from "@/lib/ai-providers"
 import { type AIProviderConfig, type Category } from "@/lib/settings-context"
 import { searchCompanyKnowledge } from "@/lib/knowledge-search"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
+import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -31,14 +33,21 @@ function getNormalizedCategories(userCategories?: Category[]): string {
   return userCategories.map(c => c.name).join(', ')
 }
 
+async function requireOrgId(headers: Headers): Promise<string> {
+  const session = await auth.api.getSession({ headers })
+  if (!session?.user?.email) throw new Error('UNAUTHORIZED')
+  const orgUser = await getOrgAndUserByEmail(session.user.email)
+  if (!orgUser) throw new Error('ORG_NOT_FOUND')
+  return orgUser.organizationId
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
 
     // Always load AI configuration from the database to access the stored API key.
-    // For now we use the demo organization (matches /api/organization/settings route).
-    const DEMO_ORGANIZATION_ID = "82ef6e9f-e0b2-419f-82e3-2468ae4c1d21"
-    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(DEMO_ORGANIZATION_ID)
+    const orgId = await requireOrgId(request.headers)
+    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     if (!orgSettings || !orgSettings.aiConfig) {
       return NextResponse.json({ error: "AI configuration is required" }, { status: 400 })
@@ -180,6 +189,12 @@ Generate a professional customer support response.`
 
     return NextResponse.json(response)
   } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
     console.error("[v0] Error generating AI response:", error)
     
     // Provide specific error messages for common issues

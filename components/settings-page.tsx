@@ -13,8 +13,11 @@ import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
+  const [portalLoading, setPortalLoading] = useState<boolean>(false)
+  const [portalError, setPortalError] = useState<string>("")
   useEffect(() => {
     const loadMailbox = async () => {
       try {
@@ -41,9 +44,13 @@ export function SettingsPage() {
   const [saveResult, setSaveResult] = useState<{ success: boolean; error?: string } | null>(null)
   const [savedSettings, setSavedSettings] = useState(settings)
 
-  // Detect if there are unsaved changes
+  // Detect if there are unsaved changes (ignore theme to avoid save banner on theme toggle)
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(settings) !== JSON.stringify(savedSettings)
+    const stripTheme = (obj: typeof settings) => {
+      const entries = Object.entries(obj).filter(([key]) => key !== 'theme')
+      return Object.fromEntries(entries)
+    }
+    return JSON.stringify(stripTheme(settings)) !== JSON.stringify(stripTheme(savedSettings))
   }, [settings, savedSettings])
 
 
@@ -255,9 +262,10 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -316,7 +324,147 @@ export function SettingsPage() {
                     Dark
                   </Button>
                 </div>
+                </div>
               </div>
+
+              <div className="pt-6 mt-6 border-t">
+                <h4 className="text-sm font-semibold mb-3">Profile</h4>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      setIsSigningOut(true)
+                      await fetch('/api/auth/sign-out', { method: 'POST' })
+                    } catch {
+                      // ignore; still navigate away
+                    } finally {
+                      // Ensure navigation regardless of network hiccups
+                      window.location.href = 'https://aidly.me'
+                    }
+                  }}
+                  disabled={isSigningOut}
+                  className="shadow-sm"
+                >
+                  {isSigningOut ? 'Signing out…' : 'Sign out'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          <div className="bg-card rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Billing</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex flex-col items-stretch gap-2 max-w-sm">
+                  <Button
+                    className="shadow-sm w-full"
+                    onClick={async () => {
+                      setPortalError("")
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                    disabled={portalLoading}
+                  >
+                    {portalLoading ? 'Opening…' : 'Manage Billing'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      // Opens the same portal where payment methods can be managed
+                      setPortalError("")
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                  >
+                    Manage Payment Method
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={async () => {
+                      // Opens the portal where invoices and history are available
+                      setPortalError("")
+                      try {
+                        setPortalLoading(true)
+                        const resp = await fetch('/api/auth/subscription/billing-portal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/app` : '/app',
+                          }),
+                        })
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}))
+                          throw new Error(data?.error || 'Failed to open billing portal')
+                        }
+                        const data = await resp.json()
+                        if (data?.url) {
+                          window.location.href = data.url
+                        } else {
+                          setPortalError('No portal URL returned')
+                        }
+                      } catch (e) {
+                        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal')
+                      } finally {
+                        setPortalLoading(false)
+                      }
+                    }}
+                  >
+                    View Invoices
+                  </Button>
+                  {portalError && (
+                    <span className="text-sm text-red-600">{portalError}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
