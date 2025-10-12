@@ -111,7 +111,7 @@ export function ReviewQueue() {
             <div className="px-6 pb-6">
               <div className="mb-4">
                 <h4 className="font-semibold mb-2">Subject: {message.subject}</h4>
-                <p className="text-foreground leading-relaxed mb-4">{message.message}</p>
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words mb-4">{formatEmailText(message.message)}</p>
               </div>
 
               {message.aiSuggestedResponse && (

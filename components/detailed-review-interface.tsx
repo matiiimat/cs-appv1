@@ -453,7 +453,7 @@ Output requirements:
                       </span>
                     </div>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm leading-relaxed">{selectedMessage.message}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{formatEmailText(selectedMessage.message)}</p>
                     </div>
                   </div>
                 </div>
