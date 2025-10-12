@@ -22,7 +22,7 @@ interface ChatMessage {
 
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
-  const { settings } = useSettings()
+  const { settings, aiConfigHasKey } = useSettings()
 
   // Get agent ID - use demo agent for demo organization, otherwise require auth
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
@@ -167,7 +167,12 @@ export function DetailedReviewInterface() {
     }
 
     // Check if AI is configured
-    if (!settings.aiConfig.apiKey) {
+    const isLocal = settings.aiConfig.provider === 'local'
+    const hasClientKey = Boolean(settings.aiConfig.apiKey)
+    const hasServerKey = Boolean(aiConfigHasKey)
+    const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
+
+    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
       const errorMessage: ChatMessage = {
         id: genId(),
         content: "Please configure your AI settings first to use the AI assistant.",
@@ -218,7 +223,13 @@ ${conversationContext}
 
 Agent's latest input: ${aiChatInput}
 
-Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue. The response should be ready to send to the customer directly.`
+Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue.
+
+Output requirements:
+- Return only the final, customer-ready email body.
+- Do not include any prefaces, labels, quotes, code fences, or markdown.
+- Do not say things like "Here is the response" or "Translated version:".
+- End your response with this exact signature once: "${settings.agentSignature}". If the current draft already includes a signature, keep only one copy.`
 
       // Call server route to avoid browser CORS and keep keys server-side
       const resp = await fetch('/api/ai/chat', {
@@ -260,7 +271,23 @@ Generate a customer-ready response that addresses the agent's input while helpin
   }
 
   const handleQuickAction = async (actionTitle: string, actionInstruction: string) => {
-    if (!selectedMessage || !settings.aiConfig.apiKey) return
+    if (!selectedMessage) return
+
+    // Allow quick actions when a server-side key exists or a client key is present (non-local).
+    const isLocal = settings.aiConfig.provider === 'local'
+    const hasClientKey = Boolean(settings.aiConfig.apiKey)
+    const hasServerKey = Boolean(aiConfigHasKey)
+    const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
+    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
+      const errorMessage: ChatMessage = {
+        id: genId(),
+        content: "Please configure your AI settings first to use quick actions.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorMessage])
+      return
+    }
 
     const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
     if (!currentResponse) {
