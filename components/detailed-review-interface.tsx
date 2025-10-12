@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
-import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
+import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, stripQuotedForTooltip } from "@/lib/utils"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
@@ -393,7 +393,7 @@ Output requirements:
                   {reviewMessages.map((message) => (
                     <div key={message.id} className="w-full">
                       <Tooltip 
-                        content={message.message} 
+                        content={stripQuotedForTooltip(message.message)} 
                         delay={1000}
                         className="text-xs whitespace-pre-wrap"
                       >

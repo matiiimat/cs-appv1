@@ -94,3 +94,31 @@ export function formatFriendlyDate(timestamp: string): string {
   
   return `${month} ${day}, ${time}`
 }
+
+// Strip quoted email content for compact tooltip display
+export function stripQuotedForTooltip(text: string, limit = 200): string {
+  if (!text) return ''
+  const lines = text.split(/\r?\n/)
+  const kept: string[] = []
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (
+      line.startsWith('>') ||
+      /^On .+ wrote:$/i.test(line) ||
+      /^-----Original Message-----/i.test(line)
+    ) {
+      break
+    }
+    kept.push(raw)
+  }
+  // Fallback: if nothing kept (message starts with quote), take the first non-quoted non-empty line
+  if (kept.length === 0) {
+    const first = lines.find(l => l.trim() && !l.trim().startsWith('>')) || ''
+    kept.push(first)
+  }
+  const singleLine = kept.join(' ').replace(/\s+/g, ' ').trim()
+  if (limit > 0 && singleLine.length > limit) {
+    return singleLine.slice(0, Math.max(0, limit - 1)) + '…'
+  }
+  return singleLine
+}
