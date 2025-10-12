@@ -15,9 +15,13 @@ async function requireOrgId(headers: Headers): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     // Accept legacy shape with aiConfig but ignore any client-sent apiKey; use DB-config instead
-    const body = await request.json().catch(() => ({})) as any
-    const system: string = body?.system
-    const prompt: string = body?.prompt
+    type ChatRequestBody = { system?: string; prompt?: string }
+    const bodyUnknown = await request.json().catch(() => ({})) as unknown
+    const body: ChatRequestBody = (typeof bodyUnknown === 'object' && bodyUnknown !== null)
+      ? bodyUnknown as ChatRequestBody
+      : {}
+    const system = body.system
+    const prompt = body.prompt
 
     if (!system || !prompt) {
       return NextResponse.json({ error: 'system and prompt are required' }, { status: 400 })
