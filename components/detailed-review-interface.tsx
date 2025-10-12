@@ -468,7 +468,7 @@ Output requirements:
                     placeholder="Edit the AI-generated response or write your own..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[120px] resize-y"
                   />
                   <div className="flex gap-2">
                     <Button onClick={handleApprove} className="w-full">
