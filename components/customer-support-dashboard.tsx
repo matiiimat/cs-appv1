@@ -16,6 +16,7 @@ export function CustomerSupportDashboard() {
     approveMessage,
     sendToReview,
     moveToPreviousMessage,
+    refreshData,
   } = useMessageManager()
   
   const { settings } = useSettings()
@@ -40,6 +41,11 @@ export function CustomerSupportDashboard() {
   }
 
   const agentId = getAgentId()
+  
+  // Refresh triage data on mount/entry
+  useEffect(() => {
+    refreshData()
+  }, [refreshData])
 
   // Filter to only show messages that are AI-reviewed and pending human review
   const pendingMessages = messages.filter(message => message.status === 'new' && message.aiReviewed)
