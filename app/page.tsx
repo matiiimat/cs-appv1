@@ -90,8 +90,33 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold">How it works</h2>
+          <p className="mt-2 text-muted-foreground">A quick overview of Aidly in action.</p>
+        </div>
+        <div className="mt-8 mx-auto max-w-4xl">
+          <div
+            className="relative w-full overflow-hidden rounded-lg border bg-card shadow-sm"
+            style={{ aspectRatio: '16 / 9' }}
+          >
+            <div className="absolute inset-0 grid place-items-center text-muted-foreground">
+              <div className="flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full bg-muted/60 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <p className="mt-3 text-sm">Product video coming soon</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
-      <section id="features" className="container mx-auto px-4 py-16 md:py-20">
+  <section id="features" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">What you get</h2>
           <p className="mt-2 text-muted-foreground">
@@ -110,7 +135,23 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </section>
+  </section>
+
+  {/* Users Opinion */}
+  <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
+    <div className="mx-auto max-w-2xl text-center">
+      <h2 className="text-2xl md:text-3xl font-semibold">What our users say</h2>
+      <p className="mt-2 text-muted-foreground">Real feedback from teams using Aidly daily.</p>
+    </div>
+    <div className="mt-8">
+      {/* Lightweight carousel with 10 placeholder opinions */}
+      {(() => {
+        const Carousel = require('@/components/testimonials-carousel').TestimonialsCarousel
+        return <Carousel />
+      })()}
+    </div>
+  </section>
+
 
       {/* Pricing */}
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
