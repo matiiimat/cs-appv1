@@ -172,12 +172,15 @@ export async function PUT(request: NextRequest) {
         const replyTo = makeOrgForwardAddress(orgId)
         const to = updatedMessage.customer_email || ''
 
-        // Build final subject: [CaseID] - Re: <original subject>
+        // Build final subject with single canonical bracketed case ID
+        // and ensure we don't stack multiple bracketed numbers in subject.
         const originalSubject = (updatedMessage.subject || '').trim()
         const hasRe = /^re:/i.test(originalSubject)
         const baseSubject = hasRe ? originalSubject : (originalSubject ? `Re: ${originalSubject}` : 'Re:')
+        const { sanitizeSubjectBrackets } = await import('@/lib/subject-utils')
+        const cleaned = sanitizeSubjectBrackets(baseSubject)
         const caseId = (updatedMessage.ticket_id || '').trim()
-        const finalSubject = caseId ? `[${caseId}] - ${baseSubject}` : baseSubject
+        const finalSubject = caseId ? `[${caseId}] - ${cleaned}` : cleaned
 
         // Sanitize body: remove any leading "Subject:" line and subsequent blank line(s)
         const rawText = updatedMessage.ai_suggested_response || ''
