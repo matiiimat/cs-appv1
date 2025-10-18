@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, stripQuotedForTooltip } from "@/lib/utils"
+import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
@@ -21,7 +22,7 @@ interface ChatMessage {
 }
 
 export function DetailedReviewInterface() {
-  const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
+  const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
   const { settings, aiConfigHasKey } = useSettings()
 
   // Get agent ID - use demo agent for demo organization, otherwise require auth
@@ -92,17 +93,23 @@ export function DetailedReviewInterface() {
   }, [selectedMessage, selectedMessageId, getDraftReply, updateDraftReply])
 
   const handleApprove = useCallback(async () => {
-    if (selectedMessage) {
-      try {
-        await updateMessage(selectedMessage.id, { status: "sent", agentId })
-        setChatMessages([])
-        // Navigation will be handled by useEffect when reviewMessages updates
-      } catch (error) {
-        console.error('Failed to approve message:', error)
-        alert('Authentication required. Please implement user login.')
-      }
+    if (!selectedMessage) return
+    const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
+    if (!finalResponse.trim()) {
+      alert('Draft reply is empty. Please write or insert a reply before sending.')
+      return
     }
-  }, [selectedMessage, updateMessage, setChatMessages, agentId])
+    try {
+      // Persist the current draft as the final response, then mark as sent
+      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: "sent", agentId })
+      clearDraftReply(selectedMessage.id)
+      setChatMessages([])
+      // Navigation will be handled by useEffect when reviewMessages updates
+    } catch (error) {
+      console.error('Failed to approve message:', error)
+      alert('Authentication required. Please implement user login.')
+    }
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
 
   // Auto-navigate when reviewMessages changes (after approve/etc)
   useEffect(() => {
@@ -453,7 +460,7 @@ Output requirements:
                       </span>
                     </div>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{formatEmailText(selectedMessage.message)}</p>
+                      <EmailText text={selectedMessage.message} />
                     </div>
                   </div>
                 </div>
