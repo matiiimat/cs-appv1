@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { TestimonialsCarousel } from "@/components/testimonials-carousel"
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -145,10 +146,7 @@ export default function Home() {
     </div>
     <div className="mt-8">
       {/* Lightweight carousel with 10 placeholder opinions */}
-      {(() => {
-        const Carousel = require('@/components/testimonials-carousel').TestimonialsCarousel
-        return <Carousel />
-      })()}
+      <TestimonialsCarousel />
     </div>
   </section>
 

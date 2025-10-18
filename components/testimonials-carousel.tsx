@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Testimonial = {
@@ -30,21 +30,25 @@ export function TestimonialsCarousel() {
 
   const current = useMemo(() => ITEMS[index], [index])
 
-  const next = () => setIndex((i) => (i + 1) % total)
-  const prev = () => setIndex((i) => (i - 1 + total) % total)
+  const next = useCallback(() => setIndex((i) => (i + 1) % total), [total])
+  const prev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total])
 
   // Auto-advance every 5s; pause on hover
   useEffect(() => {
-    intervalRef.current && clearInterval(intervalRef.current)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
     intervalRef.current = setInterval(() => next(), 5000)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [index])
+  }, [index, next])
 
-  const pause = () => intervalRef.current && clearInterval(intervalRef.current)
+  const pause = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+  }
   const resume = () => {
-    intervalRef.current && clearInterval(intervalRef.current)
+    if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(() => next(), 5000)
   }
 
