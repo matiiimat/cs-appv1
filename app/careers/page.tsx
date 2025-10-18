@@ -1,4 +1,4 @@
-import Link from 'next/link'
+//
 
 export default function CareersPage() {
   return (
@@ -62,4 +62,3 @@ export default function CareersPage() {
     </main>
   )
 }
-

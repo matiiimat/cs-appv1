@@ -5,7 +5,7 @@ export default function PrivacyPage() {
       <p className="mt-3 text-muted-foreground">Last updated: {new Date().getFullYear()}</p>
       <section className="mt-8 space-y-6 text-sm leading-6">
         <p>
-          This Privacy Policy describes how Aidly ("we", "us") collects, uses, and safeguards
+          This Privacy Policy describes how Aidly (“we”, “us”) collects, uses, and safeguards
           information in connection with our customer support platform.
         </p>
 

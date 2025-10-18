@@ -7,7 +7,7 @@ export default function TermsPage() {
         <div>
           <h2 className="text-lg font-semibold">Acceptance of Terms</h2>
           <p className="mt-2">
-            By accessing or using Aidly (the "Service"), you agree to these Terms. If you do not agree, do not use the Service.
+            By accessing or using Aidly (the “Service”), you agree to these Terms. If you do not agree, do not use the Service.
           </p>
         </div>
 
