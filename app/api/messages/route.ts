@@ -144,15 +144,29 @@ export async function PUT(request: NextRequest) {
       validatedUpdates.processed_at = new Date().toISOString()
     }
 
-    // Update message in database
-    const updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
+    let updatedMessage = null as Awaited<ReturnType<typeof MessageModel.update>> | null
 
-    if (!updatedMessage) {
-      return NextResponse.json({ error: "Message not found" }, { status: 404 })
-    }
-
-    // MVP: if transitioned to sent, trigger outbound email
+    // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
+      const transitioned = await MessageModel.transitionToSent(
+        orgId,
+        id,
+        validatedUpdates.agent_id,
+        validatedUpdates.processed_at
+      )
+
+      if (!transitioned) {
+        // Either already sent or not found; fetch current state and return without re-sending email
+        const current = await MessageModel.findById(orgId, id)
+        if (!current) {
+          return NextResponse.json({ error: "Message not found" }, { status: 404 })
+        }
+        return NextResponse.json({ message: current })
+      }
+
+      updatedMessage = transitioned
+
+      // Trigger outbound email only on successful state transition
       try {
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
         const replyTo = makeOrgForwardAddress(orgId)
@@ -193,6 +207,12 @@ export async function PUT(request: NextRequest) {
       } catch (sendErr) {
         console.error('Failed to send outbound email:', sendErr)
         // Do not fail the PUT response; sending can be retried later
+      }
+    } else {
+      // Non-'sent' updates use the regular update path
+      updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
+      if (!updatedMessage) {
+        return NextResponse.json({ error: "Message not found" }, { status: 404 })
       }
     }
 

@@ -50,6 +50,7 @@ export function CustomerSupportDashboard() {
 
   // State for keyboard action feedback
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
+  const [isActing, setIsActing] = useState(false)
 
 
 
@@ -60,25 +61,31 @@ export function CustomerSupportDashboard() {
     }, 300) // Same duration as swipe animation
   }, [setKeyboardFeedback])
 
-  const handleApprove = useCallback(() => {
-    if (!currentMessage) return
+  const handleApprove = useCallback(async () => {
+    if (!currentMessage || isActing) return
+    setIsActing(true)
     try {
-      approveMessage(currentMessage.id, agentId)
+      await approveMessage(currentMessage.id, agentId)
     } catch (error) {
       console.error('Failed to approve message:', error)
       alert('Authentication required. Please implement user login.')
+    } finally {
+      setIsActing(false)
     }
-  }, [currentMessage, approveMessage, agentId])
+  }, [currentMessage, approveMessage, agentId, isActing])
 
-  const handleSendToReview = useCallback(() => {
-    if (!currentMessage) return
+  const handleSendToReview = useCallback(async () => {
+    if (!currentMessage || isActing) return
+    setIsActing(true)
     try {
-      sendToReview(currentMessage.id, agentId, "Needs manual review")
+      await sendToReview(currentMessage.id, agentId, "Needs manual review")
     } catch (error) {
       console.error('Failed to send to review:', error)
       alert('Authentication required. Please implement user login.')
+    } finally {
+      setIsActing(false)
     }
-  }, [currentMessage, sendToReview, agentId])
+  }, [currentMessage, sendToReview, agentId, isActing])
 
   const handleKeyboardApprove = useCallback(() => {
     if (!currentMessage) return
@@ -208,8 +215,8 @@ export function CustomerSupportDashboard() {
         <SwipeableCard
           onSwipeLeft={handleSendToReview}
           onSwipeRight={handleApprove}
-          disabled={currentMessage.isGenerating}
-          className="absolute inset-0"
+          disabled={currentMessage.isGenerating || isActing}
+          className={`absolute inset-0 ${isActing ? 'opacity-60 pointer-events-none' : ''}`}
         >
           <div 
             className="h-full overflow-hidden transition-all duration-300 bg-card rounded-lg shadow-lg"
