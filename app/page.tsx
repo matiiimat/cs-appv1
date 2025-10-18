@@ -195,14 +195,15 @@ export default function Home() {
 
       {/* Footer */}
       <footer id="contact" className="border-t border-border/60">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-8 md:flex-row">
-          <div className="flex items-center gap-2">
+        <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center gap-2 justify-self-start">
             <Image src="/logo-60x.png" alt="Aidly" width={18} height={18} />
             <span className="text-sm">© {new Date().getFullYear()} Aidly</span>
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground justify-self-center">
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
+            <Link href="/careers">Careers</Link>
             <a href="mailto:support@aidly.me">support@aidly.me</a>
           </div>
         </div>
