@@ -286,7 +286,7 @@ export function SettingsPage() {
                   }}
                   placeholder="e.g., Acme"
                 />
-                <p className="text-xs text-muted-foreground">Will appear in emails as "{settings.brandName || 'Your Brand'} Support".</p>
+                <p className="text-xs text-muted-foreground">Will appear in emails as &quot;{settings.brandName || 'Your Brand'} Support&quot;.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name</Label>
