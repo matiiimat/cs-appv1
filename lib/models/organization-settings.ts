@@ -17,6 +17,8 @@ export type OrganizationSettingsType = z.infer<typeof OrganizationSettingsSchema
 // Settings data structure (before encryption)
 export const SettingsDataSchema = z.object({
   theme: z.enum(['light', 'dark']).default('light'),
+  // Brand name shown to customers in email friendly-from
+  brandName: z.string().max(80).default(''),
   agentName: z.string().default('Support Agent'),
   agentSignature: z.string().default('Best regards,\nSupport Team'),
   aiInstructions: z.string().default('You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.'),

@@ -5,6 +5,7 @@ export interface OutboundEmail {
   subject: string
   text: string
   replyTo?: string
+  fromName?: string
 }
 
 export interface SendResult {
@@ -32,7 +33,7 @@ export class EmailService {
         personalizations: [
           { to: [{ email: out.to }] }
         ],
-        from: { email: fromEmail },
+        from: out.fromName ? { email: fromEmail, name: out.fromName } : { email: fromEmail },
         subject: out.subject,
         content: [ { type: 'text/plain', value: out.text } ],
         ...(out.replyTo ? { reply_to: { email: out.replyTo } } : {}),
@@ -58,7 +59,7 @@ export class EmailService {
     if (provider === 'brevo') {
       const apiKey = getEnv('BREVO_API_KEY') as string
       const payload: Record<string, unknown> = {
-        sender: { email: fromEmail },
+        sender: out.fromName ? { email: fromEmail, name: out.fromName } : { email: fromEmail },
         to: [{ email: out.to }],
         subject: out.subject,
         textContent: out.text,
@@ -85,7 +86,7 @@ export class EmailService {
     // Default: Postmark
     const serverToken = getEnv('POSTMARK_SERVER_TOKEN') as string
     const payload: Record<string, unknown> = {
-      From: fromEmail,
+      From: out.fromName ? `${out.fromName} <${fromEmail}>` : fromEmail,
       To: out.to,
       Subject: out.subject,
       TextBody: out.text,

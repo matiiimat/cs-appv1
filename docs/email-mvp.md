@@ -38,6 +38,13 @@ SendGrid Inbound setup (MVP)
 
 Outbound provider
 - Set `EMAIL_PROVIDER=sendgrid` and `SENDGRID_API_KEY=...`.
+
+## Friendly From (Brand Display Name)
+
+- Outbound emails now include a display name based on your organization brand, e.g., "Acme Support" <support@aidly.me>.
+- Configure your brand from Settings → Profile & Branding → Brand Name; this updates `organizations.name` (no schema changes required).
+- The system uses `OUTBOUND_FROM_EMAIL` for the sender address and per-org `reply_to` as `support+{orgId}@INBOUND_DOMAIN` to keep routing intact.
+- See `friendly_from_approach.md` for the rationale and examples.
 - Use `OUTBOUND_FROM_EMAIL` from an authenticated domain or Single Sender (for quick testing).
 
 Outbound provider

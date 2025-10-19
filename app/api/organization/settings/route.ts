@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { OrganizationSettingsModel, SettingsDataSchema } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { db } from '@/lib/database'
+import { updateOrganizationName } from '@/lib/tenant'
 
 async function requireOrgId(headers: Headers): Promise<string> {
   const session = await auth.api.getSession({ headers })
@@ -15,11 +17,21 @@ export async function GET(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request.headers)
     const settings = await OrganizationSettingsModel.findByOrganizationId(orgId)
+    // Load current organization name to expose as brandName
+    let brandName = ''
+    try {
+      const res = await db.query<{ name: string }>('SELECT name FROM organizations WHERE id = $1', [orgId])
+      if (res.rows[0]?.name) {
+        // Provide a clean brand default (strip trailing "'s Workspace")
+        brandName = res.rows[0].name.replace(/'s Workspace\s*$/i, '').trim()
+      }
+    } catch {}
 
     if (!settings) {
       console.log('No settings found, returning defaults')
       // Return default settings if none exist
       return NextResponse.json({
+        brandName,
         theme: "light",
         agentName: "Support Agent",
         agentSignature: "Best regards,\nSupport Team",
@@ -76,7 +88,7 @@ export async function GET(request: NextRequest) {
       aiConfigHasKey: hasKey,
       hasSavedSettings: true,
     }
-    return NextResponse.json(sanitized)
+      return NextResponse.json({ ...sanitized, brandName })
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -100,8 +112,24 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validatedData = SettingsDataSchema.parse(settingsData)
 
+    // Preserve existing API key if client posts empty string (since GET hides it)
+    try {
+      const existing = await OrganizationSettingsModel.findByOrganizationId(orgId)
+      const incomingKey = (validatedData?.aiConfig?.apiKey || '').trim()
+      const existingKey = (existing?.aiConfig?.apiKey || '').trim()
+      if (!incomingKey && existingKey) {
+        validatedData.aiConfig.apiKey = existingKey
+      }
+    } catch {}
+
     // Save settings to database
     const result = await OrganizationSettingsModel.upsert(orgId, validatedData)
+
+    // If brandName is provided, update organizations.name to match exactly
+    const brand = typeof validatedData.brandName === 'string' ? validatedData.brandName.trim() : ''
+    if (brand) {
+      await updateOrganizationName(orgId, brand)
+    }
 
     return NextResponse.json({
       success: true,

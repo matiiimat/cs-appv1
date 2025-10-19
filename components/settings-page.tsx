@@ -272,9 +272,22 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">Agent Information</h3>
+                <h3 className="text-lg font-semibold">Profile & Branding</h3>
               </div>
               <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="brandName">Brand Name (visible to customers)</Label>
+                <Input
+                  id="brandName"
+                  value={settings.brandName}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 80)
+                    updateSettings({ brandName: value })
+                  }}
+                  placeholder="e.g., Acme"
+                />
+                <p className="text-xs text-muted-foreground">Will appear in emails as "{settings.brandName || 'Your Brand'} Support".</p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name</Label>
                 <Input

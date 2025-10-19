@@ -148,6 +148,16 @@ export async function PUT(request: NextRequest) {
 
     // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
+      // If client passed a modified ai_suggested_response with the send action,
+      // persist it first so the outbound email uses the latest content.
+      if (typeof (validatedUpdates as Record<string, unknown>).ai_suggested_response === 'string') {
+        try {
+          await MessageModel.update(orgId, id, { ai_suggested_response: (validatedUpdates as Record<string, string>).ai_suggested_response })
+        } catch (e) {
+          console.warn('Failed to persist ai_suggested_response before send; proceeding to send anyway', e)
+        }
+      }
+
       const transitioned = await MessageModel.transitionToSent(
         orgId,
         id,
@@ -169,6 +179,7 @@ export async function PUT(request: NextRequest) {
       // Trigger outbound email only on successful state transition
       try {
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
+        const { getOrganizationNameById } = await import('@/lib/tenant')
         const replyTo = makeOrgForwardAddress(orgId)
         const to = updatedMessage.customer_email || ''
 
@@ -195,8 +206,19 @@ export async function PUT(request: NextRequest) {
         }
         const text = lines.slice(startIdx).join('\n')
 
+        // Build Friendly From display name from organization name
+        let fromName: string | undefined
+        try {
+          const orgName = await getOrganizationNameById(orgId)
+          if (orgName && orgName.trim().length > 0) {
+            // Minimal cleanup: remove a trailing “'s Workspace” suffix if present, then append Support
+            const cleaned = orgName.replace(/'s Workspace\s*$/i, '').trim()
+            fromName = `${cleaned} Support`
+          }
+        } catch {}
+
         if (to && text) {
-          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo })
+          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
           await MessageModel.addActivity(
             orgId,
             updatedMessage.id,
