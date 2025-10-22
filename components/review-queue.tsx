@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
+import { EmailText } from "@/components/email-text"
 import { MessageSquare, Clock, User, Tag, Eye, Zap, Loader2 } from "lucide-react"
 
 export function ReviewQueue() {
@@ -111,7 +112,9 @@ export function ReviewQueue() {
             <div className="px-6 pb-6">
               <div className="mb-4">
                 <h4 className="font-semibold mb-2">Subject: {message.subject}</h4>
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words mb-4">{formatEmailText(message.message)}</p>
+                <div className="text-foreground leading-relaxed break-words mb-4">
+                  <EmailText text={message.message} />
+                </div>
               </div>
 
               {message.aiSuggestedResponse && (

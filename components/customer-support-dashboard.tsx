@@ -6,6 +6,7 @@ import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
+import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, Clock, User, Loader2, RotateCcw } from "lucide-react"
 
@@ -210,7 +211,9 @@ export function CustomerSupportDashboard() {
               <div className="px-6 pb-6">
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Subject: {nextMessage.subject}</h4>
-                  <p className="text-foreground leading-relaxed whitespace-pre-line break-words line-clamp-3">{formatEmailText(nextMessage.message)}</p>
+                  <div className="text-foreground leading-relaxed break-words">
+                    <EmailText text={nextMessage.message} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -264,7 +267,7 @@ export function CustomerSupportDashboard() {
             <div className="px-6 pb-6 h-full overflow-y-auto">
               <div className="mb-6">
                 <h4 className="font-semibold mb-2">Subject: {currentMessage.subject}</h4>
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">{formatEmailText(currentMessage.message)}</p>
+                <EmailText text={currentMessage.message} />
               </div>
 
               {/* AI Response Section */}
