@@ -183,15 +183,25 @@ export async function PUT(request: NextRequest) {
         const replyTo = makeOrgForwardAddress(orgId)
         const to = updatedMessage.customer_email || ''
 
-        // Build final subject with single canonical bracketed case ID
-        // and ensure we don't stack multiple bracketed numbers in subject.
+        // Build final subject.
+        // Quick fix: if the original subject already contains a bracketed case ID, preserve it as-is
+        // (just normalize leading Re: once) and do not inject a new one.
         const originalSubject = (updatedMessage.subject || '').trim()
         const hasRe = /^re:/i.test(originalSubject)
+        const hasExistingBracketId = /\[\s*#?\s*\d+\s*\]/.test(originalSubject)
         const baseSubject = hasRe ? originalSubject : (originalSubject ? `Re: ${originalSubject}` : 'Re:')
-        const { sanitizeSubjectBrackets } = await import('@/lib/subject-utils')
-        const cleaned = sanitizeSubjectBrackets(baseSubject)
-        const caseId = (updatedMessage.ticket_id || '').trim()
-        const finalSubject = caseId ? `[${caseId}] - ${cleaned}` : cleaned
+
+        let finalSubject: string
+        if (hasExistingBracketId) {
+          // Keep the caller-provided bracketed ID intact; don't sanitize it away or replace it
+          finalSubject = baseSubject.trim()
+        } else {
+          // Ensure we don't stack multiple bracketed numbers in subject and inject our case ID
+          const { sanitizeSubjectBrackets } = await import('@/lib/subject-utils')
+          const cleaned = sanitizeSubjectBrackets(baseSubject)
+          const caseId = (updatedMessage.ticket_id || '').trim()
+          finalSubject = caseId ? `[${caseId}] - ${cleaned}` : cleaned
+        }
 
         // Sanitize body: remove any leading "Subject:" line and subsequent blank line(s)
         const rawText = updatedMessage.ai_suggested_response || ''
