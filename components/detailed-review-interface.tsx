@@ -35,7 +35,7 @@ export function DetailedReviewInterface() {
 
     // For demo organization, use demo agent
     if (DEMO_AGENT_ID) {
-      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      // console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
       return DEMO_AGENT_ID
     }
 
