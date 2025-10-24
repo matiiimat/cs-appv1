@@ -6,6 +6,7 @@ import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
+import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, Clock, User, Loader2, RotateCcw } from "lucide-react"
 
@@ -16,6 +17,7 @@ export function CustomerSupportDashboard() {
     approveMessage,
     sendToReview,
     moveToPreviousMessage,
+    refreshData,
   } = useMessageManager()
   
   const { settings } = useSettings()
@@ -32,7 +34,7 @@ export function CustomerSupportDashboard() {
 
     // For demo organization, use demo agent
     if (DEMO_AGENT_ID) {
-      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      // console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
       return DEMO_AGENT_ID
     }
 
@@ -40,6 +42,11 @@ export function CustomerSupportDashboard() {
   }
 
   const agentId = getAgentId()
+  
+  // Refresh triage data on mount/entry
+  useEffect(() => {
+    refreshData()
+  }, [refreshData])
 
   // Filter to only show messages that are AI-reviewed and pending human review
   const pendingMessages = messages.filter(message => message.status === 'new' && message.aiReviewed)
@@ -50,6 +57,7 @@ export function CustomerSupportDashboard() {
 
   // State for keyboard action feedback
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
+  const [isActing, setIsActing] = useState(false)
 
 
 
@@ -60,25 +68,31 @@ export function CustomerSupportDashboard() {
     }, 300) // Same duration as swipe animation
   }, [setKeyboardFeedback])
 
-  const handleApprove = useCallback(() => {
-    if (!currentMessage) return
+  const handleApprove = useCallback(async () => {
+    if (!currentMessage || isActing) return
+    setIsActing(true)
     try {
-      approveMessage(currentMessage.id, agentId)
+      await approveMessage(currentMessage.id, agentId)
     } catch (error) {
       console.error('Failed to approve message:', error)
       alert('Authentication required. Please implement user login.')
+    } finally {
+      setIsActing(false)
     }
-  }, [currentMessage, approveMessage, agentId])
+  }, [currentMessage, approveMessage, agentId, isActing])
 
-  const handleSendToReview = useCallback(() => {
-    if (!currentMessage) return
+  const handleSendToReview = useCallback(async () => {
+    if (!currentMessage || isActing) return
+    setIsActing(true)
     try {
-      sendToReview(currentMessage.id, agentId, "Needs manual review")
+      await sendToReview(currentMessage.id, agentId, "Needs manual review")
     } catch (error) {
       console.error('Failed to send to review:', error)
       alert('Authentication required. Please implement user login.')
+    } finally {
+      setIsActing(false)
     }
-  }, [currentMessage, sendToReview, agentId])
+  }, [currentMessage, sendToReview, agentId, isActing])
 
   const handleKeyboardApprove = useCallback(() => {
     if (!currentMessage) return
@@ -197,7 +211,9 @@ export function CustomerSupportDashboard() {
               <div className="px-6 pb-6">
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Subject: {nextMessage.subject}</h4>
-                  <p className="text-foreground leading-relaxed line-clamp-3">{nextMessage.message}</p>
+                  <div className="text-foreground leading-relaxed break-words">
+                    <EmailText text={nextMessage.message} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -208,8 +224,8 @@ export function CustomerSupportDashboard() {
         <SwipeableCard
           onSwipeLeft={handleSendToReview}
           onSwipeRight={handleApprove}
-          disabled={currentMessage.isGenerating}
-          className="absolute inset-0"
+          disabled={currentMessage.isGenerating || isActing}
+          className={`absolute inset-0 ${isActing ? 'opacity-60 pointer-events-none' : ''}`}
         >
           <div 
             className="h-full overflow-hidden transition-all duration-300 bg-card rounded-lg shadow-lg"
@@ -251,7 +267,7 @@ export function CustomerSupportDashboard() {
             <div className="px-6 pb-6 h-full overflow-y-auto">
               <div className="mb-6">
                 <h4 className="font-semibold mb-2">Subject: {currentMessage.subject}</h4>
-                <p className="text-foreground leading-relaxed">{currentMessage.message}</p>
+                <EmailText text={currentMessage.message} />
               </div>
 
               {/* AI Response Section */}

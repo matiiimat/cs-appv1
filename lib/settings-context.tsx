@@ -27,6 +27,7 @@ export interface AIProviderConfig {
 
 export interface Settings {
   theme: "light" | "dark"
+  brandName: string
   agentName: string
   agentSignature: string
   aiInstructions: string
@@ -59,6 +60,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 const defaultSettings: Settings = {
   theme: "light",
+  brandName: "",
   agentName: "Support Agent",
   agentSignature: "Best regards,\nSupport Team",
   aiInstructions:

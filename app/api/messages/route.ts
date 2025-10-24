@@ -144,26 +144,64 @@ export async function PUT(request: NextRequest) {
       validatedUpdates.processed_at = new Date().toISOString()
     }
 
-    // Update message in database
-    const updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
+    let updatedMessage = null as Awaited<ReturnType<typeof MessageModel.update>> | null
 
-    if (!updatedMessage) {
-      return NextResponse.json({ error: "Message not found" }, { status: 404 })
-    }
-
-    // MVP: if transitioned to sent, trigger outbound email
+    // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
+      // If client passed a modified ai_suggested_response with the send action,
+      // persist it first so the outbound email uses the latest content.
+      if (typeof (validatedUpdates as Record<string, unknown>).ai_suggested_response === 'string') {
+        try {
+          await MessageModel.update(orgId, id, { ai_suggested_response: (validatedUpdates as Record<string, string>).ai_suggested_response })
+        } catch (e) {
+          console.warn('Failed to persist ai_suggested_response before send; proceeding to send anyway', e)
+        }
+      }
+
+      const transitioned = await MessageModel.transitionToSent(
+        orgId,
+        id,
+        validatedUpdates.agent_id,
+        validatedUpdates.processed_at
+      )
+
+      if (!transitioned) {
+        // Either already sent or not found; fetch current state and return without re-sending email
+        const current = await MessageModel.findById(orgId, id)
+        if (!current) {
+          return NextResponse.json({ error: "Message not found" }, { status: 404 })
+        }
+        return NextResponse.json({ message: current })
+      }
+
+      updatedMessage = transitioned
+
+      // Trigger outbound email only on successful state transition
       try {
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
+        const { getOrganizationNameById } = await import('@/lib/tenant')
         const replyTo = makeOrgForwardAddress(orgId)
         const to = updatedMessage.customer_email || ''
 
-        // Build final subject: [CaseID] - Re: <original subject>
+        // Build final subject.
+        // Quick fix: if the original subject already contains a bracketed case ID, preserve it as-is
+        // (just normalize leading Re: once) and do not inject a new one.
         const originalSubject = (updatedMessage.subject || '').trim()
         const hasRe = /^re:/i.test(originalSubject)
+        const hasExistingBracketId = /\[\s*#?\s*\d+\s*\]/.test(originalSubject)
         const baseSubject = hasRe ? originalSubject : (originalSubject ? `Re: ${originalSubject}` : 'Re:')
-        const caseId = (updatedMessage.ticket_id || '').trim()
-        const finalSubject = caseId ? `[${caseId}] - ${baseSubject}` : baseSubject
+
+        let finalSubject: string
+        if (hasExistingBracketId) {
+          // Keep the caller-provided bracketed ID intact; don't sanitize it away or replace it
+          finalSubject = baseSubject.trim()
+        } else {
+          // Ensure we don't stack multiple bracketed numbers in subject and inject our case ID
+          const { sanitizeSubjectBrackets } = await import('@/lib/subject-utils')
+          const cleaned = sanitizeSubjectBrackets(baseSubject)
+          const caseId = (updatedMessage.ticket_id || '').trim()
+          finalSubject = caseId ? `[${caseId}] - ${cleaned}` : cleaned
+        }
 
         // Sanitize body: remove any leading "Subject:" line and subsequent blank line(s)
         const rawText = updatedMessage.ai_suggested_response || ''
@@ -178,8 +216,19 @@ export async function PUT(request: NextRequest) {
         }
         const text = lines.slice(startIdx).join('\n')
 
+        // Build Friendly From display name from organization name
+        let fromName: string | undefined
+        try {
+          const orgName = await getOrganizationNameById(orgId)
+          if (orgName && orgName.trim().length > 0) {
+            // Minimal cleanup: remove a trailing “'s Workspace” suffix if present, then append Support
+            const cleaned = orgName.replace(/'s Workspace\s*$/i, '').trim()
+            fromName = `${cleaned} Support`
+          }
+        } catch {}
+
         if (to && text) {
-          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo })
+          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
           await MessageModel.addActivity(
             orgId,
             updatedMessage.id,
@@ -193,6 +242,12 @@ export async function PUT(request: NextRequest) {
       } catch (sendErr) {
         console.error('Failed to send outbound email:', sendErr)
         // Do not fail the PUT response; sending can be retried later
+      }
+    } else {
+      // Non-'sent' updates use the regular update path
+      updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
+      if (!updatedMessage) {
+        return NextResponse.json({ error: "Message not found" }, { status: 404 })
       }
     }
 

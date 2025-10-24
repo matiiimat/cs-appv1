@@ -72,14 +72,19 @@ export async function POST(request: NextRequest) {
 
     // Handle quick actions - modify existing response
     if (quickActionInstruction && currentResponse) {
-      const quickActionSystem = `You are a professional customer support agent. You have been asked to modify an existing response based on a specific instruction.
+      const quickActionSystem = `You are a professional customer support agent. Modify the existing response according to the instruction.
 
 Current response:
 "${currentResponse}"
 
 Instruction: ${quickActionInstruction}
 
-Please provide the modified response that follows the instruction while maintaining professionalism and the core message intent. Keep the same signature if present.`
+Output requirements:
+- Return only the final, customer-ready email body.
+- Do not include any prefaces, labels, quotes, code fences, or markdown.
+- Do not say things like "Here is the response" or "Translated version:".
+- Keep the existing signature if present; otherwise, end with this exact signature once: "${agentSignature}".
+- Ensure there is only one signature in the final output.`
 
       const quickActionPrompt = `Original customer message context:
 Customer: ${customerName}
@@ -159,7 +164,12 @@ Guidelines:
 - For technical issues, provide step-by-step guidance
 - For billing issues, reference account details appropriately
 - Always end with an offer for further assistance
-- End your response with this exact signature: "${agentSignature}"
+-
+Output requirements:
+- Return only the final, customer-ready email body.
+- Do not include any prefaces, labels, quotes, code fences, or markdown.
+- Do not say things like "Here is the response" or "Translated version:".
+- End your response with this exact signature once: "${agentSignature}".
 
 The message category is: ${parsedCategory.category}
 

@@ -7,13 +7,18 @@ import { formatRelativeTime } from "@/lib/utils"
 import { Zap, PlayCircle, Loader2 } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
 import { useSettings } from "@/lib/settings-context"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { getMessageUrgency } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 
 export function AgentDashboard() {
-  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, processBatch, cancelBatchProcessing } = useMessageManager()
+  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
+  
+  // Refresh dashboard data on mount/entry
+  useEffect(() => {
+    refreshData()
+  }, [refreshData])
   
   // Calculate queue metrics
   const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')

@@ -12,7 +12,7 @@ import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-r
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading } = useSettings()
+  const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, aiConfigHasKey } = useSettings()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
@@ -272,9 +272,22 @@ export function SettingsPage() {
           <div className="bg-card rounded-lg shadow-md">
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">Agent Information</h3>
+                <h3 className="text-lg font-semibold">Profile & Branding</h3>
               </div>
               <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="brandName">Brand Name (visible to customers)</Label>
+                <Input
+                  id="brandName"
+                  value={settings.brandName}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 80)
+                    updateSettings({ brandName: value })
+                  }}
+                  placeholder="e.g., Acme"
+                />
+                <p className="text-xs text-muted-foreground">Will appear in emails as &quot;{settings.brandName || 'Your Brand'} Support&quot;.</p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="agentName">Agent Name</Label>
                 <Input
@@ -571,13 +584,20 @@ export function SettingsPage() {
 
               {settings.aiConfig.provider !== 'local' && (
                 <div className="space-y-2">
-                  <Label htmlFor="api-key">API Key</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="api-key">API Key</Label>
+                    {aiConfigHasKey && !settings.aiConfig.apiKey && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/40 dark:text-green-200 dark:border-green-800">
+                        Saved
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="api-key"
                     type="password"
                     value={settings.aiConfig.apiKey}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                    placeholder="Enter your API key"
+                    placeholder={aiConfigHasKey && !settings.aiConfig.apiKey ? '••••••••••••••••••••••••' : 'Enter your API key'}
                   />
                   {connectionResult && (
                     <div className={`text-sm p-2 rounded ${

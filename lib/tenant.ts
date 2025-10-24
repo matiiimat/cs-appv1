@@ -10,6 +10,19 @@ export async function getOrgAndUserByEmail(email: string): Promise<{ organizatio
   return { organizationId: result.rows[0].organization_id, userId: result.rows[0].id }
 }
 
+export async function getOrganizationNameById(organizationId: string): Promise<string | null> {
+  const result = await db.query<{ name: string }>(
+    'SELECT name FROM organizations WHERE id = $1',
+    [organizationId]
+  )
+  if (result.rows.length === 0) return null
+  return result.rows[0].name
+}
+
+export async function updateOrganizationName(organizationId: string, name: string): Promise<void> {
+  await db.query('UPDATE organizations SET name = $1, updated_at = NOW() WHERE id = $2', [name, organizationId])
+}
+
 export async function provisionOrgAndUserForEmail(email: string, name?: string): Promise<{ organizationId: string; userId: string }> {
   const existing = await getOrgAndUserByEmail(email)
   if (existing) return existing

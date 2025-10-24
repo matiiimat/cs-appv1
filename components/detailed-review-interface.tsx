@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
-import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
+import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, stripQuotedForTooltip } from "@/lib/utils"
+import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
@@ -21,8 +22,8 @@ interface ChatMessage {
 }
 
 export function DetailedReviewInterface() {
-  const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply } = useMessageManager()
-  const { settings } = useSettings()
+  const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
+  const { settings, aiConfigHasKey } = useSettings()
 
   // Get agent ID - use demo agent for demo organization, otherwise require auth
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
@@ -34,7 +35,7 @@ export function DetailedReviewInterface() {
 
     // For demo organization, use demo agent
     if (DEMO_AGENT_ID) {
-      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      // console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
       return DEMO_AGENT_ID
     }
 
@@ -92,17 +93,23 @@ export function DetailedReviewInterface() {
   }, [selectedMessage, selectedMessageId, getDraftReply, updateDraftReply])
 
   const handleApprove = useCallback(async () => {
-    if (selectedMessage) {
-      try {
-        await updateMessage(selectedMessage.id, { status: "sent", agentId })
-        setChatMessages([])
-        // Navigation will be handled by useEffect when reviewMessages updates
-      } catch (error) {
-        console.error('Failed to approve message:', error)
-        alert('Authentication required. Please implement user login.')
-      }
+    if (!selectedMessage) return
+    const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
+    if (!finalResponse.trim()) {
+      alert('Draft reply is empty. Please write or insert a reply before sending.')
+      return
     }
-  }, [selectedMessage, updateMessage, setChatMessages, agentId])
+    try {
+      // Persist the current draft as the final response, then mark as sent
+      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: "sent", agentId })
+      clearDraftReply(selectedMessage.id)
+      setChatMessages([])
+      // Navigation will be handled by useEffect when reviewMessages updates
+    } catch (error) {
+      console.error('Failed to approve message:', error)
+      alert('Authentication required. Please implement user login.')
+    }
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
 
   // Auto-navigate when reviewMessages changes (after approve/etc)
   useEffect(() => {
@@ -167,7 +174,12 @@ export function DetailedReviewInterface() {
     }
 
     // Check if AI is configured
-    if (!settings.aiConfig.apiKey) {
+    const isLocal = settings.aiConfig.provider === 'local'
+    const hasClientKey = Boolean(settings.aiConfig.apiKey)
+    const hasServerKey = Boolean(aiConfigHasKey)
+    const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
+
+    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
       const errorMessage: ChatMessage = {
         id: genId(),
         content: "Please configure your AI settings first to use the AI assistant.",
@@ -218,7 +230,13 @@ ${conversationContext}
 
 Agent's latest input: ${aiChatInput}
 
-Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue. The response should be ready to send to the customer directly.`
+Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue.
+
+Output requirements:
+- Return only the final, customer-ready email body.
+- Do not include any prefaces, labels, quotes, code fences, or markdown.
+- Do not say things like "Here is the response" or "Translated version:".
+- End your response with this exact signature once: "${settings.agentSignature}". If the current draft already includes a signature, keep only one copy.`
 
       // Call server route to avoid browser CORS and keep keys server-side
       const resp = await fetch('/api/ai/chat', {
@@ -260,7 +278,23 @@ Generate a customer-ready response that addresses the agent's input while helpin
   }
 
   const handleQuickAction = async (actionTitle: string, actionInstruction: string) => {
-    if (!selectedMessage || !settings.aiConfig.apiKey) return
+    if (!selectedMessage) return
+
+    // Allow quick actions when a server-side key exists or a client key is present (non-local).
+    const isLocal = settings.aiConfig.provider === 'local'
+    const hasClientKey = Boolean(settings.aiConfig.apiKey)
+    const hasServerKey = Boolean(aiConfigHasKey)
+    const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
+    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
+      const errorMessage: ChatMessage = {
+        id: genId(),
+        content: "Please configure your AI settings first to use quick actions.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setChatMessages((prev) => [...prev, errorMessage])
+      return
+    }
 
     const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
     if (!currentResponse) {
@@ -366,7 +400,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
                   {reviewMessages.map((message) => (
                     <div key={message.id} className="w-full">
                       <Tooltip 
-                        content={message.message} 
+                        content={stripQuotedForTooltip(message.message)} 
                         delay={1000}
                         className="text-xs whitespace-pre-wrap"
                       >
@@ -426,7 +460,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
                       </span>
                     </div>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm leading-relaxed">{selectedMessage.message}</p>
+                      <EmailText text={selectedMessage.message} />
                     </div>
                   </div>
                 </div>
@@ -441,7 +475,7 @@ Generate a customer-ready response that addresses the agent's input while helpin
                     placeholder="Edit the AI-generated response or write your own..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[120px] resize-y"
                   />
                   <div className="flex gap-2">
                     <Button onClick={handleApprove} className="w-full">

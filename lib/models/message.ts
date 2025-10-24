@@ -270,6 +270,38 @@ export class MessageModel {
   }
 
   /**
+   * Atomically transition a message to 'sent' exactly once.
+   * Returns the updated message if the transition occurred, or null if it was already 'sent'.
+   */
+  static async transitionToSent(
+    organizationId: string,
+    messageId: string,
+    agentId?: string,
+    processedAt?: string | Date
+  ): Promise<Message | null> {
+    const organizationKey = await this.getOrganizationKey(organizationId);
+
+    // Perform atomic transition only if current status is not already 'sent'
+    const result = await db.query(
+      `UPDATE messages
+       SET status = 'sent',
+           agent_id = COALESCE($3, agent_id),
+           processed_at = COALESCE($4::timestamptz, processed_at, NOW()),
+           updated_at = NOW()
+       WHERE organization_id = $1 AND id = $2 AND status <> 'sent'
+       RETURNING *`,
+      [organizationId, messageId, agentId ?? null, processedAt ?? null]
+    );
+
+    if (result.rows.length === 0) {
+      // No transition happened (already sent or not found under org)
+      return null;
+    }
+
+    return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
+  }
+
+  /**
    * Delete message
    */
   static async delete(organizationId: string, messageId: string): Promise<boolean> {
