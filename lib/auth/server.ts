@@ -95,32 +95,8 @@ export const auth = betterAuth({
               return
             }
 
-            // Send magic link only after successful payment and provisioning
-            try {
-              // Build callback URL using origin only (avoid double /app)
-              const raw = process.env.APP_URL || ''
-              let callbackURL = '/app'
-              if (raw) {
-                try {
-                  const u = new URL(raw)
-                  callbackURL = `${u.origin}/app`
-                } catch {
-                  callbackURL = `${raw.replace(/\/+$/, '')}/app`
-                }
-              }
-
-              await auth.api.signInMagicLink({
-                body: {
-                  email,
-                  callbackURL,
-                },
-                headers: {},
-              })
-
-              console.log(`[Stripe onEvent] Magic link sent successfully to: ${email}`)
-            } catch (magicLinkError) {
-              console.error('[Stripe onEvent] Failed to send magic link to:', email, magicLinkError)
-            }
+            // Auto magic-link send removed by request; users can sign in via the standard login flow.
+            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}. Not sending auto magic link.`)
           }
         } catch (err) {
           console.error('[Stripe onEvent] error handling event', event.type, err)
