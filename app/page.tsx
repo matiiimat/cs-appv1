@@ -143,7 +143,7 @@ export default function Home() {
       {/* Hero */}
       <section className="container mx-auto px-4 py-10 md:py-16">
         <ParallaxHero>
-          <div className="relative mx-auto max-w-3xl px-6 py-20 text-center md:py-28">
+          <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
             <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white md:text-6xl">
               Grow your business, not your support costs
             </h1>
@@ -163,11 +163,11 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
+      <section id="how-it-works" className="container mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">See It In Action</h2>
         </div>
-        <div className="mt-8 mx-auto max-w-4xl">
+        <div className="mt-6 mx-auto max-w-4xl">
           <div
             className="relative w-full overflow-hidden rounded-lg border bg-card shadow-sm"
             style={{ aspectRatio: '16 / 9' }}
