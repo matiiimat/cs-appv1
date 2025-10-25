@@ -379,7 +379,6 @@ Output requirements:
             </div>
           </div>
           <h3 className="text-lg font-semibold mb-2">Queue Empty!</h3>
-          <p className="text-muted-foreground">All messages have been reviewed. Great work!</p>
         </div>
       </div>
     )
@@ -433,10 +432,10 @@ Output requirements:
           </div>
         </div>
 
-        <div className="w-2/4 flex flex-col gap-4">
+        <div className="w-2/4 flex flex-col gap-4 min-h-0">
           {selectedMessage && (
             <>
-              <div className="flex-1 bg-card rounded-lg shadow-md">
+              <div className="flex-[2] bg-card rounded-lg shadow-md">
                 <div className="pb-3 p-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Customer Question</h3>
@@ -448,7 +447,7 @@ Output requirements:
                     </div>
                   </div>
                 </div>
-                <div className="px-6 pb-6">
+                <div className="px-6 pb-6 flex-1 overflow-hidden">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-muted-foreground" />
@@ -459,23 +458,24 @@ Output requirements:
                         {formatFriendlyDate(selectedMessage.timestamp)}
                       </span>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg">
+                    <div className="p-4 bg-muted rounded-lg h-full overflow-auto">
                       <EmailText text={selectedMessage.message} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 bg-card rounded-lg shadow-md">
+              <div className="flex-1 bg-card rounded-lg shadow-md flex flex-col min-h-0">
                 <div className="pb-3 p-6">
                   <h3 className="text-sm font-semibold">Draft Reply</h3>
                 </div>
-                <div className="px-6 pb-6 space-y-4">
+                <div className="px-6 pb-6 flex-1 flex flex-col space-y-4 min-h-0">
                   <Textarea
                     placeholder="Edit the AI-generated response or write your own..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="min-h-[120px] resize-y"
+                    rows={10}
+                    className="flex-1 resize-none"
                   />
                   <div className="flex gap-2">
                     <Button onClick={handleApprove} className="w-full">

@@ -52,9 +52,6 @@ export default function Home() {
             <Button asChild variant="ghost">
               <Link href="/app/login">Sign in</Link>
             </Button>
-            <Button asChild>
-              <Link href="#pricing">Get started</Link>
-            </Button>
           </div>
         </div>
       </header>
@@ -84,7 +81,7 @@ export default function Home() {
                 <Link href="#pricing" className="text-white">Get started</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#features">Features</Link>
+                <Link href="#how-it-works">Features</Link>
               </Button>
             </div>
           </div>
@@ -94,8 +91,7 @@ export default function Home() {
       {/* How it works */}
       <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">How it works</h2>
-          <p className="mt-2 text-muted-foreground">A quick overview of Aidly in action.</p>
+          <h2 className="text-2xl md:text-3xl font-semibold">See It In Action</h2>
         </div>
         <div className="mt-8 mx-auto max-w-4xl">
           <div
@@ -116,13 +112,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features 
   <section id="features" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">What you get</h2>
-          <p className="mt-2 text-muted-foreground">
-            Purpose-built tools to triage and resolve conversations quickly.
-          </p>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
@@ -136,13 +129,12 @@ export default function Home() {
             </div>
           ))}
         </div>
-  </section>
+  </section> */}
 
   {/* Users Opinion */}
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
       <h2 className="text-2xl md:text-3xl font-semibold">What our users say</h2>
-      <p className="mt-2 text-muted-foreground">Real feedback from teams using Aidly daily.</p>
     </div>
     <div className="mt-8">
       {/* Lightweight carousel with 10 placeholder opinions */}
@@ -155,30 +147,32 @@ export default function Home() {
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Simple pricing</h2>
+          <p className="mt-2 text-muted-foreground font-bold">14-day money-back guarantee.</p>
           <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
-          <button
-            className={`rounded-md border px-3 py-1 text-sm ${!annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
-            onClick={() => setAnnual(true)}
-          >
-            Yearly
-          </button>
+
           <button
             className={`rounded-md border px-3 py-1 text-sm ${annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
             onClick={() => setAnnual(false)}
           >
             Monthly
           </button>
+          <button
+            className={`rounded-md border px-3 py-1 text-sm ${!annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
+            onClick={() => setAnnual(true)}
+          >
+            Yearly
+          </button>
         </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-6 grid-cols-1 place-items-center">
           {/* Pro plan */}
-          <div className="rounded-lg border bg-card p-6">
+          <div className="w-full max-w-md rounded-lg border bg-card p-6">
             <h3 className="text-lg font-semibold">Pro</h3>
             <p className="mt-1 text-sm text-muted-foreground">Everything you need to run efficient support.</p>
             <div className="mt-4 flex items-end gap-1">
-              <span className="text-4xl font-bold">{annual ? "$1999" : "$199"}</span>
-              <span className="text-muted-foreground">/{annual ? "year" : "month"}</span>
+              <span className="text-4xl font-bold">{annual ? "$167" : "$199"}</span>
+              <span className="text-muted-foreground">/{annual ? "month - ($1999 yearly)" : "month"}</span>
             </div>
             <ul className="mt-4 space-y-2 text-sm">
               <li>AI triage and agent assist</li>
@@ -190,11 +184,11 @@ export default function Home() {
                 {loading ? 'Starting…' : 'Get started'}
               </Button>
               {error && <div className="text-sm text-red-600">{error}</div>}
-              <p className="text-xs text-muted-foreground">You’ll be redirected to Stripe Checkout where you’ll enter your email. The plan is 0€ in test.</p>
+              <p className="text-xs text-muted-foreground">You will be redirected to Stripe Checkout to provide your email address. This email will serve as your login.</p>
             </div>
           </div>
 
-          {/* Enterprise plan */}
+          {/* Enterprise plan
           <div className="rounded-lg border bg-card p-6">
             <h3 className="text-lg font-semibold">Enterprise</h3>
             <p className="mt-1 text-sm text-muted-foreground">Custom needs, SLAs, and security reviews.</p>
@@ -209,7 +203,8 @@ export default function Home() {
             <Button asChild variant="outline" className="mt-6 w-full">
               <a href="mailto:sales@aidly.me">Contact sales</a>
             </Button>
-          </div>
+          </div> */}
+
         </div>
       </section>
 
@@ -220,9 +215,11 @@ export default function Home() {
         </div>
         <div className="mx-auto mt-6 max-w-3xl space-y-4">
           {[
-            { q: "Is there a trial?", a: "No trial at launch. You can cancel anytime and keep access until the end of the billing period." },
-            { q: "Can I cancel?", a: "Yes, from billing settings. Access remains until the paid period ends." },
-            { q: "Do you support teams?", a: "Team/seat billing is not available yet; planned for later." },
+            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI provider’s API key, and you're ready to go." },
+            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We’re EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime." },
+            { q: "Which AI provider and models do you support?", a: "All models from OpenAI and Anthropic." },
+            { q: "Can I use my own LLM?", a: "Soon! We’re working on it." },
+            { q: "I am not satisfied with the tool, can I cancel?", a: "Of course! Send a message to our support team, and we'll proceed with the cancellation. If you could let us know what made you cancel, that would be greatly appreciated." },
           ].map((f) => (
             <div key={f.q} className="rounded-lg border bg-card p-4">
               <p className="font-medium">{f.q}</p>
@@ -244,6 +241,9 @@ export default function Home() {
             <Link href="/terms">Terms</Link>
             <Link href="/careers">Careers</Link>
             <a href="mailto:support@aidly.me">support@aidly.me</a>
+          </div>
+          <div className="hidden md:block justify-self-end text-sm text-muted-foreground">
+            Made with <span aria-label="love" role="img">❤️</span> in <span aria-label="France" role="img">🇫🇷</span>
           </div>
         </div>
       </footer>

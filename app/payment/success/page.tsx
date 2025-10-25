@@ -13,8 +13,8 @@ export default function PaymentSuccessPage() {
         <h1 className="text-2xl font-semibold text-green-600 mb-2">Payment successful</h1>
 
         <p className="text-lg text-gray-700 mb-4">
-          Your subscription is now active. You can 
-          now log in to Aidly.
+          Your subscription is active. You can log in to Aidly 
+          with the email address used for the payment.
         </p>
 
         <div className="flex items-center justify-center gap-3 mt-6">

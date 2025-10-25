@@ -19,6 +19,8 @@ class DatabaseConnection {
   private static instance: DatabaseConnection;
   private pool: Pool;
   private isConnected: boolean = false;
+  private hasEnded: boolean = false;
+  private handlersAttached: boolean = false;
 
   private constructor() {
     const config = this.parseConfig();
@@ -86,6 +88,8 @@ class DatabaseConnection {
    * Setup database event handlers
    */
   private setupEventHandlers(): void {
+    if (this.handlersAttached) return;
+    this.handlersAttached = true;
     this.pool.on('connect', () => {
       console.log('🔗 New database client connected');
       this.isConnected = true;
@@ -196,6 +200,11 @@ class DatabaseConnection {
   async gracefulShutdown(): Promise<void> {
     console.log('🔄 Shutting down database connections...');
     try {
+      if (this.hasEnded) {
+        console.log('⚠️  Database pool already ended; skipping second shutdown');
+        return;
+      }
+      this.hasEnded = true;
       await this.pool.end();
       console.log('✅ Database connections closed successfully');
     } catch (error) {
