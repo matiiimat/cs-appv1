@@ -134,7 +134,7 @@ export default function Home() {
   {/* Users Opinion */}
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
-      <h2 className="text-2xl md:text-3xl font-semibold">What our users say</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold">Hear It From Our Users</h2>
     </div>
     <div className="mt-8">
       {/* Lightweight carousel with 10 placeholder opinions */}
@@ -146,7 +146,7 @@ export default function Home() {
       {/* Pricing */}
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">Simple pricing</h2>
+          <h2 className="text-2xl md:text-3xl font-semibold">Simple Pricing</h2>
           <p className="mt-2 text-muted-foreground font-bold">14-day money-back guarantee.</p>
           <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
         </div>
