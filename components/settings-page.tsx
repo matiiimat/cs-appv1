@@ -16,7 +16,9 @@ export function SettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [portalLoading, setPortalLoading] = useState<boolean>(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [portalError, setPortalError] = useState<string>("")
   useEffect(() => {
     const loadMailbox = async () => {
