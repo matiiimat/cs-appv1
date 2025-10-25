@@ -95,7 +95,6 @@ export default function Home() {
       <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">How it works</h2>
-          <p className="mt-2 text-muted-foreground">A quick overview of Aidly in action.</p>
         </div>
         <div className="mt-8 mx-auto max-w-4xl">
           <div
@@ -116,13 +115,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features 
   <section id="features" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">What you get</h2>
-          <p className="mt-2 text-muted-foreground">
-            Purpose-built tools to triage and resolve conversations quickly.
-          </p>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
@@ -136,13 +132,12 @@ export default function Home() {
             </div>
           ))}
         </div>
-  </section>
+  </section> */}
 
   {/* Users Opinion */}
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
       <h2 className="text-2xl md:text-3xl font-semibold">What our users say</h2>
-      <p className="mt-2 text-muted-foreground">Real feedback from teams using Aidly daily.</p>
     </div>
     <div className="mt-8">
       {/* Lightweight carousel with 10 placeholder opinions */}
@@ -155,6 +150,7 @@ export default function Home() {
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Simple pricing</h2>
+          <p className="mt-2 text-muted-foreground font-bold">14-day money-back guarantee.</p>
           <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
@@ -222,9 +218,11 @@ export default function Home() {
         </div>
         <div className="mx-auto mt-6 max-w-3xl space-y-4">
           {[
-            { q: "Is there a trial?", a: "No trial at launch. You can cancel anytime and keep access until the end of the billing period." },
-            { q: "Can I cancel?", a: "Yes, from billing settings. Access remains until the paid period ends." },
-            { q: "Do you support teams?", a: "Team/seat billing is not available yet; planned for later." },
+            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI tool’s API key, and you are ready to go." },
+            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We’re EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime" },
+            { q: "Which AI provider and models do you support?", a: "All models from OpenAI and Anthropic." },
+            { q: "Can I use my own LLM?", a: "Soon! We are working on it" },
+            { q: "I am not satisfied with the tool, can I cancel?", a: "Of course! Send a message to our support and we'll proceed with the cancellation. If you could let us know what made you cancel that'd be super appreciated." },
           ].map((f) => (
             <div key={f.q} className="rounded-lg border bg-card p-4">
               <p className="font-medium">{f.q}</p>
