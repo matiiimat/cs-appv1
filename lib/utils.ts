@@ -55,10 +55,7 @@ export function getMessageUrgency(
   const diffInMs = now.getTime() - messageDate.getTime()
   const hoursOld = diffInMs / (1000 * 60 * 60)
   
-  // Debug logging (remove in production)
-  if (typeof window !== 'undefined') {
-    console.log('Timestamp:', timestamp, 'Hours old:', hoursOld.toFixed(2), 'Thresholds:', thresholds)
-  }
+  // Debug logging removed
   
   if (hoursOld <= thresholds.greenHours) return 'green'
   if (hoursOld <= thresholds.yellowHours) return 'yellow'

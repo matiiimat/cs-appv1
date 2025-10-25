@@ -52,9 +52,6 @@ export default function Home() {
             <Button asChild variant="ghost">
               <Link href="/app/login">Sign in</Link>
             </Button>
-            <Button asChild>
-              <Link href="#pricing">Get started</Link>
-            </Button>
           </div>
         </div>
       </header>
@@ -84,7 +81,7 @@ export default function Home() {
                 <Link href="#pricing" className="text-white">Get started</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#features">Features</Link>
+                <Link href="#how-it-works">Features</Link>
               </Button>
             </div>
           </div>
@@ -94,7 +91,7 @@ export default function Home() {
       {/* How it works */}
       <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">How it works</h2>
+          <h2 className="text-2xl md:text-3xl font-semibold">See It In Action</h2>
         </div>
         <div className="mt-8 mx-auto max-w-4xl">
           <div
@@ -218,11 +215,11 @@ export default function Home() {
         </div>
         <div className="mx-auto mt-6 max-w-3xl space-y-4">
           {[
-            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI tool’s API key, and you are ready to go." },
-            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We’re EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime" },
+            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI provider’s API key, and you're ready to go." },
+            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We’re EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime." },
             { q: "Which AI provider and models do you support?", a: "All models from OpenAI and Anthropic." },
-            { q: "Can I use my own LLM?", a: "Soon! We are working on it" },
-            { q: "I am not satisfied with the tool, can I cancel?", a: "Of course! Send a message to our support and we'll proceed with the cancellation. If you could let us know what made you cancel that'd be super appreciated." },
+            { q: "Can I use my own LLM?", a: "Soon! We’re working on it." },
+            { q: "I am not satisfied with the tool, can I cancel?", a: "Of course! Send a message to our support team, and we'll proceed with the cancellation. If you could let us know what made you cancel, that would be greatly appreciated." },
           ].map((f) => (
             <div key={f.q} className="rounded-lg border bg-card p-4">
               <p className="font-medium">{f.q}</p>
@@ -244,6 +241,9 @@ export default function Home() {
             <Link href="/terms">Terms</Link>
             <Link href="/careers">Careers</Link>
             <a href="mailto:support@aidly.me">support@aidly.me</a>
+          </div>
+          <div className="hidden md:block justify-self-end text-sm text-muted-foreground">
+            Made with <span aria-label="love" role="img">❤️</span> in <span aria-label="France" role="img">🇫🇷</span>
           </div>
         </div>
       </footer>

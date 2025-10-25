@@ -34,7 +34,7 @@ export function CustomerSupportDashboard() {
 
     // For demo organization, use demo agent
     if (DEMO_AGENT_ID) {
-      // console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
+      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
       return DEMO_AGENT_ID
     }
 
@@ -149,8 +149,7 @@ export function CustomerSupportDashboard() {
           <div className="pt-6 p-6">
             <div className="text-center">
               <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Queue Empty!</h3>
-              <p className="text-muted-foreground">All messages have been reviewed. Great work!</p>
+              <h3 className="text-lg font-semibold mb-2">Queue Empty</h3>
               {currentMessageIndex > 0 && (
                 <Button variant="outline" onClick={moveToPreviousMessage} className="mt-4 bg-transparent">
                   <RotateCcw className="h-4 w-4 mr-2" />
@@ -210,7 +209,7 @@ export function CustomerSupportDashboard() {
               </div>
               <div className="px-6 pb-6">
                 <div className="mb-4">
-                  <h4 className="font-semibold mb-2">Subject: {nextMessage.subject}</h4>
+                  <h4 className="font-semibold mb-2">{nextMessage.subject}</h4>
                   <div className="text-foreground leading-relaxed break-words">
                     <EmailText text={nextMessage.message} />
                   </div>
@@ -266,7 +265,7 @@ export function CustomerSupportDashboard() {
             </div>
             <div className="px-6 pb-6 h-full overflow-y-auto">
               <div className="mb-6">
-                <h4 className="font-semibold mb-2">Subject: {currentMessage.subject}</h4>
+                <h4 className="font-semibold mb-2">{currentMessage.subject}</h4>
                 <EmailText text={currentMessage.message} />
               </div>
 
