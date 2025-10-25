@@ -134,11 +134,46 @@ export default function Home() {
   {/* Users Opinion */}
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
-      <h2 className="text-2xl md:text-3xl font-semibold">Hear It From Our Users</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold">Trusted by Support Teams Everywhere</h2>
     </div>
-    <div className="mt-8">
-      {/* Lightweight carousel with 10 placeholder opinions */}
-      <TestimonialsCarousel />
+    <div className="mt-10 relative overflow-hidden">
+      <div className="logo-marquee">
+        <div className="logo-track">
+          {[...Array(2)].map((_, dupIdx) => (
+            <div className="flex items-center gap-12 pr-12" aria-hidden={dupIdx === 1} key={dupIdx}>
+              {Array.from({ length: 7 }).map((__, i) => (
+                <a
+                  href="https://braceletsdemontre.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 transition-opacity"
+                  key={`${dupIdx}-${i}`}
+                  aria-label="Visit braceletsdemontre.com"
+                >
+                  <Image
+                    src="/fonts/users/bdm-logo-light.png"
+                    alt="Customer logo"
+                    width={210}
+                    height={60}
+                    className="h-12 w-auto object-contain"
+                  />
+                </a>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <style jsx>{`
+        .logo-track {
+          display: flex;
+          width: max-content;
+          animation: logo-scroll 28s linear infinite;
+        }
+        @keyframes logo-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   </section>
 
