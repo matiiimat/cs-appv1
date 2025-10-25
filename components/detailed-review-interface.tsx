@@ -432,10 +432,10 @@ Output requirements:
           </div>
         </div>
 
-        <div className="w-2/4 flex flex-col gap-4 min-h-0">
+        <div className="w-2/4 flex flex-col gap-4 min-h-0 overflow-y-auto">
           {selectedMessage && (
             <>
-              <div className="flex-[2] bg-card rounded-lg shadow-md">
+              <div className="flex-none bg-card rounded-lg shadow-md max-h-[50%] overflow-hidden">
                 <div className="pb-3 p-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Customer Question</h3>
@@ -465,7 +465,7 @@ Output requirements:
                 </div>
               </div>
 
-              <div className="flex-1 bg-card rounded-lg shadow-md flex flex-col min-h-0">
+              <div className="flex-none bg-card rounded-lg shadow-md flex flex-col">
                 <div className="pb-3 p-6">
                   <h3 className="text-sm font-semibold">Draft Reply</h3>
                 </div>
@@ -475,7 +475,7 @@ Output requirements:
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     rows={10}
-                    className="flex-1 resize-none"
+                    className="min-h-[240px] max-h-none resize-y"
                   />
                   <div className="flex gap-2">
                     <Button onClick={handleApprove} className="w-full">

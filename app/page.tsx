@@ -1,9 +1,92 @@
 "use client"
 
 import Image from "next/image"
-import { TestimonialsCarousel } from "@/components/testimonials-carousel"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+
+function ParallaxHero({ children }: { children: React.ReactNode }) {
+  const backdropRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = backdropRef.current
+    if (!el) return
+    const onScroll = () => {
+      const y = window.scrollY || 0
+      el.style.setProperty('--p1', `${y * 0.08}px`)
+      el.style.setProperty('--p2', `${y * 0.16}px`)
+      el.style.setProperty('--p3', `${y * 0.12}px`)
+    }
+    const onMouseMove = (e: MouseEvent) => {
+      const mx = (e.clientX / window.innerWidth) * 2 - 1 // -1..1
+      const my = (e.clientY / window.innerHeight) * 2 - 1
+      el.style.setProperty('--mx', `${mx}`)
+      el.style.setProperty('--my', `${my}`)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
+  }, [])
+
+  return (
+    <>
+      {/* Page-wide fixed background */}
+      <div
+        ref={backdropRef}
+        className="fixed inset-0 -z-10 pointer-events-none"
+      >
+        {/* Base faint wash to ensure visible color site-wide */}
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            background:
+              'radial-gradient(120% 80% at 10% 90%, rgba(59,130,246,0.16), transparent 60%), radial-gradient(100% 70% at 85% 15%, rgba(239,68,68,0.12), transparent 55%)',
+          }}
+        />
+        {/* Blue glow bottom-left */}
+        <div
+          className="absolute -inset-1 opacity-95 will-change-transform blur-3xl"
+          style={{
+            transform: 'translate3d(calc(var(--mx, 0) * 6px), calc(var(--p1, 0px) + var(--my, 0) * 6px), 0)',
+            background:
+              'radial-gradient(48% 48% at 15% 85%, rgba(59,130,246,0.55), transparent 62%)',
+          }}
+        />
+        {/* Red burst center */}
+        <div
+          className="absolute -inset-1 opacity-80 will-change-transform blur-[30px]"
+          style={{
+            transform: 'translate3d(calc(var(--mx, 0) * 10px), calc(var(--p2, 0px) + var(--my, 0) * 10px), 0)',
+            background:
+              'radial-gradient(40% 40% at 50% 58%, rgba(239,68,68,0.55), transparent 66%)',
+          }}
+        />
+        {/* Secondary blue top-right */}
+        <div
+          className="absolute -inset-1 opacity-85 will-change-transform blur-3xl"
+          style={{
+            transform: 'translate3d(calc(var(--mx, 0) * 8px), calc(var(--p3, 0px) + var(--my, 0) * 8px), 0)',
+            background:
+              'radial-gradient(40% 40% at 88% 12%, rgba(37,99,235,0.48), transparent 90%)',
+          }}
+        />
+        {/* Copper accent bottom-right (visible on load, no parallax shift) */}
+        <div
+          className="absolute -inset-1 opacity-95 blur-xl"
+          style={{
+            transform: 'translate3d(calc(var(--mx, 0) * 8px), calc(var(--my, 0) * 8px), 0)',
+            background:
+              'radial-gradient(65% 65% at 96% 92%, rgba(184,115,51,0.75), transparent 88%)',
+          }}
+        />
+      </div>
+      {children}
+    </>
+  )
+}
 import { Button } from "@/components/ui/button"
 
 export default function Home() {
@@ -36,7 +119,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
       {/* Top Nav */}
       <header className="sticky top-0 z-20 border-b border-border/50 bg-card/70 backdrop-blur">
         <div className="container mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-4 py-4">
@@ -58,42 +141,32 @@ export default function Home() {
 
       {/* Hero */}
       <section className="container mx-auto px-4 py-10 md:py-16">
-        <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a]">
-          <div className="absolute inset-0">
-            <Image
-              src="/hero.png"
-              alt="Aidly hero"
-              fill
-              priority
-              className="object-cover opacity-40"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-          </div>
-          <div className="relative mx-auto max-w-3xl px-6 py-20 text-center md:py-28">
-            <h1 className="text-4xl font-bold tracking-tight text-white md:text-6xl">
+        <ParallaxHero>
+          <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
+            <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white md:text-6xl">
               Grow your business, not your support costs
             </h1>
-            <p className="mt-4 text-lg text-white md:text-xl">
+            <p className="mt-4 text-lg text-black dark:text-white md:text-xl">
               Intelligent automation that delivers faster, smarter support at lower cost.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3">
               <Button asChild size="lg">
-                <Link href="#pricing" className="text-white">Get started</Link>
+                <Link href="#pricing">Get started</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link href="#how-it-works">Features</Link>
               </Button>
             </div>
           </div>
-        </div>
+        </ParallaxHero>
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-20">
+      <section id="how-it-works" className="container mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">See It In Action</h2>
         </div>
-        <div className="mt-8 mx-auto max-w-4xl">
+        <div className="mt-6 mx-auto max-w-4xl">
           <div
             className="relative w-full overflow-hidden rounded-lg border bg-card shadow-sm"
             style={{ aspectRatio: '16 / 9' }}
@@ -134,11 +207,46 @@ export default function Home() {
   {/* Users Opinion */}
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
-      <h2 className="text-2xl md:text-3xl font-semibold">What our users say</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold">Trusted by Support Teams Everywhere</h2>
     </div>
-    <div className="mt-8">
-      {/* Lightweight carousel with 10 placeholder opinions */}
-      <TestimonialsCarousel />
+    <div className="mt-10 relative overflow-hidden">
+      <div className="logo-marquee">
+        <div className="logo-track">
+          {[...Array(2)].map((_, dupIdx) => (
+            <div className="flex items-center gap-12 pr-12" aria-hidden={dupIdx === 1} key={dupIdx}>
+              {Array.from({ length: 7 }).map((__, i) => (
+                <a
+                  href="https://braceletsdemontre.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 transition-opacity"
+                  key={`${dupIdx}-${i}`}
+                  aria-label="Visit braceletsdemontre.com"
+                >
+                  <Image
+                    src="/fonts/users/bdm-logo-light.png"
+                    alt="Customer logo"
+                    width={210}
+                    height={60}
+                    className="h-12 w-auto object-contain"
+                  />
+                </a>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <style jsx>{`
+        .logo-track {
+          display: flex;
+          width: max-content;
+          animation: logo-scroll 28s linear infinite;
+        }
+        @keyframes logo-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   </section>
 
@@ -146,7 +254,7 @@ export default function Home() {
       {/* Pricing */}
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">Simple pricing</h2>
+          <h2 className="text-2xl md:text-3xl font-semibold">Simple Pricing</h2>
           <p className="mt-2 text-muted-foreground font-bold">14-day money-back guarantee.</p>
           <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
         </div>
