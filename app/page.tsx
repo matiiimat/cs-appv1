@@ -158,27 +158,28 @@ export default function Home() {
           <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
-          <button
-            className={`rounded-md border px-3 py-1 text-sm ${!annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
-            onClick={() => setAnnual(true)}
-          >
-            Yearly
-          </button>
+
           <button
             className={`rounded-md border px-3 py-1 text-sm ${annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
             onClick={() => setAnnual(false)}
           >
             Monthly
           </button>
+          <button
+            className={`rounded-md border px-3 py-1 text-sm ${!annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
+            onClick={() => setAnnual(true)}
+          >
+            Yearly
+          </button>
         </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-6 grid-cols-1 place-items-center">
           {/* Pro plan */}
-          <div className="rounded-lg border bg-card p-6">
+          <div className="w-full max-w-md rounded-lg border bg-card p-6">
             <h3 className="text-lg font-semibold">Pro</h3>
             <p className="mt-1 text-sm text-muted-foreground">Everything you need to run efficient support.</p>
             <div className="mt-4 flex items-end gap-1">
-              <span className="text-4xl font-bold">{annual ? "$1999" : "$199"}</span>
-              <span className="text-muted-foreground">/{annual ? "year" : "month"}</span>
+              <span className="text-4xl font-bold">{annual ? "$167" : "$199"}</span>
+              <span className="text-muted-foreground">/{annual ? "month - ($1999 yearly)" : "month"}</span>
             </div>
             <ul className="mt-4 space-y-2 text-sm">
               <li>AI triage and agent assist</li>
@@ -190,11 +191,11 @@ export default function Home() {
                 {loading ? 'Starting…' : 'Get started'}
               </Button>
               {error && <div className="text-sm text-red-600">{error}</div>}
-              <p className="text-xs text-muted-foreground">You’ll be redirected to Stripe Checkout where you’ll enter your email. The plan is 0€ in test.</p>
+              <p className="text-xs text-muted-foreground">You will be redirected to Stripe Checkout to provide your email address. This email will serve as your login.</p>
             </div>
           </div>
 
-          {/* Enterprise plan */}
+          {/* Enterprise plan
           <div className="rounded-lg border bg-card p-6">
             <h3 className="text-lg font-semibold">Enterprise</h3>
             <p className="mt-1 text-sm text-muted-foreground">Custom needs, SLAs, and security reviews.</p>
@@ -209,7 +210,8 @@ export default function Home() {
             <Button asChild variant="outline" className="mt-6 w-full">
               <a href="mailto:sales@aidly.me">Contact sales</a>
             </Button>
-          </div>
+          </div> */}
+
         </div>
       </section>
 
