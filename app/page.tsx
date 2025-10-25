@@ -1,7 +1,6 @@
 "use client"
 
 import Image from "next/image"
-import { TestimonialsCarousel } from "@/components/testimonials-carousel"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
