@@ -202,7 +202,7 @@ export default function Home() {
             <ParallaxImage>
               <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
                 <Image
-                  src="/fonts/users/drive-retention.png"
+                  src="/fonts/users/launch-fast.png"
                   alt="Feature preview"
                   fill
                   className="object-contain"
@@ -226,7 +226,7 @@ export default function Home() {
             <ParallaxImage>
               <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
                 <Image
-                  src="/fonts/users/automate-replies.gif"
+                  src="/fonts/users/automate-replies.png"
                   alt="Feature preview"
                   fill
                   className="object-contain"
@@ -257,7 +257,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* How it works 
       <section id="how-it-works" className="container mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">See It In Action</h2>
@@ -279,7 +279,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features 
   <section id="features" className="container mx-auto px-4 py-16 md:py-20">
