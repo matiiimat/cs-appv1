@@ -88,34 +88,6 @@ function ParallaxHero({ children }: { children: React.ReactNode }) {
   )
 }
 
-function ParallaxImage({ children, strength = 0.25 }: { children: React.ReactNode; strength?: number }) {
-  const ref = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const onScroll = () => {
-      const rect = el.getBoundingClientRect()
-      const center = window.innerHeight / 2
-      const delta = rect.top + rect.height / 2 - center
-      const translate = Math.max(-24, Math.min(24, -delta * strength))
-      el.style.transform = `translate3d(0, ${translate}px, 0)`
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-    }
-  }, [strength])
-
-  return (
-    <div ref={ref} className="will-change-transform transition-transform duration-100 ease-out">
-      {children}
-    </div>
-  )
-}
 import { Button } from "@/components/ui/button"
 
 export default function Home() {
@@ -487,7 +459,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-[lbFade_180ms_ease-out_forwards]"></div>
             <div className="relative z-10 p-4 animate-[lbZoom_200ms_ease-out_forwards]" onClick={(e) => e.stopPropagation()}>
               <div className="relative w-[90vw] max-w-5xl h-[80vh] rounded-xl overflow-hidden shadow-2xl bg-black cursor-zoom-out" onClick={() => setLightbox(null)}>
-                <img src={lightbox.src} alt={lightbox.alt} className="h-full w-full object-contain" />
+                <Image src={lightbox.src} alt={lightbox.alt} fill sizes="90vw" className="object-contain" />
               </div>
               {/* Close button removed: click overlay/image or press ESC to close */}
             </div>
