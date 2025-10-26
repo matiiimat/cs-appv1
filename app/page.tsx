@@ -87,6 +87,35 @@ function ParallaxHero({ children }: { children: React.ReactNode }) {
     </>
   )
 }
+
+function ParallaxImage({ children, strength = 0.25 }: { children: React.ReactNode; strength?: number }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onScroll = () => {
+      const rect = el.getBoundingClientRect()
+      const center = window.innerHeight / 2
+      const delta = rect.top + rect.height / 2 - center
+      const translate = Math.max(-24, Math.min(24, -delta * strength))
+      el.style.transform = `translate3d(0, ${translate}px, 0)`
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [strength])
+
+  return (
+    <div ref={ref} className="will-change-transform transition-transform duration-100 ease-out">
+      {children}
+    </div>
+  )
+}
 import { Button } from "@/components/ui/button"
 
 export default function Home() {
@@ -153,12 +182,79 @@ export default function Home() {
               <Button asChild size="lg">
                 <Link href="#pricing">Get started</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              {/* <Button asChild size="lg" variant="outline">
                 <Link href="#how-it-works">Features</Link>
-              </Button>
+              </Button> */}
             </div>
           </div>
         </ParallaxHero>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="container mx-auto px-4 py-16 md:py-20">
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-semibold">Features</h2>
+        </div>
+
+        {/* Feature 1: image left, text right */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
+            <ParallaxImage>
+              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
+                <Image
+                  src="/fonts/users/drive-retention.png"
+                  alt="Feature preview"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </ParallaxImage>
+          </div>
+          <div className="text-left md:text-left">
+            <h3 className="text-xl md:text-2xl font-semibold">Launch Fast</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Get started in just two minutes. Connect your AI API key, define your categories, SLAs, and custom instructions, then link your Aidly support address to your own. That’s all it takes to launch a smarter, faster support workflow.</p>
+          </div>
+        </div>
+
+        {/* Feature 2: image right, text left */}
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div className="order-2 md:order-1 text-left">
+            <h3 className="text-xl md:text-2xl font-semibold">Automate Replies - With Control</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Once you’re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
+          </div>
+          <div className="order-1 md:order-2 rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
+            <ParallaxImage>
+              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
+                <Image
+                  src="/fonts/users/automate-replies.gif"
+                  alt="Feature preview"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </ParallaxImage>
+          </div>
+        </div>
+
+        {/* Feature 3: image left, text right */}
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
+            <ParallaxImage>
+              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
+                <Image
+                  src="/fonts/users/customize-image.png"
+                  alt="Feature preview"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </ParallaxImage>
+          </div>
+          <div className="text-left">
+            <h3 className="text-xl md:text-2xl font-semibold">Drive Retention</h3>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">Use the dashboard to uncover what drives satisfaction and retention. Spot trends, reduce churn, and continuously refine your support strategy to deliver an outstanding customer experience every time.</p>
+          </div>
+        </div>
       </section>
 
       {/* How it works */}
@@ -316,6 +412,27 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Subscribe */}
+      <section id="subscribe" className="container mx-auto px-4 py-16 md:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold">Stay in Touch</h2>
+          <p className="mt-2 text-muted-foreground">Subscribe to product updates and announcements.</p>
+        </div>
+        <div className="mt-6">
+          <div className="mx-auto max-w-[540px]">
+            <iframe
+              width="540"
+              height="405"
+              src="https://b2c7da7c.sibforms.com/serve/MUIFAJwN9cDr5ia1jYzQwEtPLReDLUppGWlU9iYN1i49_2BnTjPkl4esxUlNQnFOjbnEdE6KuVU7UTHKTw9a_WArB7XnFlZm8lRQjGKDATFFQ6z3ljDf98uI4ny53yD5sJS7mcfWwSLid6GX33k6WpNu-uyIskN-JGVGg7Gjvkky6_FFWveSckFCWGRbRNSX_0fGbJrIQcH2JKE5"
+              frameBorder={0}
+              scrolling="auto"
+              allowFullScreen
+              style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%' }}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section id="faq" className="container mx-auto px-4 py-16 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
@@ -337,27 +454,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Subscribe */}
-      <section id="subscribe" className="container mx-auto px-4 py-12 md:py-16">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">Subscribe</h2>
-          <p className="mt-2 text-muted-foreground">Subscribe to product updates and announcements.</p>
-        </div>
-        <div className="mt-6">
-          <div className="mx-auto max-w-[540px]">
-            <iframe
-              width="540"
-              height="405"
-              src="https://b2c7da7c.sibforms.com/serve/MUIFAJwN9cDr5ia1jYzQwEtPLReDLUppGWlU9iYN1i49_2BnTjPkl4esxUlNQnFOjbnEdE6KuVU7UTHKTw9a_WArB7XnFlZm8lRQjGKDATFFQ6z3ljDf98uI4ny53yD5sJS7mcfWwSLid6GX33k6WpNu-uyIskN-JGVGg7Gjvkky6_FFWveSckFCWGRbRNSX_0fGbJrIQcH2JKE5"
-              frameBorder={0}
-              scrolling="auto"
-              allowFullScreen
-              style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%' }}
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer id="contact" className="border-t border-border/60">
         <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -369,7 +465,6 @@ export default function Home() {
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
             <Link href="/careers">Careers</Link>
-            <a href="mailto:support@aidly.me">support@aidly.me</a>
           </div>
           <div className="hidden md:block justify-self-end text-sm text-muted-foreground">
             Made with <span aria-label="love" role="img">❤️</span> in <span aria-label="France" role="img">🇫🇷</span>
