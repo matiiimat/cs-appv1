@@ -212,7 +212,7 @@ export default function Home() {
           </div>
           <div className="text-left md:text-left">
             <h3 className="text-xl md:text-2xl font-semibold">Launch Fast</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Get started in just two minutes. Connect your AI API key, define your categories, SLAs, and custom instructions, then link your Aidly support address to your own. That’s all it takes to launch a smarter, faster support workflow.</p>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Get started in just two minutes. Connect your AI API key, define your categories, SLAs, and custom instructions, then link your Aidly support address to your own. That’s all it takes to launch a smarter, faster support workflow.</p>
           </div>
         </div>
 
@@ -220,7 +220,7 @@ export default function Home() {
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div className="order-2 md:order-1 text-left">
             <h3 className="text-xl md:text-2xl font-semibold">Automate Replies - With Control</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Once you’re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Once you’re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
           </div>
           <div className="order-1 md:order-2 rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
             <ParallaxImage>
@@ -252,7 +252,7 @@ export default function Home() {
           </div>
           <div className="text-left">
             <h3 className="text-xl md:text-2xl font-semibold">Drive Retention</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Use the dashboard to uncover what drives satisfaction and retention. Spot trends, reduce churn, and continuously refine your support strategy to deliver an outstanding customer experience every time.</p>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Use the dashboard to uncover what drives satisfaction and retention. Spot trends, reduce churn, and continuously refine your support strategy to deliver an outstanding customer experience every time.</p>
           </div>
         </div>
       </section>
@@ -300,7 +300,7 @@ export default function Home() {
         </div>
   </section> */}
 
-  {/* Users Opinion */}
+  {/* Users Opinion 
   <section id="testimonials" className="container mx-auto px-4 py-16 md:py-20">
     <div className="mx-auto max-w-2xl text-center">
       <h2 className="text-2xl md:text-3xl font-semibold">Trusted by Support Teams Everywhere</h2>
@@ -345,7 +345,7 @@ export default function Home() {
       `}</style>
     </div>
   </section>
-
+*/}
 
       {/* Pricing */}
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
@@ -413,7 +413,7 @@ export default function Home() {
       </section>
 
       {/* Subscribe */}
-      <section id="subscribe" className="container mx-auto px-4 py-16 md:py-20">
+      <section id="subscribe" className="container mx-auto px-4 pt-16 md:pt-20 pb-8 md:pb-10">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Stay in Touch</h2>
           <p className="mt-2 text-muted-foreground">Subscribe to product updates and announcements.</p>
@@ -434,7 +434,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="container mx-auto px-4 py-16 md:py-20">
+      <section id="faq" className="container mx-auto px-4 pt-8 md:pt-10 pb-16 md:pb-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">FAQ</h2>
         </div>
