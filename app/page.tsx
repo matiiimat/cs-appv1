@@ -122,6 +122,17 @@ export default function Home() {
   const [annual, setAnnual] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+
+  // Close lightbox with ESC
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox])
 
   async function startCheckout() {
     setError("")
@@ -198,17 +209,20 @@ export default function Home() {
 
         {/* Feature 1: image left, text right */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
-            <ParallaxImage>
-              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
-                <Image
-                  src="/fonts/users/launch-fast.png"
-                  alt="Feature preview"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </ParallaxImage>
+          <div
+            className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            onClick={() => setLightbox({ src: '/fonts/users/launch-fast.png', alt: 'Launch Fast' })}
+            role="button"
+            aria-label="Enlarge image: Launch Fast"
+          >
+            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+              <Image
+                src="/fonts/users/launch-fast.png"
+                alt="Feature preview"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="text-left md:text-left">
             <h3 className="text-xl md:text-2xl font-semibold">Launch Fast</h3>
@@ -222,33 +236,39 @@ export default function Home() {
             <h3 className="text-xl md:text-2xl font-semibold">Automate Replies - With Control</h3>
             <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Once you’re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
           </div>
-          <div className="order-1 md:order-2 rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
-            <ParallaxImage>
-              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
-                <Image
-                  src="/fonts/users/automate-replies.png"
-                  alt="Feature preview"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </ParallaxImage>
+          <div
+            className="order-1 md:order-2 rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            onClick={() => setLightbox({ src: '/fonts/users/automate-replies.png', alt: 'Automate Replies' })}
+            role="button"
+            aria-label="Enlarge image: Automate Replies"
+          >
+            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+              <Image
+                src="/fonts/users/automate-replies.png"
+                alt="Feature preview"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
         </div>
 
         {/* Feature 3: image left, text right */}
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto">
-            <ParallaxImage>
-              <div className="relative w-full" style={{ aspectRatio: '3 / 2' }}>
-                <Image
-                  src="/fonts/users/customize-image.png"
-                  alt="Feature preview"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </ParallaxImage>
+          <div
+            className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            onClick={() => setLightbox({ src: '/fonts/users/customize-image.png', alt: 'Customize' })}
+            role="button"
+            aria-label="Enlarge image: Customize"
+          >
+            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+              <Image
+                src="/fonts/users/customize-image.png"
+                alt="Feature preview"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="text-left">
             <h3 className="text-xl md:text-2xl font-semibold">Drive Retention</h3>
@@ -453,6 +473,31 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Lightbox Modal */}
+      {lightbox && (
+        <>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            onClick={() => setLightbox(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image lightbox"
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-[lbFade_180ms_ease-out_forwards]"></div>
+            <div className="relative z-10 p-4 animate-[lbZoom_200ms_ease-out_forwards]" onClick={(e) => e.stopPropagation()}>
+              <div className="relative w-[90vw] max-w-5xl h-[80vh] rounded-xl overflow-hidden shadow-2xl bg-black cursor-zoom-out" onClick={() => setLightbox(null)}>
+                <img src={lightbox.src} alt={lightbox.alt} className="h-full w-full object-contain" />
+              </div>
+              {/* Close button removed: click overlay/image or press ESC to close */}
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes lbFade { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes lbZoom { from { opacity: 0; transform: scale(0.98) } to { opacity: 1; transform: scale(1) } }
+          `}</style>
+        </>
+      )}
 
       {/* Footer */}
       <footer id="contact" className="border-t border-border/60">
