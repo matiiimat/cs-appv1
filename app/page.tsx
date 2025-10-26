@@ -337,6 +337,27 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Subscribe */}
+      <section id="subscribe" className="container mx-auto px-4 py-12 md:py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold">Subscribe</h2>
+          <p className="mt-2 text-muted-foreground">Subscribe to product updates and announcements.</p>
+        </div>
+        <div className="mt-6">
+          <div className="mx-auto max-w-[540px]">
+            <iframe
+              width="540"
+              height="405"
+              src="https://b2c7da7c.sibforms.com/serve/MUIFAJwN9cDr5ia1jYzQwEtPLReDLUppGWlU9iYN1i49_2BnTjPkl4esxUlNQnFOjbnEdE6KuVU7UTHKTw9a_WArB7XnFlZm8lRQjGKDATFFQ6z3ljDf98uI4ny53yD5sJS7mcfWwSLid6GX33k6WpNu-uyIskN-JGVGg7Gjvkky6_FFWveSckFCWGRbRNSX_0fGbJrIQcH2JKE5"
+              frameBorder={0}
+              scrolling="auto"
+              allowFullScreen
+              style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%' }}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer id="contact" className="border-t border-border/60">
         <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
