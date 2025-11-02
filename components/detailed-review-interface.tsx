@@ -12,7 +12,7 @@ import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDa
 import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
-import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
+import { Clock, User, Send, Bot, Zap, MessageSquare, Trash } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -134,6 +134,24 @@ export function DetailedReviewInterface() {
       }
     }
   }, [chatMessages])
+
+  const handleCloseWithoutReply = useCallback(async () => {
+    if (!selectedMessage) return
+    const confirmed = window.confirm(
+      'Close this case without sending a reply? This removes it from Inbox.'
+    )
+    if (!confirmed) return
+
+    try {
+      await updateMessage(selectedMessage.id, { status: 'sent', agentId })
+      clearDraftReply(selectedMessage.id)
+      setChatMessages([])
+      // Auto-navigation handled by effect monitoring reviewMessages
+    } catch (error) {
+      console.error('Failed to close case without reply:', error)
+      alert('Authentication required. Please implement user login.')
+    }
+  }, [selectedMessage, updateMessage, clearDraftReply, setChatMessages, agentId])
 
 
   const handleAiChat = async () => {
@@ -444,6 +462,16 @@ Output requirements:
                         currentCategory={selectedMessage.category || ""}
                         onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
                       />
+                      <Tooltip content="Close case without replying" delay={400} inline>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Close case without replying"
+                          onClick={handleCloseWithoutReply}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>
