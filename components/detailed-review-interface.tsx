@@ -47,6 +47,7 @@ export function DetailedReviewInterface() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiChatInput, setAiChatInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   
   // Generate unique IDs for chat items to avoid key collisions
   const genId = () => {
@@ -101,13 +102,13 @@ export function DetailedReviewInterface() {
     }
     try {
       // Persist the current draft as the final response, then mark as sent
-      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: "sent", agentId })
+      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: "sent", agentId, metadata: { ...(selectedMessage.metadata || {}), pending_followup: false } })
       clearDraftReply(selectedMessage.id)
       setChatMessages([])
       // Navigation will be handled by useEffect when reviewMessages updates
     } catch (error) {
       console.error('Failed to approve message:', error)
-      alert('Authentication required. Please implement user login.')
+      alert('Authentication required.')
     }
   }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
 
@@ -134,6 +135,45 @@ export function DetailedReviewInterface() {
       }
     }
   }, [chatMessages])
+
+  // No-op: pending follow-up is stored in DB metadata now
+
+  const handleCloseWithoutReply = useCallback(async () => {
+    if (!selectedMessage) return
+    const confirmed = window.confirm(
+      'Close this case without sending a reply? This removes it from Inbox.'
+    )
+    if (!confirmed) return
+
+    try {
+      await updateMessage(selectedMessage.id, { status: 'sent', agentId, metadata: { ...(selectedMessage.metadata || {}), close_without_reply: true, pending_followup: false } })
+      clearDraftReply(selectedMessage.id)
+      setChatMessages([])
+      setMoreMenuOpen(false)
+      // Auto-navigation handled by effect monitoring reviewMessages
+    } catch (error) {
+      console.error('Failed to close case without reply:', error)
+      alert('Authentication required.')
+    }
+  }, [selectedMessage, updateMessage, clearDraftReply, setChatMessages, agentId])
+
+  const handleSendKeepOpen = useCallback(async () => {
+    if (!selectedMessage) return
+    const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
+    if (!finalResponse.trim()) {
+      alert('Draft reply is empty. Please write or insert a reply before sending.')
+      return
+    }
+    try {
+      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: 'to_review_queue', agentId, metadata: { ...(selectedMessage.metadata || {}), pending_followup: true, send_and_keep_open: true } })
+      clearDraftReply(selectedMessage.id)
+      setChatMessages([])
+      setMoreMenuOpen(false)
+    } catch (error) {
+      console.error('Failed to send message and keep case open:', error)
+      alert('Authentication required.')
+    }
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
 
 
   const handleAiChat = async () => {
@@ -416,11 +456,21 @@ Output requirements:
                         <Badge variant="outline" className="text-xs mb-1">
                           {message.category}
                         </Badge>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Clock className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                          <span className={`px-2 py-1 rounded text-xs font-medium truncate ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
-                            {formatFriendlyDate(message.timestamp)}
-                          </span>
+                    <div className="flex items-center gap-1 text-xs">
+                          {(
+                            message.metadata &&
+                            typeof message.metadata === 'object' &&
+                            (message.metadata as Record<string, unknown>)['pending_followup'] === true
+                          ) ? (
+                            <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-300">PENDING</span>
+                          ) : (
+                            <>
+                              <Clock className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                              <span className={`px-2 py-1 rounded text-xs font-medium truncate ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
+                                {formatFriendlyDate(message.timestamp)}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       </Tooltip>
@@ -432,11 +482,11 @@ Output requirements:
           </div>
         </div>
 
-        <div className="w-2/4 flex flex-col gap-4 min-h-0 overflow-y-auto">
+        <div className="w-2/4 flex flex-col gap-4 min-h-0 overflow-visible">
           {selectedMessage && (
             <>
-              <div className="flex-none bg-card rounded-lg shadow-md max-h-[50%] overflow-hidden">
-                <div className="pb-3 p-6">
+              <div className="bg-card rounded-lg shadow-md md:flex md:flex-col md:min-h-0 md:h-[50vh] overflow-hidden">
+                <div className="pb-3 p-6 md:flex-none">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Customer Question</h3>
                     <div className="flex items-center gap-2">
@@ -447,8 +497,8 @@ Output requirements:
                     </div>
                   </div>
                 </div>
-                <div className="px-6 pb-6 flex-1 overflow-hidden">
-                  <div className="space-y-3">
+                <div className="px-6 pb-6 md:flex-1 md:min-h-0 md:overflow-hidden">
+                  <div className="space-y-3 md:flex md:flex-col md:min-h-0 md:h-full">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">{selectedMessage.customerName}</span>
@@ -458,7 +508,7 @@ Output requirements:
                         {formatFriendlyDate(selectedMessage.timestamp)}
                       </span>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg h-full overflow-auto">
+                    <div className="p-4 bg-muted rounded-lg md:flex-1 md:min-h-0 md:overflow-y-auto">
                       <EmailText text={selectedMessage.message} />
                     </div>
                   </div>
@@ -477,8 +527,38 @@ Output requirements:
                     rows={10}
                     className="min-h-[240px] max-h-none resize-y"
                   />
-                  <div className="flex gap-2">
-                    <Button onClick={handleApprove} className="w-full">
+                  <div className="flex gap-2 items-center relative min-w-0">
+                    <div className="relative flex-none">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setMoreMenuOpen(v => !v)}
+                        aria-haspopup="menu"
+                        aria-expanded={moreMenuOpen}
+                        aria-label="More actions"
+                      >
+                        ...
+                      </Button>
+                      {moreMenuOpen && (
+                        <div className="absolute left-0 mt-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={handleSendKeepOpen}
+                          >
+                            Send message and keep case open
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-destructive"
+                            onClick={handleCloseWithoutReply}
+                          >
+                            Close case without replying
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <Button onClick={handleApprove} className="flex-1 min-w-0">
                       <Send className="h-4 w-4 mr-2" />
                       Send
                     </Button>

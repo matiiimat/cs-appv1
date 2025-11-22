@@ -24,6 +24,7 @@ function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
     responseTime: apiMessage.response_time_ms || undefined,
     updatedAt: apiMessage.updated_at,
     editHistory: apiMessage.edit_history || [],
+    metadata: apiMessage.metadata || {},
   }
 }
 
@@ -73,6 +74,7 @@ export interface CustomerMessage {
     editedResponse: string
     reason: string
   }>
+  metadata?: Record<string, unknown>
 }
 
 export interface MessageStats {
@@ -235,6 +237,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       }
       if (updates.aiReviewed !== undefined) apiUpdates.ai_reviewed = updates.aiReviewed
       if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
+      if (updates.metadata !== undefined) apiUpdates.metadata = updates.metadata
 
       await apiClient.updateMessage(id, apiUpdates)
 

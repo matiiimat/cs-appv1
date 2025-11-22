@@ -148,6 +148,9 @@ export async function PUT(request: NextRequest) {
 
     // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
+      // Safely read boolean flag from metadata without using `any`
+      const meta = (validatedUpdates as { metadata?: unknown }).metadata
+      const skipEmail = !!(meta && typeof meta === 'object' && (meta as Record<string, unknown>)['close_without_reply'] === true)
       // If client passed a modified ai_suggested_response with the send action,
       // persist it first so the outbound email uses the latest content.
       if (typeof (validatedUpdates as Record<string, unknown>).ai_suggested_response === 'string') {
@@ -155,6 +158,15 @@ export async function PUT(request: NextRequest) {
           await MessageModel.update(orgId, id, { ai_suggested_response: (validatedUpdates as Record<string, string>).ai_suggested_response })
         } catch (e) {
           console.warn('Failed to persist ai_suggested_response before send; proceeding to send anyway', e)
+        }
+      }
+
+      // Persist metadata (e.g., close_without_reply flag) before transition if present
+      if (validatedUpdates.metadata) {
+        try {
+          await MessageModel.update(orgId, id, { metadata: validatedUpdates.metadata })
+        } catch (e) {
+          console.warn('Failed to persist metadata before send; proceeding anyway', e)
         }
       }
 
@@ -176,8 +188,12 @@ export async function PUT(request: NextRequest) {
 
       updatedMessage = transitioned
 
-      // Trigger outbound email only on successful state transition
+      // Trigger outbound email only on successful state transition AND not explicitly closed without reply
       try {
+        if (skipEmail) {
+          // Skip sending email when closing case without replying
+          return NextResponse.json({ message: updatedMessage })
+        }
         const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
         const { getOrganizationNameById } = await import('@/lib/tenant')
         const replyTo = makeOrgForwardAddress(orgId)
@@ -245,9 +261,73 @@ export async function PUT(request: NextRequest) {
       }
     } else {
       // Non-'sent' updates use the regular update path
+      const meta2 = (validatedUpdates as { metadata?: unknown }).metadata
+      const keepOpenSend = !!(meta2 && typeof meta2 === 'object' && (meta2 as Record<string, unknown>)['send_and_keep_open'] === true)
       updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
       if (!updatedMessage) {
         return NextResponse.json({ error: "Message not found" }, { status: 404 })
+      }
+
+      // If requested, send email but keep status unchanged
+      if (keepOpenSend) {
+        try {
+          const { EmailService, makeOrgForwardAddress } = await import('@/lib/email')
+          const { getOrganizationNameById } = await import('@/lib/tenant')
+          const replyTo = makeOrgForwardAddress(orgId)
+          const to = updatedMessage.customer_email || ''
+
+          // Build subject similar to the 'sent' branch
+          const originalSubject = (updatedMessage.subject || '').trim()
+          const hasRe = /^re:/i.test(originalSubject)
+          const hasExistingBracketId = /\[\s*#?\s*\d+\s*\]/.test(originalSubject)
+          const baseSubject = hasRe ? originalSubject : (originalSubject ? `Re: ${originalSubject}` : 'Re:')
+
+          let finalSubject: string
+          if (hasExistingBracketId) {
+            finalSubject = baseSubject.trim()
+          } else {
+            const { sanitizeSubjectBrackets } = await import('@/lib/subject-utils')
+            const cleaned = sanitizeSubjectBrackets(baseSubject)
+            const caseId = (updatedMessage.ticket_id || '').trim()
+            finalSubject = caseId ? `[${caseId}] - ${cleaned}` : cleaned
+          }
+
+          // Sanitize body: remove any leading "Subject:" line and subsequent blank line(s)
+          const rawText = updatedMessage.ai_suggested_response || ''
+          const lines = rawText.split(/\r?\n/)
+          let startIdx = 0
+          if (lines[0] && /^\s*subject\s*:/i.test(lines[0])) {
+            startIdx = 1
+            while (startIdx < lines.length && /^\s*$/.test(lines[startIdx])) {
+              startIdx++
+            }
+          }
+          const text = lines.slice(startIdx).join('\n')
+
+          let fromName: string | undefined
+          try {
+            const orgName = await getOrganizationNameById(orgId)
+            if (orgName && orgName.trim().length > 0) {
+              const cleaned = orgName.replace(/'s Workspace\s*$/i, '').trim()
+              fromName = `${cleaned} Support`
+            }
+          } catch {}
+
+          if (to && text) {
+            const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
+            await MessageModel.addActivity(
+              orgId,
+              updatedMessage.id,
+              validatedUpdates.agent_id ?? null,
+              'approved',
+              { channel: 'email', provider: 'sendgrid', ok: result.ok, providerMessageId: result.providerMessageId, keepOpen: true }
+            )
+          } else {
+            console.warn('Skipping email send (keep open): missing recipient or body')
+          }
+        } catch (sendErr) {
+          console.error('Failed to send outbound email (keep open):', sendErr)
+        }
       }
     }
 
