@@ -417,7 +417,7 @@ export function SettingsPage() {
                               } else {
                                 alert('Could not schedule cancellation. Please try again.')
                               }
-                            } catch (e) {
+                            } catch {
                               alert('Could not schedule cancellation. Please try again.')
                             }
                           }}
@@ -456,9 +456,9 @@ export function SettingsPage() {
                                   } else {
                                     alert('Could not resume subscription. Please try again.')
                                   }
-                                } catch (e) {
-                                  alert('Could not resume subscription. Please try again.')
-                                }
+                                  } catch {
+                                    alert('Could not resume subscription. Please try again.')
+                                  }
                               }}
                               className="shadow-sm"
                             >
