@@ -2,6 +2,14 @@ import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
 import Stripe from 'stripe'
 
+function getUnixTs(obj: unknown, key: string): number | null {
+  if (obj && typeof obj === 'object') {
+    const v = (obj as Record<string, unknown>)[key]
+    if (typeof v === 'number') return v
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
@@ -33,10 +41,13 @@ export async function POST(req: NextRequest) {
     }
 
     // If already set, just return current state
-    if (activeSub.cancel_at_period_end) {
+    if ((activeSub as unknown as Record<string, unknown>)['cancel_at_period_end'] === true) {
       return NextResponse.json({
         willCancelAtPeriodEnd: true,
-        currentPeriodEnd: new Date((activeSub.current_period_end || 0) * 1000).toISOString(),
+        currentPeriodEnd: (() => {
+          const end = getUnixTs(activeSub, 'current_period_end')
+          return end ? new Date(end * 1000).toISOString() : null
+        })(),
         subscriptionId: activeSub.id,
       })
     }
@@ -45,7 +56,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       willCancelAtPeriodEnd: true,
-      currentPeriodEnd: new Date((updated.current_period_end || 0) * 1000).toISOString(),
+      currentPeriodEnd: (() => {
+        const end = getUnixTs(updated, 'current_period_end')
+        return end ? new Date(end * 1000).toISOString() : null
+      })(),
       subscriptionId: updated.id,
     })
   } catch (err) {
@@ -53,4 +67,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to schedule cancellation' }, { status: 500 })
   }
 }
-

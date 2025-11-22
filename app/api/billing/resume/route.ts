@@ -2,6 +2,14 @@ import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
 import Stripe from 'stripe'
 
+function getUnixTs(obj: unknown, key: string): number | null {
+  if (obj && typeof obj === 'object') {
+    const v = (obj as Record<string, unknown>)[key]
+    if (typeof v === 'number') return v
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
@@ -34,7 +42,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       willCancelAtPeriodEnd: false,
-      currentPeriodEnd: updated.current_period_end ? new Date(updated.current_period_end * 1000).toISOString() : null,
+      currentPeriodEnd: (() => {
+        const end = getUnixTs(updated, 'current_period_end')
+        return end ? new Date(end * 1000).toISOString() : null
+      })(),
       subscriptionId: updated.id,
     })
   } catch (err) {
@@ -42,4 +53,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to resume subscription' }, { status: 500 })
   }
 }
-

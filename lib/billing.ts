@@ -1,5 +1,21 @@
 import Stripe from 'stripe'
 
+function getUnixTs(obj: unknown, key: string): number | null {
+  if (obj && typeof obj === 'object') {
+    const v = (obj as Record<string, unknown>)[key]
+    if (typeof v === 'number') return v
+  }
+  return null
+}
+
+function getBool(obj: unknown, key: string): boolean {
+  if (obj && typeof obj === 'object') {
+    const v = (obj as Record<string, unknown>)[key]
+    return v === true
+  }
+  return false
+}
+
 export type BillingStatus = {
   isActive: boolean
   willCancelAtPeriodEnd: boolean
@@ -25,17 +41,19 @@ export async function getBillingStatusForEmail(email: string): Promise<BillingSt
     // No active sub — find the most recent subscription to surface period end
     const latest = subs.data
       .slice()
-      .sort((a, b) => (b.current_period_end || 0) - (a.current_period_end || 0))[0]
-    const endIso = latest?.current_period_end ? new Date(latest.current_period_end * 1000).toISOString() : null
+      .sort((a, b) => (getUnixTs(b, 'current_period_end') || 0) - (getUnixTs(a, 'current_period_end') || 0))[0]
+    const end = latest ? getUnixTs(latest, 'current_period_end') : null
+    const endIso = end ? new Date(end * 1000).toISOString() : null
     return { isActive: false, willCancelAtPeriodEnd: false, currentPeriodEnd: endIso, canResume: false }
   }
 
-  const endIso = activeSub.current_period_end ? new Date(activeSub.current_period_end * 1000).toISOString() : null
+  const end = getUnixTs(activeSub, 'current_period_end')
+  const endIso = end ? new Date(end * 1000).toISOString() : null
   return {
     isActive: ['active', 'trialing'].includes(activeSub.status),
-    willCancelAtPeriodEnd: Boolean(activeSub.cancel_at_period_end),
+    willCancelAtPeriodEnd: getBool(activeSub, 'cancel_at_period_end'),
     currentPeriodEnd: endIso,
-    canResume: Boolean(activeSub.cancel_at_period_end) && ['active', 'trialing', 'past_due', 'unpaid'].includes(activeSub.status),
+    canResume: getBool(activeSub, 'cancel_at_period_end') && ['active', 'trialing', 'past_due', 'unpaid'].includes(activeSub.status),
   }
 }
 
@@ -47,4 +65,3 @@ export function isAccessAllowedFromStatus(status: BillingStatus | null): boolean
   }
   return false
 }
-
