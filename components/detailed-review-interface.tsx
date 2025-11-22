@@ -457,7 +457,11 @@ Output requirements:
                           {message.category}
                         </Badge>
                     <div className="flex items-center gap-1 text-xs">
-                          {(message.metadata as any)?.pending_followup ? (
+                          {(
+                            message.metadata &&
+                            typeof message.metadata === 'object' &&
+                            (message.metadata as Record<string, unknown>)['pending_followup'] === true
+                          ) ? (
                             <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-300">PENDING</span>
                           ) : (
                             <>

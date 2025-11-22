@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/server'
 import { ensureProvisioned } from '@/lib/tenant'
+import { getBillingStatusForEmail, isAccessAllowedFromStatus } from '@/lib/billing'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   // Allow bypass in development when explicitly enabled
@@ -23,6 +24,18 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     const name = session.user.name
     if (email) {
       await ensureProvisioned(email, name)
+
+      // Enforce access based on billing status
+      try {
+        const status = await getBillingStatusForEmail(email)
+        const allowed = isAccessAllowedFromStatus(status)
+        if (!allowed) {
+          redirect('/')
+        }
+      } catch (e) {
+        console.error('Billing status check error:', e)
+        // Fail-open: do not block if billing check fails
+      }
     }
   } catch (e) {
     console.error('Provisioning error:', e)

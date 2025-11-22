@@ -14,6 +14,13 @@ import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, aiConfigHasKey } = useSettings()
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [billingLoaded, setBillingLoaded] = useState(false)
+  const [billingStatus, setBillingStatus] = useState<{
+    isActive: boolean
+    willCancelAtPeriodEnd: boolean
+    currentPeriodEnd: string | null
+    canResume?: boolean
+  }>({ isActive: false, willCancelAtPeriodEnd: false, currentPeriodEnd: null })
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
   const [mailboxError, setMailboxError] = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,6 +47,26 @@ export function SettingsPage() {
       }
     }
     loadMailbox()
+    // Load billing status
+    const loadBilling = async () => {
+      try {
+        const resp = await fetch('/api/billing/status')
+        if (resp.ok) {
+          const data = await resp.json()
+          setBillingStatus({
+            isActive: Boolean(data.isActive),
+            willCancelAtPeriodEnd: Boolean(data.willCancelAtPeriodEnd),
+            currentPeriodEnd: data.currentPeriodEnd ?? null,
+            canResume: Boolean(data.canResume),
+          })
+        }
+      } catch {
+        // ignore
+      } finally {
+        setBillingLoaded(true)
+      }
+    }
+    loadBilling()
   }, [])
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; error?: string } | null>(null)
@@ -362,6 +389,92 @@ export function SettingsPage() {
                 >
                   {isSigningOut ? 'Signing out…' : 'Sign out'}
                 </Button>
+
+                {/* Cancel subscription button */}
+                {billingLoaded && billingStatus.isActive && (
+                  <div className="mt-4">
+                    {!billingStatus.willCancelAtPeriodEnd ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={async () => {
+                            const displayDate = billingStatus.currentPeriodEnd
+                              ? new Date(billingStatus.currentPeriodEnd).toLocaleDateString()
+                              : 'the end of your current billing period'
+                            const confirmed = window.confirm(
+                              `Cancel your subscription?\n\nYou will keep access until ${displayDate}. One month after your last payment, access to Aidly will be disabled.`
+                            )
+                            if (!confirmed) return
+                            try {
+                              const resp = await fetch('/api/billing/cancel', { method: 'POST' })
+                              if (resp.ok) {
+                                const data = await resp.json()
+                                setBillingStatus((prev) => ({
+                                  ...prev,
+                                  willCancelAtPeriodEnd: true,
+                                  currentPeriodEnd: data.currentPeriodEnd ?? prev.currentPeriodEnd,
+                                }))
+                              } else {
+                                alert('Could not schedule cancellation. Please try again.')
+                              }
+                            } catch (e) {
+                              alert('Could not schedule cancellation. Please try again.')
+                            }
+                          }}
+                          className="shadow-sm"
+                        >
+                          Cancel subscription
+                        </Button>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          You’ll keep access until the end of your current billing period. One month after your last payment, access to Aidly will be disabled.
+                        </p>
+                      </>
+                    ) : (
+                      <div className="text-sm">
+                        <span className="font-medium">Cancel pending</span>
+                        {': '}ends on{' '}
+                        <span className="font-medium">
+                          {billingStatus.currentPeriodEnd ? new Date(billingStatus.currentPeriodEnd).toLocaleDateString() : 'current period end'}
+                        </span>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          One month after your last payment, access to Aidly will be disabled.
+                        </p>
+                        {billingStatus.canResume && (
+                          <div className="mt-2">
+                            <Button
+                              variant="outline"
+                              onClick={async () => {
+                                try {
+                                  const resp = await fetch('/api/billing/resume', { method: 'POST' })
+                                  if (resp.ok) {
+                                    const data = await resp.json()
+                                    setBillingStatus((prev) => ({
+                                      ...prev,
+                                      willCancelAtPeriodEnd: false,
+                                      currentPeriodEnd: data.currentPeriodEnd ?? prev.currentPeriodEnd,
+                                    }))
+                                  } else {
+                                    alert('Could not resume subscription. Please try again.')
+                                  }
+                                } catch (e) {
+                                  alert('Could not resume subscription. Please try again.')
+                                }
+                              }}
+                              className="shadow-sm"
+                            >
+                              Resume subscription
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {billingLoaded && !billingStatus.isActive && (
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    No active subscription found for this account.
+                  </p>
+                )}
               </div>
             </div>
           </div>

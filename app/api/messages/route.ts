@@ -148,7 +148,9 @@ export async function PUT(request: NextRequest) {
 
     // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
-      const skipEmail = Boolean((validatedUpdates as Record<string, any>)?.metadata?.close_without_reply)
+      // Safely read boolean flag from metadata without using `any`
+      const meta = (validatedUpdates as { metadata?: unknown }).metadata
+      const skipEmail = !!(meta && typeof meta === 'object' && (meta as Record<string, unknown>)['close_without_reply'] === true)
       // If client passed a modified ai_suggested_response with the send action,
       // persist it first so the outbound email uses the latest content.
       if (typeof (validatedUpdates as Record<string, unknown>).ai_suggested_response === 'string') {
@@ -160,9 +162,9 @@ export async function PUT(request: NextRequest) {
       }
 
       // Persist metadata (e.g., close_without_reply flag) before transition if present
-      if ((validatedUpdates as Record<string, any>)?.metadata) {
+      if (validatedUpdates.metadata) {
         try {
-          await MessageModel.update(orgId, id, { metadata: (validatedUpdates as Record<string, any>).metadata })
+          await MessageModel.update(orgId, id, { metadata: validatedUpdates.metadata })
         } catch (e) {
           console.warn('Failed to persist metadata before send; proceeding anyway', e)
         }
@@ -259,7 +261,8 @@ export async function PUT(request: NextRequest) {
       }
     } else {
       // Non-'sent' updates use the regular update path
-      const keepOpenSend = Boolean((validatedUpdates as Record<string, any>)?.metadata?.send_and_keep_open)
+      const meta2 = (validatedUpdates as { metadata?: unknown }).metadata
+      const keepOpenSend = !!(meta2 && typeof meta2 === 'object' && (meta2 as Record<string, unknown>)['send_and_keep_open'] === true)
       updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
       if (!updatedMessage) {
         return NextResponse.json({ error: "Message not found" }, { status: 404 })
