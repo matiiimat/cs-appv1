@@ -15,11 +15,11 @@ async function requireOrgId(request: NextRequest): Promise<string> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { caseId: string } }
+  { params }: { params: Promise<{ caseId: string }> }
 ) {
   try {
     const orgId = await requireOrgId(request)
-    const { caseId } = params
+    const { caseId } = await params
 
     if (!caseId) {
       return NextResponse.json({ error: "Case ID is required" }, { status: 400 })

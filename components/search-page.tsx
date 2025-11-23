@@ -1,23 +1,33 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, ExternalLink, Calendar, User, Mail } from "lucide-react"
+// import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Search, Calendar, User, Mail, MessageSquare, Clock } from "lucide-react"
 import { format } from "date-fns"
 
 interface Message {
   id: string
+  organization_id: string
   ticket_id: string
   customer_name: string | null
   customer_email: string | null
   subject: string | null
   message: string | null
   category: string | null
+  ai_suggested_response: string | null
   status: string
+  agent_id: string | null
+  processed_at: string | null
+  response_time_ms: number | null
+  auto_reviewed: boolean
+  is_generating: boolean
+  edit_history: any[]
+  metadata: Record<string, any>
   created_at: string
   updated_at: string
 }
@@ -62,6 +72,9 @@ export function SearchPage() {
   const [results, setResults] = useState<SearchResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedCase, setSelectedCase] = useState<Message | null>(null)
+  const [loadingCaseId, setLoadingCaseId] = useState<string | null>(null)
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -99,10 +112,36 @@ export function SearchPage() {
     }
   }
 
-  const openCaseInNewTab = (ticketId: string) => {
+  const openCaseModal = async (ticketId: string) => {
     const caseId = ticketId.replace('#', '')
-    window.open(`/c/${caseId}`, '_blank')
+    setLoadingCaseId(ticketId)
+
+    try {
+      const response = await fetch(`/api/messages/case/${caseId}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch case details')
+      }
+
+      const data = await response.json()
+      setSelectedCase(data.message)
+      setModalOpen(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load case details')
+    } finally {
+      setLoadingCaseId(null)
+    }
   }
+
+  // Lock background scroll when modal is open
+  useEffect(() => {
+    if (!modalOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [modalOpen])
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'MMM dd, yyyy HH:mm')
@@ -131,7 +170,7 @@ export function SearchPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Search Messages</h1>
         <p className="text-muted-foreground">
-          Search through your organization's message history
+          Search through your organization&apos;s message history
         </p>
       </div>
 
@@ -203,8 +242,8 @@ export function SearchPage() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-muted-foreground">
-              Found {results.pagination.total} result {results.pagination.total !== 1 ? 's' : ''}
-              for "{results.query.text}"
+              Found {results.pagination.total} {results.pagination.total === 1 ? 'result' : 'results'}
+              {` for "${results.query.text}"`}
               {results.query.field !== 'all' && ` in ${results.query.field.replace('_', ' ')}`}
             </p>
           </div>
@@ -218,9 +257,14 @@ export function SearchPage() {
           ) : (
             <div className="space-y-4">
               {results.messages.map((message) => (
-                <Card key={message.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={message.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => openCaseModal(message.ticket_id)}
+                  role="button"
+                >
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-start mb-4">
                       <div className="flex items-center gap-3">
                         <h3 className="font-semibold text-lg">{message.ticket_id}</h3>
                         <Badge
@@ -233,15 +277,6 @@ export function SearchPage() {
                           <Badge variant="outline">{message.category}</Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openCaseInNewTab(message.ticket_id)}
-                        className="gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Open
-                      </Button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -306,6 +341,137 @@ export function SearchPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Case Details Modal */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setModalOpen(false)}
+        >
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/50" />
+
+          {/* Modal Content */}
+          <div
+            className="relative bg-card rounded-lg shadow-xl max-w-5xl w-full mx-4 h-[90dvh] sm:h-[90vh] flex flex-col min-h-0 overflow-hidden border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {selectedCase?.subject || "No Subject"}
+                </h2>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {selectedCase?.ticket_id}
+                  </span>
+                  <Badge
+                    className={STATUS_COLORS[selectedCase?.status as keyof typeof STATUS_COLORS]}
+                    variant="secondary"
+                  >
+                    {STATUS_LABELS[selectedCase?.status as keyof typeof STATUS_LABELS] || selectedCase?.status}
+                  </Badge>
+                  {selectedCase?.category && (
+                    <Badge variant="outline" className="text-xs">{selectedCase.category}</Badge>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-semibold w-8 h-8 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
+              {selectedCase ? (
+                <div className="p-6 space-y-8">
+                  {/* Customer Info */}
+                  <div className="bg-muted/50 border p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedCase.customer_name || "Unknown Customer"}
+                          </p>
+                          <p className="text-sm text-gray-500">Customer</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedCase.customer_email || "No email"}
+                          </p>
+                          <p className="text-sm text-gray-500">Email</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedCase.processed_at ? formatDate(selectedCase.processed_at) : "Not processed"}
+                          </p>
+                          <p className="text-sm text-gray-500">Processed Date</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MessageSquare className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {STATUS_LABELS[selectedCase.status as keyof typeof STATUS_LABELS] || selectedCase.status}
+                          </p>
+                          <p className="text-sm text-gray-500">Status</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Message */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <div className="w-1 h-6 bg-blue-500 rounded"></div>
+                      Customer Message
+                    </h3>
+                    <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                      <div className="max-h-60 overflow-y-auto">
+                        <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                          {selectedCase.message || "No message content"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Response */}
+                  {selectedCase.ai_suggested_response && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-green-500 rounded"></div>
+                        Response
+                      </h3>
+                      <div className="bg-green-50 dark:bg-blue-950/30 border border-green-200 dark:border-blue-800 rounded-lg p-6">
+                        <div className="max-h-60 overflow-y-auto">
+                          <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                            {selectedCase.ai_suggested_response}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-gray-500">
+                  <p>No case data loaded</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
