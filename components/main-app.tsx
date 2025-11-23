@@ -5,14 +5,15 @@ import { CustomerSupportDashboard } from "@/components/customer-support-dashboar
 import { AgentDashboard } from "@/components/agent-dashboard"
 import { DetailedReviewInterface } from "@/components/detailed-review-interface"
 import { SettingsPage } from "@/components/settings-page"
+import { SearchPage } from "@/components/search-page"
 import { MessageManagerProvider } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { BarChart3, Zap, Inbox, Settings, Menu } from "lucide-react"
+import { BarChart3, Zap, Inbox, Settings, Search, Menu } from "lucide-react"
 import Image from "next/image"
 
-type ViewMode = "dashboard" | "swipe" | "detailed-review" | "settings"
+type ViewMode = "dashboard" | "swipe" | "detailed-review" | "settings" | "search"
 
 export function MainApp() {
   const [currentView, setCurrentView] = useState<ViewMode>("dashboard")
@@ -32,6 +33,10 @@ export function MainApp() {
   }
   const switchToSettings = () => {
     setCurrentView("settings")
+    setIsMenuOpen(false)
+  }
+  const switchToSearch = () => {
+    setCurrentView("search")
     setIsMenuOpen(false)
   }
 
@@ -101,6 +106,15 @@ export function MainApp() {
                     Inbox
                   </Button>
                   <Button
+                    variant={currentView === "search" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={switchToSearch}
+                    className={`flex items-center gap-2 hover:shadow-sm hover:dark:shadow-md hover:dark:shadow-white/20 transition-shadow ${currentView === "search" ? "dark:bg-black dark:text-white dark:hover:bg-gray-900 shadow-sm dark:shadow-md dark:shadow-white/20" : ""}`}
+                  >
+                    <Search className="h-4 w-4" />
+                    Search
+                  </Button>
+                  <Button
                     variant={currentView === "settings" ? "default" : "ghost"}
                     size="sm"
                     onClick={switchToSettings}
@@ -165,6 +179,14 @@ export function MainApp() {
                           Inbox
                         </Button>
                         <Button
+                          variant={currentView === "search" ? "default" : "ghost"}
+                          onClick={switchToSearch}
+                          className="justify-start gap-2"
+                        >
+                          <Search className="h-4 w-4" />
+                          Search
+                        </Button>
+                        <Button
                           variant={currentView === "settings" ? "default" : "ghost"}
                           onClick={switchToSettings}
                           className="justify-start gap-2"
@@ -187,6 +209,8 @@ export function MainApp() {
             <CustomerSupportDashboard />
           ) : currentView === "detailed-review" ? (
             <DetailedReviewInterface />
+          ) : currentView === "search" ? (
+            <SearchPage />
           ) : (
             <SettingsPage />
           )}

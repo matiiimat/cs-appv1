@@ -178,6 +178,24 @@ export class MessageModel {
   }
 
   /**
+   * Get message by ticket ID
+   */
+  static async findByTicketId(organizationId: string, ticketId: string): Promise<Message | null> {
+    const organizationKey = await this.getOrganizationKey(organizationId);
+
+    const result = await db.query(
+      'SELECT * FROM messages WHERE organization_id = $1 AND ticket_id = $2',
+      [organizationId, ticketId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
+  }
+
+  /**
    * Get all messages for organization
    */
   static async findByOrganization(
@@ -226,6 +244,107 @@ export class MessageModel {
     const messages = result.rows.map(row => this.decryptMessageData(row as Record<string, unknown>, organizationKey));
 
     return { messages, total };
+  }
+
+  /**
+   * Search messages within organization
+   */
+  static async search(
+    organizationId: string,
+    query: string,
+    options: {
+      field?: 'all' | 'subject' | 'message' | 'customer_email' | 'ticket_id';
+      status?: MessageStatusType;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<{ messages: Message[]; total: number }> {
+    const organizationKey = await this.getOrganizationKey(organizationId);
+
+    const {
+      field = 'all',
+      status,
+      limit = 50,
+      offset = 0
+    } = options;
+
+    let whereClause = 'WHERE organization_id = $1';
+    const params: unknown[] = [organizationId];
+    let paramIndex = 2;
+
+    // Add status filter if provided
+    if (status) {
+      whereClause += ` AND status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+
+    // For ticket_id search, we can search directly without decryption
+    if (field === 'ticket_id') {
+      const formattedTicketId = query.startsWith('#') ? query : `#${query}`;
+      whereClause += ` AND ticket_id ILIKE $${paramIndex}`;
+      params.push(`%${formattedTicketId}%`);
+    } else {
+      // For encrypted field searches, we need to get all messages and filter after decryption
+      // This is less efficient but necessary due to encryption
+      whereClause += ` AND (customer_name IS NOT NULL OR customer_email IS NOT NULL OR subject IS NOT NULL OR message IS NOT NULL)`;
+    }
+
+    // Get total count for pagination
+    const countQuery = `SELECT COUNT(*) as total FROM messages ${whereClause}`;
+    const countResult = await db.query<{ total: string }>(countQuery, params);
+    let total = parseInt(countResult.rows[0].total);
+
+    // Get messages
+    const query_sql = `
+      SELECT * FROM messages
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit * 2); // Get more records to account for filtering after decryption
+    params.push(offset);
+
+    const result = await db.query(query_sql, params);
+
+    // Decrypt all messages
+    const decryptedMessages = result.rows.map(row =>
+      this.decryptMessageData(row as Record<string, unknown>, organizationKey)
+    );
+
+    // Filter decrypted messages based on search query
+    let filteredMessages = decryptedMessages;
+
+    if (field !== 'ticket_id' && query.trim()) {
+      const searchQuery = query.toLowerCase().trim();
+      filteredMessages = decryptedMessages.filter(msg => {
+        switch (field) {
+          case 'subject':
+            return msg.subject?.toLowerCase().includes(searchQuery) ?? false;
+          case 'message':
+            return msg.message?.toLowerCase().includes(searchQuery) ?? false;
+          case 'customer_email':
+            return msg.customer_email?.toLowerCase().includes(searchQuery) ?? false;
+          case 'all':
+          default:
+            return (
+              msg.subject?.toLowerCase().includes(searchQuery) ||
+              msg.message?.toLowerCase().includes(searchQuery) ||
+              msg.customer_email?.toLowerCase().includes(searchQuery) ||
+              msg.customer_name?.toLowerCase().includes(searchQuery) ||
+              msg.ticket_id?.toLowerCase().includes(searchQuery)
+            ) ?? false;
+        }
+      });
+
+      // Update total count after filtering
+      total = filteredMessages.length;
+
+      // Apply pagination after filtering
+      filteredMessages = filteredMessages.slice(offset, offset + limit);
+    }
+
+    return { messages: filteredMessages, total };
   }
 
   /**
