@@ -6,7 +6,7 @@ import { getBillingStatusForEmail, isAccessAllowedFromStatus } from '@/lib/billi
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   // Allow bypass in development when explicitly enabled
-  const bypass = process.env.NODE_ENV !== 'production' && process.env.DEV_AUTH_BYPASS === '1' // PUT TO 1 TO DISABLE LOGIN FOR TEST
+  const bypass = process.env.NODE_ENV !== 'production' && process.env.DEV_AUTH_BYPASS === '0' // PUT TO 1 TO DISABLE LOGIN FOR TEST
   if (bypass) {
     return <>{children}</>
   }
