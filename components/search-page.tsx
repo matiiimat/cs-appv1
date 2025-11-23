@@ -26,8 +26,8 @@ interface Message {
   response_time_ms: number | null
   auto_reviewed: boolean
   is_generating: boolean
-  edit_history: any[]
-  metadata: Record<string, any>
+  edit_history: unknown[]
+  metadata: Record<string, unknown>
   created_at: string
   updated_at: string
 }
@@ -74,7 +74,6 @@ export function SearchPage() {
   const [error, setError] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedCase, setSelectedCase] = useState<Message | null>(null)
-  const [loadingCaseId, setLoadingCaseId] = useState<string | null>(null)
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -114,7 +113,6 @@ export function SearchPage() {
 
   const openCaseModal = async (ticketId: string) => {
     const caseId = ticketId.replace('#', '')
-    setLoadingCaseId(ticketId)
 
     try {
       const response = await fetch(`/api/messages/case/${caseId}`)
@@ -128,8 +126,6 @@ export function SearchPage() {
       setModalOpen(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load case details')
-    } finally {
-      setLoadingCaseId(null)
     }
   }
 
