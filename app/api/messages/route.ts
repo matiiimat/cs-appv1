@@ -3,6 +3,7 @@ import { MessageModel, CreateMessageSchema, UpdateMessageSchema } from "@/lib/mo
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { z } from "zod"
+import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -63,9 +64,12 @@ export async function POST(request: NextRequest) {
 
     // Validate input data
     const validatedData = CreateMessageSchema.parse(messageData)
+    // Drop header-like keys from metadata before persisting
+    const cleanMetaPost = sanitizeMetadata((validatedData as { metadata?: unknown }).metadata)
+    const toCreate = cleanMetaPost ? { ...validatedData, metadata: cleanMetaPost } : validatedData
 
     // Create message in database
-    const newMessage = await MessageModel.create(orgId, validatedData)
+    const newMessage = await MessageModel.create(orgId, toCreate)
 
     // Log activity
     await MessageModel.addActivity(
@@ -164,7 +168,8 @@ export async function PUT(request: NextRequest) {
       // Persist metadata (e.g., close_without_reply flag) before transition if present
       if (validatedUpdates.metadata) {
         try {
-          await MessageModel.update(orgId, id, { metadata: validatedUpdates.metadata })
+          const cleanMeta = sanitizeMetadata(validatedUpdates.metadata)
+          await MessageModel.update(orgId, id, { metadata: cleanMeta || {} })
         } catch (e) {
           console.warn('Failed to persist metadata before send; proceeding anyway', e)
         }
@@ -263,7 +268,10 @@ export async function PUT(request: NextRequest) {
       // Non-'sent' updates use the regular update path
       const meta2 = (validatedUpdates as { metadata?: unknown }).metadata
       const keepOpenSend = !!(meta2 && typeof meta2 === 'object' && (meta2 as Record<string, unknown>)['send_and_keep_open'] === true)
-      updatedMessage = await MessageModel.update(orgId, id, validatedUpdates)
+      const safeUpdates = validatedUpdates.metadata
+        ? { ...validatedUpdates, metadata: sanitizeMetadata(validatedUpdates.metadata) || {} }
+        : validatedUpdates
+      updatedMessage = await MessageModel.update(orgId, id, safeUpdates)
       if (!updatedMessage) {
         return NextResponse.json({ error: "Message not found" }, { status: 404 })
       }
