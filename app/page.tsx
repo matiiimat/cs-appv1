@@ -151,10 +151,25 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Limited Time Offer Banner */}
+      <section className="bg-gradient-to-r from-primary/90 to-primary py-3 text-center text-primary-foreground">
+        <div className="container mx-auto px-4">
+          <p className="text-sm font-medium md:text-base">
+            <strong>Limited Time:</strong> Get your first month FREE with code <span className="font-bold bg-white/20 px-2 py-1 rounded">BF26FREEMONTH</span>
+          </p>
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="container mx-auto px-4 py-10 md:py-16">
         <ParallaxHero>
           <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
+            {/* Trust badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-950/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
+              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+              <span>14-day money-back guarantee</span>
+            </div>
+
             <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white md:text-6xl">
               Grow your business, not your support costs
             </h1>
@@ -169,6 +184,11 @@ export default function Home() {
                 <Link href="#how-it-works">Features</Link>
               </Button> */}
             </div>
+
+            {/* Guarantee text */}
+            <p className="mt-4 text-sm text-muted-foreground">
+              14-day money-back guarantee • No setup fees • Cancel anytime
+            </p>
           </div>
         </ParallaxHero>
       </section>
