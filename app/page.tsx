@@ -499,6 +499,8 @@ export default function Home() {
             <span className="text-sm">© {new Date().getFullYear()} Aidly</span>
           </div>
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground justify-self-center">
+            <Link href="/getting-started">Getting Started</Link>
+            <Link href="/pricing">Pricing</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
             <Link href="/careers">Careers</Link>
