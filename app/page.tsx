@@ -3,6 +3,9 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 function ParallaxHero({ children }: { children: React.ReactNode }) {
   const backdropRef = useRef<HTMLDivElement | null>(null)
@@ -88,11 +91,7 @@ function ParallaxHero({ children }: { children: React.ReactNode }) {
   )
 }
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-
-export default function Home() {
+function Home() {
   const [annual, setAnnual] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
@@ -133,7 +132,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-transparent">
+    <ParallaxHero>
+      <main className="min-h-screen bg-transparent">
       {/* Top Nav */}
       <header className="sticky top-0 z-20 border-b border-border/50 bg-card/70 backdrop-blur">
         <div className="container mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-4 py-4">
@@ -164,82 +164,80 @@ export default function Home() {
 
       {/* Hero */}
       <section className="container mx-auto px-4 py-10 md:py-16">
-        <ParallaxHero>
-          <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
-            {/* Trust badge */}
-            <Badge variant="outline" className="mb-6 inline-flex items-center gap-2 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40">
-              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div>
-              <span>Join 500+ support teams who reduced response time by 70%</span>
-            </Badge>
+        <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
+          {/* Trust badge */}
+          <Badge variant="outline" className="mb-6 inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40" style={{backgroundColor: '#3872B9', color: 'white', borderColor: '#3872B9'}}>
+            <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
+            <span>Join 500+ support teams who reduced response time by 70%</span>
+          </Badge>
 
-            <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
-              Tired of spending{" "}
-              <span className="bg-gradient-to-r from-red-600 via-red-500 to-red-400 bg-clip-text text-transparent">
-                6+ hours daily
-              </span>
-              {" "}on repetitive support emails?
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
-              Stop losing customers to slow responses. Automate 70% of your support emails while maintaining quality and never missing an SLA again.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg" className="text-base px-8 py-3 h-auto bg-red-600 hover:bg-red-700">
-                <Link href="#pricing">Stop the support chaos</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="text-base px-8 py-3 h-auto">
-                <Link href="#problem">See how we solve this</Link>
-              </Button>
-            </div>
-
-            {/* Risk Reversal */}
-            <div className="mt-8 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg max-w-2xl mx-auto">
-              <p className="text-sm text-green-800 dark:text-green-200 font-medium text-center">
-                <span className="font-bold">Risk-Free Guarantee:</span> If you don&apos;t save 10+ hours/week in 14 days, we&apos;ll refund 100% + give you $100 for your time
-              </p>
-            </div>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
+            Tired of spending{" "}
+            <span className="text-transparent bg-clip-text" style={{backgroundImage: 'linear-gradient(to right, #B05755, #B33275)'}}>
+              6+ hours daily
+            </span>
+            {" "}on repetitive support emails?
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
+            Stop losing customers to slow responses. Automate 70% of your support emails while maintaining quality and never missing an SLA again.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button asChild size="lg" className="text-base px-8 py-3 h-auto text-white hover:opacity-90" style={{backgroundColor: '#3872B9'}}>
+              <Link href="#pricing">Stop the support chaos</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-base px-8 py-3 h-auto">
+              <Link href="#problem">See how we solve this</Link>
+            </Button>
           </div>
-        </ParallaxHero>
+
+          {/* Risk Reversal */}
+          <div className="mt-8 p-4 border rounded-lg max-w-2xl mx-auto" style={{backgroundColor: '#F38135', borderColor: '#F38135'}}>
+            <p className="text-sm font-medium text-center text-white">
+              <span className="font-bold">Risk-Free Guarantee:</span> If you don&apos;t save 10+ hours/week in 14 days, we&apos;ll refund 100% + give you $100 for your time
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Problem/Solution Section */}
-      <section id="problem" className="container mx-auto px-4 py-16 md:py-24 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20">
+      <section id="problem" className="container mx-auto px-4 py-16 md:py-24" style={{background: 'linear-gradient(to right, rgba(176,87,85,0.1), rgba(179,50,117,0.1))'}}>
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-red-900 dark:text-red-100">The Support Team Struggle is Real</h2>
-            <p className="text-lg text-red-800 dark:text-red-200">Every support team faces the same daily challenges</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-muted-foreground">The Support Team Struggle is Real</h2>
+            <p className="text-lg text-muted-foreground">Every support team faces the same daily challenges</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Problems */}
             <div>
-              <h3 className="text-2xl font-bold mb-8 text-red-900 dark:text-red-100">What&apos;s killing your productivity:</h3>
+              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What&apos;s killing your productivity:</h3>
               <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">❌</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
                   <div>
-                    <h4 className="font-semibold text-red-900 dark:text-red-100 mb-1">Drowning in repetitive emails</h4>
-                    <p className="text-sm text-red-800 dark:text-red-200">Same questions, different customers, every single day</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Drowning in repetitive emails</h4>
+                    <p className="text-sm text-muted-foreground/80">Same questions, different customers, every single day</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">❌</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
                   <div>
-                    <h4 className="font-semibold text-red-900 dark:text-red-100 mb-1">Missing SLA deadlines</h4>
-                    <p className="text-sm text-red-800 dark:text-red-200">Customers getting frustrated with slow responses</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Missing SLA deadlines</h4>
+                    <p className="text-sm text-muted-foreground/80">Customers getting frustrated with slow responses</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">❌</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
                   <div>
-                    <h4 className="font-semibold text-red-900 dark:text-red-100 mb-1">Burning out your team</h4>
-                    <p className="text-sm text-red-800 dark:text-red-200">Copy-pasting responses isn&apos;t why they joined support</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Burning out your team</h4>
+                    <p className="text-sm text-muted-foreground/80">Copy-pasting responses isn&apos;t why they joined support</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-red-100 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">❌</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
                   <div>
-                    <h4 className="font-semibold text-red-900 dark:text-red-100 mb-1">Losing customers</h4>
-                    <p className="text-sm text-red-800 dark:text-red-200">89% switch providers after a bad support experience</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Losing customers</h4>
+                    <p className="text-sm text-muted-foreground/80">89% switch providers after a bad support experience</p>
                   </div>
                 </div>
               </div>
@@ -247,34 +245,34 @@ export default function Home() {
 
             {/* Solution */}
             <div>
-              <h3 className="text-2xl font-bold mb-8 text-green-900 dark:text-green-100">What if you could automate 70% of responses while maintaining quality?</h3>
+              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What if you could automate 70% of responses while maintaining quality?</h3>
               <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 bg-green-100 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">Instant AI-powered responses</h4>
-                    <p className="text-sm text-green-800 dark:text-green-200">Never keep customers waiting again</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Instant AI-powered responses</h4>
+                    <p className="text-sm text-muted-foreground/80">Never keep customers waiting again</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-green-100 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">Always hit your SLAs</h4>
-                    <p className="text-sm text-green-800 dark:text-green-200">Reduce average response time by 70%</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Always hit your SLAs</h4>
+                    <p className="text-sm text-muted-foreground/80">Reduce average response time by 70%</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-green-100 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">Free up your team</h4>
-                    <p className="text-sm text-green-800 dark:text-green-200">Focus on complex issues that need human touch</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Free up your team</h4>
+                    <p className="text-sm text-muted-foreground/80">Focus on complex issues that need human touch</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-green-100 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">Boost customer satisfaction</h4>
-                    <p className="text-sm text-green-800 dark:text-green-200">Turn frustrated customers into loyal advocates</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Boost customer satisfaction</h4>
+                    <p className="text-sm text-muted-foreground/80">Turn frustrated customers into loyal advocates</p>
                   </div>
                 </div>
               </div>
@@ -283,7 +281,7 @@ export default function Home() {
 
           {/* Call to Action */}
           <div className="text-center mt-12">
-            <div className="inline-flex items-center gap-3 p-6 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl">
+            <div className="inline-flex items-center gap-3 p-6 text-white rounded-2xl" style={{background: `linear-gradient(to right, #3872B9, #475B88)`}}>
               <div className="text-3xl">🎯</div>
               <div className="text-left">
                 <p className="text-lg font-bold">Ready to transform your support team?</p>
@@ -319,7 +317,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-left lg:text-left space-y-4">
-            <Badge variant="outline" className="w-fit bg-red-50 text-red-700 border-red-200">🚨 Stop Wasting Weeks on Setup</Badge>
+            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#B05755'}}>🚨 Stop Wasting Weeks on Setup</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">Most support tools take months to implement. You need relief today.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> Your team is drowning in tickets right now, but typical support tools require weeks of setup, training, and integration work.
@@ -336,7 +334,7 @@ export default function Home() {
         {/* Feature 2: image right, text left */}
         <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 text-left space-y-4">
-            <Badge variant="outline" className="w-fit bg-red-50 text-red-700 border-red-200">⏰ Never Miss Another SLA Again</Badge>
+            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#B33275'}}>⏰ Never Miss Another SLA Again</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">Your customers expect instant responses. Your team can&apos;t work 24/7.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> SLA breaches are killing your customer satisfaction. Every delayed response risks losing a customer forever.
@@ -388,7 +386,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-left space-y-4">
-            <Badge variant="outline" className="w-fit bg-red-50 text-red-700 border-red-200">💔 Stop Losing Customers to Poor Support</Badge>
+            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#475B88'}}>💔 Stop Losing Customers to Poor Support</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">83% of customers leave due to bad support experiences.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> You&apos;re losing customers but don&apos;t know why. By the time they complain, it&apos;s too late.
@@ -409,11 +407,11 @@ export default function Home() {
       </section>
 
       {/* Customer Success Stories */}
-      <section className="container mx-auto px-4 py-16 md:py-24 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+      <section className="container mx-auto px-4 py-16 md:py-24" style={{background: `linear-gradient(to right, #3872B9, #475B88)`, color: 'white'}}>
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Real Results from Real Companies</h2>
-            <p className="text-lg text-muted-foreground">See how teams like yours transformed their support operations</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Real Results from Real Companies</h2>
+            <p className="text-lg text-white/80">See how teams like yours transformed their support operations</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -598,33 +596,33 @@ export default function Home() {
           <p className="text-lg text-muted-foreground mb-6">Every delayed response costs you customers. Every minute your team spends on repetitive emails costs you money.</p>
 
           {/* Cost Calculator */}
-          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 mb-8">
-            <h3 className="text-xl font-bold mb-4 text-red-900 dark:text-red-100">💸 What slow support is costing you right now:</h3>
+          <div className="border rounded-2xl p-6 mb-8 text-white" style={{backgroundColor: '#B05755', borderColor: '#B05755'}}>
+            <h3 className="text-xl font-bold mb-4">💸 What slow support is costing you right now:</h3>
             <div className="grid md:grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">$3,000</div>
-                <div className="text-xs text-red-600 dark:text-red-400">Monthly cost per support agent</div>
+              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
+                <div className="text-2xl font-bold text-white">$3,000</div>
+                <div className="text-xs text-white/80">Monthly cost per support agent</div>
               </div>
-              <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">$12,000</div>
-                <div className="text-xs text-red-600 dark:text-red-400">Average customer lifetime value lost to churn</div>
+              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
+                <div className="text-2xl font-bold text-white">$12,000</div>
+                <div className="text-xs text-white/80">Average customer lifetime value lost to churn</div>
               </div>
-              <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">6+ hours</div>
-                <div className="text-xs text-red-600 dark:text-red-400">Daily time wasted on repetitive emails</div>
+              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
+                <div className="text-2xl font-bold text-white">6+ hours</div>
+                <div className="text-xs text-white/80">Daily time wasted on repetitive emails</div>
               </div>
             </div>
           </div>
 
           {/* ROI Statement */}
-          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-8">
-            <h3 className="text-xl font-bold mb-2 text-green-900 dark:text-green-100">💰 Pay $199/month, Save $3,000+ monthly</h3>
-            <p className="text-sm text-green-800 dark:text-green-200">Average ROI: 1,500% in the first year</p>
+          <div className="border rounded-2xl p-6 mb-8 text-white" style={{backgroundColor: '#3872B9', borderColor: '#3872B9'}}>
+            <h3 className="text-xl font-bold mb-2">💰 Pay $199/month, Save $3,000+ monthly</h3>
+            <p className="text-sm text-white/80">Average ROI: 1,500% in the first year</p>
           </div>
 
-          <Badge variant="outline" className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
-            <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-            Risk-free: 14-day money-back guarantee + $100 for your time
+          <Badge variant="outline" className="text-white border-white/30" style={{backgroundColor: '#F38135'}}>
+            <div className="h-2 w-2 rounded-full bg-white mr-2"></div>
+            Risk-free: 14-day money-back guarantee
           </Badge>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
@@ -644,20 +642,20 @@ export default function Home() {
         </div>
         <div className="mt-8 grid gap-6 grid-cols-1 place-items-center">
           {/* Pro plan */}
-          <Card className="w-full max-w-lg relative overflow-hidden border-2 border-green-200 hover:border-green-300 transition-colors duration-300 shadow-lg">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-500/20 to-transparent rounded-bl-full"></div>
-            <div className="absolute top-4 right-4 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold">BEST VALUE</div>
+          <Card className="w-full max-w-lg relative overflow-hidden border-2 transition-colors duration-300 shadow-lg" style={{borderColor: '#3872B9'}}>
+            <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full" style={{background: `linear-gradient(to bottom right, #3872B9, transparent)`, opacity: 0.2}}></div>
+            <div className="absolute top-4 right-4 text-white text-xs px-2 py-1 rounded-full font-bold" style={{backgroundColor: '#F38135'}}>BEST VALUE</div>
             <CardHeader>
               <CardTitle className="text-2xl">Stop the Support Chaos</CardTitle>
               <CardDescription className="text-base">Transform your support team in minutes, not months</CardDescription>
             </CardHeader>
             <CardContent>
               {/* ROI Highlight */}
-              <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="mb-6 p-4 rounded-lg border text-white" style={{backgroundColor: '#3872B9', borderColor: '#3872B9'}}>
                 <div className="text-center">
-                  <div className="text-sm text-green-700 font-medium">Instead of hiring 3 more agents at $9,000/month</div>
-                  <div className="text-3xl font-bold text-green-600 mt-1">Pay just ${annual ? "167" : "199"}</div>
-                  <div className="text-sm text-green-700">Save over $8,800 monthly</div>
+                  <div className="text-sm font-medium text-white/90">Instead of hiring 3 more agents at $9,000/month</div>
+                  <div className="text-3xl font-bold text-white mt-1">Pay just ${annual ? "167" : "199"}</div>
+                  <div className="text-sm text-white/90">Save over $8,800 monthly</div>
                 </div>
               </div>
 
@@ -702,7 +700,7 @@ export default function Home() {
               </div>
 
               <div className="space-y-3">
-                <Button className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700" onClick={startCheckout} disabled={loading}>
+                <Button className="w-full h-12 text-base font-bold text-white hover:opacity-90" onClick={startCheckout} disabled={loading} style={{backgroundColor: '#3872B9'}}>
                   {loading ? 'Starting your transformation…' : 'Stop losing customers today →'}
                 </Button>
                 {error && <div className="text-sm text-red-600 text-center">{error}</div>}
@@ -778,7 +776,7 @@ export default function Home() {
             },
             {
               q: "What if it doesn't work for our specific industry/use case?",
-              a: "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money AND give you $100 for your time. Zero risk, massive upside."
+              a: "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money. Zero risk, massive upside."
             },
             {
               q: "Is our data secure?",
@@ -787,22 +785,11 @@ export default function Home() {
           ].map((f) => (
             <Card key={f.q} className="hover:shadow-md transition-shadow duration-300">
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-3 text-red-700 dark:text-red-300">{f.q}</h3>
+                <h3 className="font-semibold text-lg mb-3" style={{color: '#B05755'}}>{f.q}</h3>
                 <p className="text-foreground leading-relaxed">{f.a}</p>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Final CTA */}
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-8 rounded-2xl max-w-3xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4">Still not convinced? Here&apos;s our guarantee:</h3>
-            <p className="text-lg mb-6">Try Aidly for 14 days. If you don&apos;t save at least 10 hours/week and improve your customer satisfaction, we&apos;ll refund every penny PLUS give you $100 for your time.</p>
-            <Button size="lg" className="bg-white text-green-600 hover:bg-green-50 font-bold px-8 py-3 h-auto text-base" onClick={startCheckout} disabled={loading}>
-              {loading ? 'Starting…' : 'Start your transformation now →'}
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -850,6 +837,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </main>
+      </main>
+    </ParallaxHero>
   )
 }
+
+export default Home
