@@ -89,6 +89,8 @@ function ParallaxHero({ children }: { children: React.ReactNode }) {
 }
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export default function Home() {
   const [annual, setAnnual] = useState<boolean>(true)
@@ -165,106 +167,132 @@ export default function Home() {
         <ParallaxHero>
           <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
             {/* Trust badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-950/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+            <Badge variant="outline" className="mb-6 inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
               <span>14-day money-back guarantee</span>
-            </div>
+            </Badge>
 
-            <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white md:text-6xl">
-              Grow your business, not your support costs
+            <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
+              Grow your business,{" "}
+              <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                not your support costs
+              </span>
             </h1>
-            <p className="mt-4 text-lg text-black dark:text-white md:text-xl">
-              Intelligent automation that delivers faster, smarter support at lower cost.
+            <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-2xl mx-auto">
+              Intelligent automation that delivers faster, smarter customer support at lower cost.
             </p>
-            <div className="mt-8 flex items-center justify-center gap-3">
-              <Button asChild size="lg">
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild size="lg" className="text-base px-8 py-3 h-auto">
                 <Link href="#pricing">Get started</Link>
               </Button>
-              {/* <Button asChild size="lg" variant="outline">
-                <Link href="#how-it-works">Features</Link>
-              </Button> */}
+              <Button asChild size="lg" variant="outline" className="text-base px-8 py-3 h-auto">
+                <Link href="#features">View features</Link>
+              </Button>
             </div>
 
             {/* Guarantee text */}
-            <p className="mt-4 text-sm text-muted-foreground">
-              14-day money-back guarantee • No setup fees • Cancel anytime
+            <p className="mt-6 text-sm text-muted-foreground flex flex-wrap items-center justify-center gap-2">
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                14-day money-back guarantee
+              </span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                No setup fees
+              </span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Cancel anytime
+              </span>
             </p>
           </div>
         </ParallaxHero>
       </section>
 
       {/* Features */}
-      <section id="features" className="container mx-auto px-4 py-16 md:py-20">
-        <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-semibold">Features</h2>
+      <section id="features" className="container mx-auto px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-4xl text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Powerful features for modern support</h2>
+          <p className="text-lg text-muted-foreground">Everything you need to deliver exceptional customer support at scale</p>
         </div>
 
         {/* Feature 1: image left, text right */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="mt-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div
-            className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            className="rounded-2xl border bg-gradient-to-br from-card to-card/50 p-1 overflow-hidden w-full max-w-[70%] mx-auto cursor-zoom-in group shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={() => setLightbox({ src: '/fonts/users/launch-fast.png', alt: 'Launch Fast' })}
             role="button"
             aria-label="Enlarge image: Launch Fast"
           >
-            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+            <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
               <Image
                 src="/fonts/users/launch-fast.png"
                 alt="Feature preview"
                 fill
-                className="object-contain"
+                className="object-contain rounded-xl"
               />
             </div>
           </div>
-          <div className="text-left md:text-left">
-            <h3 className="text-xl md:text-2xl font-semibold">Launch Fast</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Get started in just two minutes. Connect your AI API key, define your categories, SLAs, and custom instructions, then link your Aidly support address to your own. That’s all it takes to launch a smarter, faster support workflow.</p>
+          <div className="text-left lg:text-left space-y-4">
+            <Badge variant="outline" className="w-fit">⚡ Quick Setup</Badge>
+            <h3 className="text-2xl lg:text-3xl font-bold">Launch Fast</h3>
+            <p className="text-base lg:text-lg text-muted-foreground leading-relaxed">Get started in just two minutes. Connect your AI API key, define your categories, SLAs, and custom instructions, then link your Aidly support address to your own. That&apos;s all it takes to launch a smarter, faster support workflow.</p>
           </div>
         </div>
 
         {/* Feature 2: image right, text left */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div className="order-2 md:order-1 text-left">
-            <h3 className="text-xl md:text-2xl font-semibold">Automate Replies - With Control</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Once you’re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
+        <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="order-2 lg:order-1 text-left space-y-4">
+            <Badge variant="outline" className="w-fit">🤖 AI-Powered</Badge>
+            <h3 className="text-2xl lg:text-3xl font-bold">Automate Replies - With Control</h3>
+            <p className="text-base lg:text-lg text-muted-foreground leading-relaxed">Once you&apos;re set up, activate the AI to draft customer replies automatically. You stay in control and nothing gets sent until you approve it in the triage view. Need extra assurance? Send any ticket for a deeper review before responding.</p>
           </div>
           <div
-            className="order-1 md:order-2 rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            className="order-1 lg:order-2 rounded-2xl border bg-gradient-to-br from-card to-card/50 p-1 overflow-hidden w-full max-w-[70%] mx-auto cursor-zoom-in group shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={() => setLightbox({ src: '/fonts/users/automate-replies.png', alt: 'Automate Replies' })}
             role="button"
             aria-label="Enlarge image: Automate Replies"
           >
-            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+            <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
               <Image
                 src="/fonts/users/automate-replies.png"
                 alt="Feature preview"
                 fill
-                className="object-contain"
+                className="object-contain rounded-xl"
               />
             </div>
           </div>
         </div>
 
         {/* Feature 3: image left, text right */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div
-            className="rounded-xl border bg-card p-[1px] overflow-hidden w-full max-w-[60%] mx-auto cursor-zoom-in"
+            className="rounded-2xl border bg-gradient-to-br from-card to-card/50 p-1 overflow-hidden w-full max-w-[70%] mx-auto cursor-zoom-in group shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={() => setLightbox({ src: '/fonts/users/customize-image.png', alt: 'Customize' })}
             role="button"
             aria-label="Enlarge image: Customize"
           >
-            <div className="relative w-full transition-transform duration-200 ease-out hover:scale-[1.01]" style={{ aspectRatio: '3 / 2' }}>
+            <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
               <Image
                 src="/fonts/users/customize-image.png"
                 alt="Feature preview"
                 fill
-                className="object-contain"
+                className="object-contain rounded-xl"
               />
             </div>
           </div>
-          <div className="text-left">
-            <h3 className="text-xl md:text-2xl font-semibold">Drive Retention</h3>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground leading-relaxed" style={{ textAlign: 'justify' }}>Use the dashboard to uncover what drives satisfaction and retention. Spot trends, reduce churn, and continuously refine your support strategy to deliver an outstanding customer experience every time.</p>
+          <div className="text-left space-y-4">
+            <Badge variant="outline" className="w-fit">📈 Analytics</Badge>
+            <h3 className="text-2xl lg:text-3xl font-bold">Drive Retention</h3>
+            <p className="text-base lg:text-lg text-muted-foreground leading-relaxed">Use the dashboard to uncover what drives satisfaction and retention. Spot trends, reduce churn, and continuously refine your support strategy to deliver an outstanding customer experience every time.</p>
           </div>
         </div>
       </section>
@@ -360,11 +388,14 @@ export default function Home() {
 */}
 
       {/* Pricing */}
-      <section id="pricing" className="container mx-auto px-4 py-16 md:py-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">Simple Pricing</h2>
-          <p className="mt-2 text-muted-foreground font-bold">14-day money-back guarantee.</p>
-          <p className="mt-2 text-muted-foreground">Choose monthly or yearly. Cancel anytime.</p>
+      <section id="pricing" className="container mx-auto px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple Pricing</h2>
+          <p className="text-lg text-muted-foreground mb-2">Choose monthly or yearly. Cancel anytime.</p>
+          <Badge variant="outline" className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
+            <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+            14-day money-back guarantee
+          </Badge>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
 
@@ -383,26 +414,51 @@ export default function Home() {
         </div>
         <div className="mt-8 grid gap-6 grid-cols-1 place-items-center">
           {/* Pro plan */}
-          <div className="w-full max-w-md rounded-lg border bg-card p-6">
-            <h3 className="text-lg font-semibold">Pro</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Everything you need to run efficient support.</p>
-            <div className="mt-4 flex items-end gap-1">
-              <span className="text-4xl font-bold">{annual ? "$167" : "$199"}</span>
-              <span className="text-muted-foreground">/{annual ? "month - ($1999 yearly)" : "month"}</span>
-            </div>
-            <ul className="mt-4 space-y-2 text-sm">
-              <li>AI triage and agent assist</li>
-              <li>Dashboards and analytics</li>
-              <li>Email support</li>
-            </ul>
-            <div className="mt-6 space-y-2">
-              <Button className="w-full" onClick={startCheckout} disabled={loading}>
-                {loading ? 'Starting…' : 'Get started'}
-              </Button>
-              {error && <div className="text-sm text-red-600">{error}</div>}
-              <p className="text-xs text-muted-foreground">You will be redirected to Stripe Checkout to provide your email address. This email will serve as your login.</p>
-            </div>
-          </div>
+          <Card className="w-full max-w-md relative overflow-hidden border-2 hover:border-primary/20 transition-colors duration-300">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full"></div>
+            <CardHeader>
+              <CardTitle className="text-xl">Pro</CardTitle>
+              <CardDescription className="text-base">Everything you need to run efficient support.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold">{annual ? "$167" : "$199"}</span>
+                  <span className="text-muted-foreground text-base pb-1">/{annual ? "month" : "month"}</span>
+                </div>
+                {annual && (
+                  <p className="text-sm text-muted-foreground mt-1">$1999 billed yearly • 2 months free</p>
+                )}
+              </div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm">
+                  <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  AI triage and agent assist
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Dashboards and analytics
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Email support
+                </li>
+              </ul>
+              <div className="space-y-3">
+                <Button className="w-full h-12 text-base" onClick={startCheckout} disabled={loading}>
+                  {loading ? 'Starting…' : 'Get started'}
+                </Button>
+                {error && <div className="text-sm text-red-600 text-center">{error}</div>}
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">You will be redirected to Stripe Checkout to provide your email address. This email will serve as your login.</p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Enterprise plan
           <div className="rounded-lg border bg-card p-6">
@@ -446,22 +502,25 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="container mx-auto px-4 pt-8 md:pt-10 pb-16 md:pb-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">FAQ</h2>
+      <section id="faq" className="container mx-auto px-4 pt-8 md:pt-16 pb-16 md:pb-24">
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+          <p className="text-lg text-muted-foreground">Everything you need to know about Aidly</p>
         </div>
-        <div className="mx-auto mt-6 max-w-3xl space-y-4">
+        <div className="mx-auto max-w-4xl space-y-4">
           {[
-            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI provider’s API key, and you're ready to go." },
-            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We’re EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime." },
+            { q: "How do I get started?", a: "Setup takes just a minute. Once you register, Aidly creates a unique support email for you. Simply forward your existing support address to it (or use it directly), add your favorite AI provider's API key, and you're ready to go." },
+            { q: "How do you handle data?", a: "You own your data; we only process it to deliver the service. Sensitive message fields are encrypted at rest with per‑organization keys and protected by TLS in transit, with least‑privilege, audited access. We're EU‑based and GDPR‑aware, offering a DPA and a transparent subprocessor list, with SCCs for any non‑EEA transfers. You can request export or deletion anytime." },
             { q: "Which AI provider and models do you support?", a: "All models from OpenAI and Anthropic." },
-            { q: "Can I use my own LLM?", a: "Soon! We’re working on it." },
+            { q: "Can I use my own LLM?", a: "Soon! We're working on it." },
             { q: "I am not satisfied with the tool, can I cancel?", a: "Of course! Send a message to our support team, and we'll proceed with the cancellation. If you could let us know what made you cancel, that would be greatly appreciated." },
           ].map((f) => (
-            <div key={f.q} className="rounded-lg border bg-card p-4">
-              <p className="font-medium">{f.q}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{f.a}</p>
-            </div>
+            <Card key={f.q} className="hover:shadow-md transition-shadow duration-300">
+              <CardContent className="p-6">
+                <h3 className="font-semibold text-lg mb-3">{f.q}</h3>
+                <p className="text-muted-foreground leading-relaxed">{f.a}</p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
