@@ -427,7 +427,7 @@ export default function Home() {
                   <span className="text-muted-foreground text-base pb-1">/{annual ? "month" : "month"}</span>
                 </div>
                 {annual && (
-                  <p className="text-sm text-muted-foreground mt-1">$1999 billed yearly • 2 months free</p>
+                  <p className="text-sm text-muted-foreground mt-1">$1999 billed yearly</p>
                 )}
               </div>
               <ul className="space-y-3 mb-6">
