@@ -184,7 +184,7 @@ function Home() {
   </span>
 </h1>
           <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
-            Keep customers happy with instant, high quality replies, without hiring or training a customer support team.
+            Keep your customers happy with instant, high quality replies, without hiring or training a customer support team.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
            
@@ -219,28 +219,44 @@ function Home() {
               <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What&apos;s killing your productivity:</h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
                   <div>
                     <h4 className="font-semibold text-muted-foreground mb-1">Drowning in repetitive emails</h4>
                     <p className="text-sm text-muted-foreground/80">Same questions, different customers, every single day</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
                   <div>
                     <h4 className="font-semibold text-muted-foreground mb-1">Missing SLA deadlines</h4>
                     <p className="text-sm text-muted-foreground/80">Customers getting frustrated with slow responses</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Burning out your team</h4>
-                    <p className="text-sm text-muted-foreground/80">Copy-pasting responses isn&apos;t why they joined support</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Long and cumbersome onboarding</h4>
+                    <p className="text-sm text-muted-foreground/80">  Aidly is live in 5 minutes, no training required.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#B05755'}}>❌</div>
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
                   <div>
                     <h4 className="font-semibold text-muted-foreground mb-1">Losing customers</h4>
                     <p className="text-sm text-muted-foreground/80">89% switch providers after a bad support experience</p>
@@ -251,7 +267,7 @@ function Home() {
 
             {/* Solution */}
             <div>
-              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What if you could automate 70% of responses while maintaining quality?</h3>
+              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What if you spent less time on support while keeping your customers happy?</h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
                   <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
@@ -344,7 +360,7 @@ function Home() {
               <span className="text-red-600 font-medium">The Problem:</span> SLA breaches are killing your customer satisfaction. Every delayed response risks losing a customer forever.
             </p>
             <p className="text-base lg:text-lg text-foreground leading-relaxed font-medium">
-              <span className="text-green-600 font-bold">Our Solution:</span> AI drafts replies instantly while you sleep. You approve and send. Never miss an SLA, never lose a customer to slow support.
+              <span className="text-green-600 font-bold">Our Solution:</span> AI drafts replies instantly. You approve and send. Never miss an SLA, never lose a customer to slow support.
             </p>
             <div className="mt-4 space-y-2">
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -415,8 +431,8 @@ function Home() {
       <section className="container mx-auto px-4 py-16 md:py-24" style={{background: `linear-gradient(to right, #3872B9, #475B88)`, color: 'white'}}>
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Real Results from Real Companies</h2>
-            <p className="text-lg text-white/80">See how teams like yours transformed their support operations</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Results from Companies Like Yours</h2>
+            <p className="text-lg text-white/80">See how teams transformed their support operations</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -424,16 +440,15 @@ function Home() {
             <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">24hrs → 30min</div>
-                  <div className="text-sm text-muted-foreground font-medium">Response Time</div>
+                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
                 </div>
-                <h3 className="font-bold mb-2">TechCorp</h3>
+                <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  &quot;We went from missing every SLA to being the fastest support team in our industry. Our CSAT jumped from 3.2 to 4.8.&quot;
+                  &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">TC</div>
-                  <span>Sarah Chen, Support Manager</span>
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
+                  <span>Jean-Pierre L, Founder</span>
                 </div>
               </CardContent>
             </Card>
@@ -477,29 +492,8 @@ function Home() {
 
           {/* Trust Indicators */}
           <div className="mt-16 text-center">
-            <p className="text-sm text-muted-foreground mb-8">Trusted by 500+ support teams worldwide</p>
-            <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 rounded-lg">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">TC</div>
-                <span className="text-sm font-medium">TechCorp</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 rounded-lg">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">SC</div>
-                <span className="text-sm font-medium">StartupCo</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 rounded-lg">
-                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">SU</div>
-                <span className="text-sm font-medium">ScaleUp</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 rounded-lg">
-                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">FC</div>
-                <span className="text-sm font-medium">FastCorp</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 rounded-lg">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">GC</div>
-                <span className="text-sm font-medium">GrowthCo</span>
-              </div>
-            </div>
+            <p className="text-sm text-white mb-8">Trusted by support teams worldwide</p>
+
           </div>
         </div>
       </section>
