@@ -146,7 +146,7 @@ function Home() {
           </div>
           {/* right CTAs */}
           <div className="flex items-center justify-end gap-2">
-            <Button asChild variant="ghost">
+            <Button>
               <Link href="/app/login">Sign in</Link>
             </Button>
           </div>
@@ -165,35 +165,41 @@ function Home() {
       {/* Hero */}
       <section className="container mx-auto px-4 py-10 md:py-16">
         <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-10 text-center md:pt-12 md:pb-6">
-          {/* Trust badge */}
-          <Badge variant="outline" className="mb-6 inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40" style={{backgroundColor: '#3872B9', color: 'white', borderColor: '#3872B9'}}>
-            <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
-            <span>Join 500+ support teams who reduced response time by 70%</span>
-          </Badge>
+          
 
-          <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
-            Tired of spending{" "}
-            <span className="text-transparent bg-clip-text" style={{backgroundImage: 'linear-gradient(to right, #B05755, #B33275)'}}>
-              6+ hours daily
-            </span>
-            {" "}on repetitive support emails?
-          </h1>
+<h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
+  <span className="block">
+    Reduce support costs
+  </span>
+
+  <span
+    className="block text-transparent bg-clip-text"
+    style={{ backgroundImage: "linear-gradient(to right, #B05755, #B33275)" }}
+  >
+    by 90%
+  </span>
+
+  <span className="block">
+    Deliver 100% better replies
+  </span>
+</h1>
           <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
-            Stop losing customers to slow responses. Automate 70% of your support emails while maintaining quality and never missing an SLA again.
+            Keep customers happy with instant, high quality replies, without hiring or training a customer support team.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="text-base px-8 py-3 h-auto text-white hover:opacity-90" style={{backgroundColor: '#3872B9'}}>
-              <Link href="#pricing">Stop the support chaos</Link>
-            </Button>
+           
             <Button asChild size="lg" variant="outline" className="text-base px-8 py-3 h-auto">
-              <Link href="#problem">See how we solve this</Link>
+              <Link href="#features">See how it works</Link>
+            </Button>
+            <Button asChild size="lg" className="text-base px-8 py-3 h-auto text-white hover:opacity-90" style={{backgroundColor: '#3872B9'}}>
+              <Link href="#pricing">Starting at $167/month</Link>
             </Button>
           </div>
 
           {/* Risk Reversal */}
-          <div className="mt-8 p-4 border rounded-lg max-w-2xl mx-auto" style={{backgroundColor: '#F38135', borderColor: '#F38135'}}>
+          <div className="mt-8 p-4 border rounded-lg max-w-2xl mx-auto" style={{backgroundColor: '#B05755', borderColor: '#F38135'}}>
             <p className="text-sm font-medium text-center text-white">
-              <span className="font-bold">Risk-Free Guarantee:</span> If you don&apos;t save 10+ hours/week in 14 days, we&apos;ll refund 100%
+              <span className="font-bold">Risk-Free Guarantee:</span> 14 day money-back guarantee, no questions asked. 
             </p>
           </div>
         </div>
@@ -285,7 +291,6 @@ function Home() {
               <div className="text-3xl">🎯</div>
               <div className="text-left">
                 <p className="text-lg font-bold">Ready to transform your support team?</p>
-                <p className="text-sm opacity-90">Join 500+ teams already saving 10+ hours per week</p>
               </div>
             </div>
           </div>
@@ -318,13 +323,12 @@ function Home() {
             </div>
           </div>
           <div className="text-left lg:text-left space-y-4">
-            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#B05755'}}>🚨 Stop Wasting Weeks on Setup</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">Most support tools take months to implement. You need relief today.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> Your team is drowning in tickets right now, but typical support tools require weeks of setup, training, and integration work.
             </p>
             <p className="text-base lg:text-lg text-foreground leading-relaxed font-medium">
-              <span className="text-green-600 font-bold">Our Solution:</span> Get AI-powered responses running in 2 minutes, not 2 months. Connect your AI, set your categories, forward your email. Done.
+              <span className="text-green-600 font-bold">Our Solution:</span> Get AI-powered responses running in 2 minutes, not 2 months. Connect your AI, set up mail forwarding. Done.
             </p>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800 font-medium">⏱️ <strong>Average setup time: 2 minutes</strong> vs 2-8 weeks with competitors</p>
@@ -335,7 +339,6 @@ function Home() {
         {/* Feature 2: image right, text left */}
         <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 text-left space-y-4">
-            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#B33275'}}>⏰ Never Miss Another SLA Again</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">Your customers expect instant responses. Your team can&apos;t work 24/7.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> SLA breaches are killing your customer satisfaction. Every delayed response risks losing a customer forever.
@@ -389,7 +392,6 @@ function Home() {
             </div>
           </div>
           <div className="text-left space-y-4">
-            <Badge variant="outline" className="w-fit text-white border-white/30" style={{backgroundColor: '#475B88'}}>💔 Stop Losing Customers to Poor Support</Badge>
             <h3 className="text-2xl lg:text-3xl font-bold">83% of customers leave due to bad support experiences.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
               <span className="text-red-600 font-medium">The Problem:</span> You&apos;re losing customers but don&apos;t know why. By the time they complain, it&apos;s too late.
@@ -732,7 +734,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Subscribe */}
+      {/* Subscribe 
       <section id="subscribe" className="container mx-auto px-4 pt-16 md:pt-20 pb-8 md:pb-10">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Stay in Touch</h2>
@@ -751,7 +753,7 @@ function Home() {
             />
           </div>
         </div>
-      </section>
+      </section>*/}
 
       {/* FAQ */}
       <section id="faq" className="container mx-auto px-4 pt-8 md:pt-16 pb-16 md:pb-24">
