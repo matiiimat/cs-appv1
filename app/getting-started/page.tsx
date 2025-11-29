@@ -72,7 +72,7 @@ export default function GettingStartedPage() {
                 aria-label="Enlarge image: Workspace and profile settings"
               >
                 <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
-                  <Image src="/getting-started/profile-view.png" alt="Workspace and profile settings" fill className="object-contain rounded-xl" />
+                  <Image src="/getting-started/profile-view.png" alt="Workspace and profile settings" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain rounded-xl" />
                 </div>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function GettingStartedPage() {
                 aria-label="Enlarge image: AI configuration"
               >
                 <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
-                  <Image src="/getting-started/ai-configuration.png" alt="AI configuration" fill className="object-contain rounded-xl" />
+                  <Image src="/getting-started/ai-configuration.png" alt="AI configuration" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain rounded-xl" />
                 </div>
               </div>
               <div>
@@ -234,7 +234,7 @@ export default function GettingStartedPage() {
                 aria-label="Enlarge image: Dashboard overview"
               >
                 <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
-                  <Image src="/getting-started/dashboard-view.png" alt="Dashboard overview" fill className="object-contain rounded-xl" />
+                  <Image src="/getting-started/dashboard-view.png" alt="Dashboard overview" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain rounded-xl" />
                 </div>
               </div>
             </div>
@@ -252,7 +252,7 @@ export default function GettingStartedPage() {
                 aria-label="Enlarge image: Triage view"
               >
                 <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
-                  <Image src="/getting-started/triage-view.png" alt="Triage view" fill className="object-contain rounded-xl" />
+                  <Image src="/getting-started/triage-view.png" alt="Triage view" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain rounded-xl" />
                 </div>
               </div>
               <div>
@@ -296,7 +296,7 @@ export default function GettingStartedPage() {
                 aria-label="Enlarge image: Inbox review mode"
               >
                 <div className="relative w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]" style={{ aspectRatio: '3 / 2' }}>
-                  <Image src="/getting-started/inbox-view.png" alt="Inbox review mode" fill className="object-contain rounded-xl" />
+                  <Image src="/getting-started/inbox-view.png" alt="Inbox review mode" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain rounded-xl" />
                 </div>
               </div>
             </div>

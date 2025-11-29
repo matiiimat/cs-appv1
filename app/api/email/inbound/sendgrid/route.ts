@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MessageModel } from '@/lib/models/message'
 import { parseOrgIdFromRecipient } from '@/lib/email'
 import { db } from '@/lib/database'
+import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 
 // MVP inbound handler for SendGrid Inbound Parse
 // Expects multipart/form-data with fields: to, from, subject, text, headers
@@ -89,17 +90,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing sender email' }, { status: 400 })
     }
 
+    const rawMetadata = {
+      channel: 'email' as const,
+      provider: 'sendgrid' as const,
+      headers,
+      inbound_to: to,
+    }
+    // Drop header-like fields from metadata before persisting to avoid storing PII/auth traces
+    const safeMetadata = sanitizeMetadata(rawMetadata) || {}
+
     const newMessage = await MessageModel.create(orgId, {
       customer_name: customerName || customerEmail,
       customer_email: customerEmail,
       subject: subject || '(no subject)',
       message: text || '(no body)',
-      metadata: {
-        channel: 'email',
-        provider: 'sendgrid',
-        headers,
-        inbound_to: to,
-      },
+      metadata: safeMetadata,
       category: 'General Inquiry',
     })
 

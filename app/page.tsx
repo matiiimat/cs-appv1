@@ -312,6 +312,7 @@ function Home() {
                 src="/fonts/users/launch-fast.png"
                 alt="Feature preview"
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-contain rounded-xl"
               />
             </div>
@@ -362,6 +363,7 @@ function Home() {
                 src="/fonts/users/automate-replies.png"
                 alt="Feature preview"
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-contain rounded-xl"
               />
             </div>
@@ -381,6 +383,7 @@ function Home() {
                 src="/fonts/users/customize-image.png"
                 alt="Feature preview"
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-contain rounded-xl"
               />
             </div>
