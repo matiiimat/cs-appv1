@@ -193,7 +193,7 @@ function Home() {
           {/* Risk Reversal */}
           <div className="mt-8 p-4 border rounded-lg max-w-2xl mx-auto" style={{backgroundColor: '#F38135', borderColor: '#F38135'}}>
             <p className="text-sm font-medium text-center text-white">
-              <span className="font-bold">Risk-Free Guarantee:</span> If you don&apos;t save 10+ hours/week in 14 days, we&apos;ll refund 100% + give you $100 for your time
+              <span className="font-bold">Risk-Free Guarantee:</span> If you don&apos;t save 10+ hours/week in 14 days, we&apos;ll refund 100%
             </p>
           </div>
         </div>
