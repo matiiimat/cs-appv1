@@ -5,7 +5,7 @@ import { searchCompanyKnowledge } from "@/lib/knowledge-search"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
-import { KnowledgeBaseStorage } from '@/lib/knowledge-base'
+import { KnowledgeBaseModel } from '@/lib/models/knowledge-base'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -19,11 +19,6 @@ interface GenerateResponseRequest {
   quickActionInstruction?: string // For quick actions
   currentResponse?: string // Existing response to modify
   companyKnowledge?: string // Company knowledge base
-  knowledgeBaseEntries?: Array<{
-    case_summary: string
-    resolution: string
-    category?: string
-  }> // User's knowledge base entries
 }
 
 interface GenerateResponseResponse {
@@ -33,10 +28,58 @@ interface GenerateResponseResponse {
 
 function getNormalizedCategories(userCategories?: Category[]): string {
   if (!userCategories || userCategories.length === 0) {
-    // Default categories when none are configured  
+    // Default categories when none are configured
     return "Technical Support, Billing, General Inquiry"
   }
   return userCategories.map(c => c.name).join(', ')
+}
+
+function extractSearchTerms(messageContent: string): string[] {
+  if (!messageContent) return []
+
+  // Remove common words but keep important business terms
+  const commonWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+    'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must',
+    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+    'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+  ])
+
+  // Important short terms to preserve
+  const preserveShortTerms = new Set([
+    'api', 'ui', 'ux', 'ai', 'ml', 'id', 'ip', 'db', 'os', 'app', 'web', 'ios', 'sms', 'pdf',
+    'fee', 'pro', 'dev', 'qa', 'pm', 'hr', 'crm', 'erp', 'roi', 'kpi', 'sla'
+  ])
+
+  // Handle compound terms that should stay together
+  let processedContent = messageContent.toLowerCase()
+
+  // Preserve important compound terms by replacing spaces with underscores
+  const compoundTerms = [
+    'subscription plan', 'pricing plan', 'cost savings', 'annual plan', 'monthly plan',
+    'billing cycle', 'payment method', 'price range', 'cost effective', 'price point',
+    'technical support', 'customer service', 'user account', 'login issue', 'password reset',
+    'bug report', 'feature request', 'error message', 'system error', 'data loss'
+  ]
+
+  compoundTerms.forEach(term => {
+    const regex = new RegExp(term.replace(/\s+/g, '\\s+'), 'gi')
+    processedContent = processedContent.replace(regex, term.replace(/\s+/g, '_'))
+  })
+
+  return processedContent
+    .replace(/[^a-z0-9\s_]/g, ' ') // Remove punctuation but preserve underscores
+    .split(/\s+/) // Split on whitespace
+    .map(word => word.replace(/_/g, ' ')) // Convert underscores back to spaces for compound terms
+    .filter(word => {
+      const trimmed = word.trim()
+      // Keep word if it's long enough, or it's a preserved short term, or it's a compound term
+      return (trimmed.length > 2 && !commonWords.has(trimmed)) ||
+             preserveShortTerms.has(trimmed) ||
+             trimmed.includes(' ') // compound term
+    })
+    .slice(0, 15) // Increased limit for more comprehensive matching
 }
 
 async function requireOrgId(headers: Headers): Promise<string> {
@@ -49,7 +92,7 @@ async function requireOrgId(headers: Headers): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge, knowledgeBaseEntries }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
 
     // Always load AI configuration from the database to access the stored API key.
     const orgId = await requireOrgId(request.headers)
@@ -157,34 +200,27 @@ Message: ${message}`
       }
     }
 
-    // Process knowledge base entries if provided
+    // Fetch and process knowledge base entries from database
     let relevantKbEntries = ''
-    if (knowledgeBaseEntries && knowledgeBaseEntries.length > 0) {
-      try {
-        // Extract search terms from the customer message
-        const searchTerms = KnowledgeBaseStorage.extractSearchTerms(`${subject} ${message}`)
+    try {
+      // Extract search terms from the customer message
+      const searchTerms = extractSearchTerms(`${subject} ${message}`)
 
-        // Find relevant entries based on category and content similarity
-        const relevantEntries = knowledgeBaseEntries.filter(entry => {
-          // First check if categories match
-          if (entry.category && entry.category.toLowerCase() === parsedCategory.category.toLowerCase()) {
-            return true
-          }
+      // Fetch relevant knowledge base entries from database
+      const dbEntries = await KnowledgeBaseModel.findRelevant(
+        orgId,
+        parsedCategory.category, // Use detected category
+        searchTerms
+      )
 
-          // Then check content similarity with search terms
-          const entryText = (entry.case_summary + ' ' + entry.resolution).toLowerCase()
-          return searchTerms.some(term => entryText.includes(term.toLowerCase()))
-        }).slice(0, 3) // Limit to 3 most relevant entries
-
-        if (relevantEntries.length > 0) {
-          relevantKbEntries = '\n\nRELEVANT CASE RESOLUTIONS:\n' +
-            relevantEntries.map((entry, index) =>
-              `${index + 1}. Issue: ${entry.case_summary}\n   Resolution: ${entry.resolution}`
-            ).join('\n\n')
-        }
-      } catch (error) {
-        console.warn('Knowledge base entry processing failed:', error)
+      if (dbEntries.length > 0) {
+        relevantKbEntries = '\n\nRELEVANT CASE RESOLUTIONS:\n' +
+          dbEntries.map((entry, index) =>
+            `${index + 1}. Issue: ${entry.case_summary}\n   Resolution: ${entry.resolution}`
+          ).join('\n\n')
       }
+    } catch (error) {
+      console.warn('Knowledge base entry processing failed:', error)
     }
 
     // Generate AI response

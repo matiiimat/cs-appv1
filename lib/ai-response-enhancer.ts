@@ -2,46 +2,6 @@
  * Enhances AI response generation requests with knowledge base context
  */
 export class AIResponseEnhancer {
-  /**
-   * Get relevant knowledge base entries for a customer message
-   */
-  static async getRelevantKnowledgeBaseEntries(
-    subject: string,
-    message: string,
-    category?: string
-  ) {
-    try {
-      // Extract search terms from customer message for API call
-      const searchTerms = this.extractSearchTerms(`${subject} ${message}`)
-
-      // Build API URL with search parameters
-      const params = new URLSearchParams()
-      if (category) {
-        params.append('category', category)
-      }
-      if (searchTerms.length > 0) {
-        params.append('search', searchTerms.join(','))
-      }
-
-      const response = await fetch(`/api/knowledge-base?${params}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch knowledge base entries')
-      }
-
-      const data = await response.json()
-      const entries = data.entries || []
-
-      // Return limited number of entries to avoid overwhelming the AI
-      return entries.slice(0, 3).map((entry: any) => ({
-        case_summary: entry.case_summary,
-        resolution: entry.resolution,
-        category: entry.category,
-      }))
-    } catch (error) {
-      console.warn('Failed to get relevant knowledge base entries:', error)
-      return []
-    }
-  }
 
   /**
    * Extract search terms from message content (moved from localStorage utility)
@@ -85,26 +45,14 @@ export class AIResponseEnhancer {
     }
   ) {
     try {
-      // Get relevant knowledge base entries
-      const knowledgeBaseEntries = await this.getRelevantKnowledgeBaseEntries(
-        payload.subject,
-        payload.message,
-        undefined // For now, don't try to determine category automatically
-      )
-
-      // Enhanced payload with knowledge base entries
-      const enhancedPayload = {
-        ...payload,
-        knowledgeBaseEntries,
-      }
-
-      // Make the API call
+      // The API route now handles knowledge base fetching directly from the database
+      // so we just pass the original payload without pre-fetching entries
       const response = await fetch('/api/generate-response', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(enhancedPayload),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {

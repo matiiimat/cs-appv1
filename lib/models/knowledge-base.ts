@@ -181,30 +181,178 @@ export class KnowledgeBaseModel {
     category?: string,
     searchTerms?: string[]
   ): Promise<KnowledgeBaseEntryClient[]> {
-    let query = 'SELECT id, case_summary, resolution, category, enabled, created_at FROM knowledge_base_entries WHERE organization_id = $1 AND enabled = true'
-    const params: unknown[] = [organizationId]
-    let paramIndex = 2
+    // Expand search terms with synonyms
+    const expandedTerms = this.expandSearchTermsWithSynonyms(searchTerms || [])
 
-    // Add category filter if provided
-    if (category) {
-      query += ` AND LOWER(category) = LOWER($${paramIndex})`
-      params.push(category)
-      paramIndex++
+    let results: KnowledgeBaseEntryClient[] = []
+
+    // Strategy 1: Try exact category + enhanced text search
+    if (category && expandedTerms.length > 0) {
+      results = await this.searchWithCategoryAndTerms(organizationId, category, expandedTerms)
     }
 
-    // Add text search if provided
-    if (searchTerms && searchTerms.length > 0) {
-      const searchQuery = searchTerms.join(' | ') // OR search
-      query += ` AND (to_tsvector('english', case_summary || ' ' || resolution) @@ plainto_tsquery('english', $${paramIndex}))`
-      params.push(searchQuery)
-      paramIndex++
+    // Strategy 2: If no results, try broader category matching (e.g., billing-related categories)
+    if (results.length === 0 && category) {
+      const relatedCategories = this.getRelatedCategories(category)
+      for (const relatedCategory of relatedCategories) {
+        results = await this.searchWithCategoryAndTerms(organizationId, relatedCategory, expandedTerms)
+        if (results.length > 0) break
+      }
     }
 
-    query += ' ORDER BY created_at DESC LIMIT 10'
+    // Strategy 3: If still no results, try category-only search
+    if (results.length === 0 && category) {
+      results = await this.searchCategoryOnly(organizationId, category)
+    }
 
-    const result = await db.query(query, params)
+    // Strategy 4: If still no results, try expanded text search across all categories
+    if (results.length === 0 && expandedTerms.length > 0) {
+      results = await this.searchTextOnly(organizationId, expandedTerms)
+    }
 
-    return result.rows.map((row) => ({
+    // Strategy 5: Final fallback - return most recent entries
+    if (results.length === 0) {
+      results = await this.searchMostRecent(organizationId)
+    }
+
+    return results.slice(0, 3) // Limit to top 3 most relevant
+  }
+
+  /**
+   * Expand search terms with common synonyms, especially for pricing/billing
+   */
+  private static expandSearchTermsWithSynonyms(searchTerms: string[]): string[] {
+    const synonyms: Record<string, string[]> = {
+      // Pricing synonyms
+      'price': ['pricing', 'cost', 'fee', 'rate', 'charge'],
+      'pricing': ['price', 'cost', 'fee', 'rate', 'charge'],
+      'cost': ['price', 'pricing', 'expense', 'fee', 'rate'],
+      'plan': ['subscription', 'package', 'tier', 'option'],
+      'subscription': ['plan', 'package', 'tier', 'billing'],
+      'monthly': ['month', 'per-month', 'monthly-billing'],
+      'annual': ['yearly', 'year', 'annually', 'annual-billing'],
+      'billing': ['payment', 'invoice', 'charge', 'subscription'],
+      'payment': ['billing', 'pay', 'invoice', 'charge'],
+      // Technical synonyms
+      'bug': ['error', 'issue', 'problem', 'defect'],
+      'error': ['bug', 'issue', 'problem', 'exception'],
+      'login': ['signin', 'authentication', 'auth', 'access'],
+      'password': ['auth', 'authentication', 'credential', 'login']
+    }
+
+    const expanded = new Set(searchTerms)
+
+    searchTerms.forEach(term => {
+      const termLower = term.toLowerCase()
+      if (synonyms[termLower]) {
+        synonyms[termLower].forEach(synonym => expanded.add(synonym))
+      }
+    })
+
+    return Array.from(expanded)
+  }
+
+  /**
+   * Get related categories for broader matching
+   */
+  private static getRelatedCategories(category: string): string[] {
+    const categoryGroups: Record<string, string[]> = {
+      'billing': ['payment', 'subscription', 'pricing', 'invoice'],
+      'payment': ['billing', 'subscription', 'pricing', 'invoice'],
+      'pricing': ['billing', 'payment', 'subscription', 'cost'],
+      'technical': ['bug', 'error', 'support', 'troubleshooting'],
+      'support': ['technical', 'help', 'assistance', 'guidance'],
+      'account': ['login', 'access', 'profile', 'settings']
+    }
+
+    const categoryLower = category.toLowerCase()
+    return categoryGroups[categoryLower] || []
+  }
+
+  /**
+   * Search with exact category and expanded terms
+   */
+  private static async searchWithCategoryAndTerms(
+    organizationId: string,
+    category: string,
+    terms: string[]
+  ): Promise<KnowledgeBaseEntryClient[]> {
+    const searchQuery = terms.join(' | ') // OR search
+    const query = `
+      SELECT id, case_summary, resolution, category, enabled, created_at,
+             ts_rank(to_tsvector('english', case_summary || ' ' || resolution),
+                     plainto_tsquery('english', $3)) as rank
+      FROM knowledge_base_entries
+      WHERE organization_id = $1
+        AND enabled = true
+        AND LOWER(category) = LOWER($2)
+        AND (to_tsvector('english', case_summary || ' ' || resolution) @@ plainto_tsquery('english', $3))
+      ORDER BY rank DESC, created_at DESC
+      LIMIT 10
+    `
+
+    const result = await db.query(query, [organizationId, category, searchQuery])
+    return this.mapResultRows(result.rows)
+  }
+
+  /**
+   * Search by category only
+   */
+  private static async searchCategoryOnly(organizationId: string, category: string): Promise<KnowledgeBaseEntryClient[]> {
+    const query = `
+      SELECT id, case_summary, resolution, category, enabled, created_at
+      FROM knowledge_base_entries
+      WHERE organization_id = $1 AND enabled = true AND LOWER(category) = LOWER($2)
+      ORDER BY created_at DESC
+      LIMIT 5
+    `
+
+    const result = await db.query(query, [organizationId, category])
+    return this.mapResultRows(result.rows)
+  }
+
+  /**
+   * Search by text only across all categories
+   */
+  private static async searchTextOnly(organizationId: string, terms: string[]): Promise<KnowledgeBaseEntryClient[]> {
+    const searchQuery = terms.join(' | ') // OR search
+    const query = `
+      SELECT id, case_summary, resolution, category, enabled, created_at,
+             ts_rank(to_tsvector('english', case_summary || ' ' || resolution),
+                     plainto_tsquery('english', $2)) as rank
+      FROM knowledge_base_entries
+      WHERE organization_id = $1
+        AND enabled = true
+        AND (to_tsvector('english', case_summary || ' ' || resolution) @@ plainto_tsquery('english', $2))
+      ORDER BY rank DESC, created_at DESC
+      LIMIT 5
+    `
+
+    const result = await db.query(query, [organizationId, searchQuery])
+    return this.mapResultRows(result.rows)
+  }
+
+  /**
+   * Fallback: get most recent entries
+   */
+  private static async searchMostRecent(organizationId: string): Promise<KnowledgeBaseEntryClient[]> {
+    const query = `
+      SELECT id, case_summary, resolution, category, enabled, created_at
+      FROM knowledge_base_entries
+      WHERE organization_id = $1 AND enabled = true
+      ORDER BY created_at DESC
+      LIMIT 3
+    `
+
+    const result = await db.query(query, [organizationId])
+    return this.mapResultRows(result.rows)
+  }
+
+  /**
+   * Helper to map database rows to client format
+   */
+  private static mapResultRows(rows: any[]): KnowledgeBaseEntryClient[] {
+    return rows.map((row) => ({
       id: row.id,
       case_summary: row.case_summary,
       resolution: row.resolution,

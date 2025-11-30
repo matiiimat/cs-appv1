@@ -11,7 +11,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BookOpen, Edit, Trash2, Search, Eye, EyeOff, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { useToast } from "@/components/ui/toast"
-import { KnowledgeBaseStorage, type KnowledgeBaseEntry } from "@/lib/knowledge-base"
+type KnowledgeBaseEntry = {
+  id: string
+  case_summary: string
+  resolution: string
+  category?: string
+  enabled: boolean
+  created_date: string
+}
 
 export function KnowledgeBaseManager() {
   const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([])
