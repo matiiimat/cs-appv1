@@ -5,6 +5,7 @@ import { searchCompanyKnowledge } from "@/lib/knowledge-search"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { KnowledgeBaseStorage } from '@/lib/knowledge-base'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -18,6 +19,11 @@ interface GenerateResponseRequest {
   quickActionInstruction?: string // For quick actions
   currentResponse?: string // Existing response to modify
   companyKnowledge?: string // Company knowledge base
+  knowledgeBaseEntries?: Array<{
+    case_summary: string
+    resolution: string
+    category?: string
+  }> // User's knowledge base entries
 }
 
 interface GenerateResponseResponse {
@@ -43,7 +49,7 @@ async function requireOrgId(headers: Headers): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
+    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge, knowledgeBaseEntries }: GenerateResponseRequest = await request.json()
 
     // Always load AI configuration from the database to access the stored API key.
     const orgId = await requireOrgId(request.headers)
@@ -151,6 +157,36 @@ Message: ${message}`
       }
     }
 
+    // Process knowledge base entries if provided
+    let relevantKbEntries = ''
+    if (knowledgeBaseEntries && knowledgeBaseEntries.length > 0) {
+      try {
+        // Extract search terms from the customer message
+        const searchTerms = KnowledgeBaseStorage.extractSearchTerms(`${subject} ${message}`)
+
+        // Find relevant entries based on category and content similarity
+        const relevantEntries = knowledgeBaseEntries.filter(entry => {
+          // First check if categories match
+          if (entry.category && entry.category.toLowerCase() === parsedCategory.category.toLowerCase()) {
+            return true
+          }
+
+          // Then check content similarity with search terms
+          const entryText = (entry.case_summary + ' ' + entry.resolution).toLowerCase()
+          return searchTerms.some(term => entryText.includes(term.toLowerCase()))
+        }).slice(0, 3) // Limit to 3 most relevant entries
+
+        if (relevantEntries.length > 0) {
+          relevantKbEntries = '\n\nRELEVANT CASE RESOLUTIONS:\n' +
+            relevantEntries.map((entry, index) =>
+              `${index + 1}. Issue: ${entry.case_summary}\n   Resolution: ${entry.resolution}`
+            ).join('\n\n')
+        }
+      } catch (error) {
+        console.warn('Knowledge base entry processing failed:', error)
+      }
+    }
+
     // Generate AI response
     const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
@@ -178,7 +214,13 @@ IMPORTANT: Use the following company-specific information to provide accurate re
 
 ${relevantKnowledge}
 
-Base your response on this company knowledge when applicable. If the customer's question relates to information in the knowledge base, use that information to provide the most accurate and helpful response.` : ''}`
+Base your response on this company knowledge when applicable. If the customer's question relates to information in the knowledge base, use that information to provide the most accurate and helpful response.` : ''}${relevantKbEntries ? `
+
+IMPORTANT: Learn from the following similar cases that were successfully resolved:
+
+${relevantKbEntries}
+
+Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}`
 
     const aiResponsePrompt = `Customer: ${customerName}
 Email: ${customerEmail}

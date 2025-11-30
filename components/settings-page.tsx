@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Trash2, Moon, Sun, CheckCircle, XCircle, Loader2, Save } from "lucide-react"
 import { AI_PROVIDERS, AIService } from "@/lib/ai-providers"
+import { KnowledgeBaseManager } from "@/components/knowledge-base-manager"
 
 export function SettingsPage() {
   const { settings, updateSettings, updateQuickAction, updateCategory, addCategory, deleteCategory, saveSettings, isLoading, aiConfigHasKey } = useSettings()
@@ -291,9 +292,10 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
           {/** <TabsTrigger value="billing">Billing</TabsTrigger> */}
         </TabsList>
 
@@ -498,6 +500,10 @@ export function SettingsPage() {
           </div>
         </TabsContent>
         */}
+
+        <TabsContent value="knowledge-base" className="space-y-6">
+          <KnowledgeBaseManager />
+        </TabsContent>
 
         <TabsContent value="configuration" className="space-y-6">
           <div className="bg-card rounded-lg shadow-md">

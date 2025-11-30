@@ -307,28 +307,19 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       // Update database to show generating
       await updateMessage(message.id, { isGenerating: true })
 
-      const response = await fetch("/api/generate-response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: message.customerName,
-          customerEmail: message.customerEmail,
-          subject: message.subject,
-          message: message.message,
-          aiConfig: settings.aiConfig,
-          agentName: settings.agentName || "Support Agent",
-          agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
-          categories: settings.categories,
-          companyKnowledge: settings.companyKnowledge,
-        }),
+      // Use AIResponseEnhancer to include knowledge base entries
+      const { AIResponseEnhancer } = await import('@/lib/ai-response-enhancer')
+      const data = await AIResponseEnhancer.generateResponse({
+        customerName: message.customerName,
+        customerEmail: message.customerEmail,
+        subject: message.subject,
+        message: message.message,
+        aiConfig: settings.aiConfig,
+        agentName: settings.agentName || "Support Agent",
+        agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
+        categories: settings.categories,
+        companyKnowledge: settings.companyKnowledge,
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to generate response (${response.status})`)
-      }
-
-      const data = await response.json()
 
       // Update database with AI response
       await updateMessage(message.id, {

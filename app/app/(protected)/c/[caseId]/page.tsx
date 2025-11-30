@@ -5,9 +5,10 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar, User, Mail, MessageSquare } from "lucide-react"
+import { ArrowLeft, Calendar, User, Mail, MessageSquare, BookOpen } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { AddToKnowledgeBaseModal } from "@/components/add-to-knowledge-base-modal"
 
 interface Message {
   id: string
@@ -50,6 +51,13 @@ export default function CaseViewPage() {
   const [message, setMessage] = useState<Message | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showKnowledgeBaseModal, setShowKnowledgeBaseModal] = useState(false)
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Case detail page loaded, message:', message)
+    console.log('Show KB Modal state:', showKnowledgeBaseModal)
+  }, [message, showKnowledgeBaseModal])
 
   useEffect(() => {
     const fetchCase = async () => {
@@ -129,9 +137,9 @@ export default function CaseViewPage() {
           </Button>
         </Link>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center flex-wrap gap-4">
           <h1 className="text-3xl font-bold">Case {message.ticket_id}</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge
               className={STATUS_COLORS[message.status as keyof typeof STATUS_COLORS]}
               variant="secondary"
@@ -141,6 +149,18 @@ export default function CaseViewPage() {
             {message.category && (
               <Badge variant="outline">{message.category}</Badge>
             )}
+            <Button
+              onClick={() => {
+                console.log('Add to Knowledge Base button clicked')
+                setShowKnowledgeBaseModal(true)
+              }}
+              variant="outline"
+              size="sm"
+              className="ml-2"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Add to Knowledge Base
+            </Button>
           </div>
         </div>
       </div>
@@ -258,6 +278,15 @@ export default function CaseViewPage() {
           </Link>
         )}
       </div>
+
+      {/* Knowledge Base Modal */}
+      {message && (
+        <AddToKnowledgeBaseModal
+          isOpen={showKnowledgeBaseModal}
+          onClose={() => setShowKnowledgeBaseModal(false)}
+          message={message}
+        />
+      )}
     </div>
   )
 }

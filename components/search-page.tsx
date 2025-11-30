@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 // import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, Calendar, User, Mail, MessageSquare, Clock } from "lucide-react"
+import { Search, Calendar, User, Mail, MessageSquare, Clock, BookOpen } from "lucide-react"
 import { format } from "date-fns"
+import { AddToKnowledgeBaseModal } from "@/components/add-to-knowledge-base-modal"
 
 interface Message {
   id: string
@@ -74,6 +75,7 @@ export function SearchPage() {
   const [error, setError] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedCase, setSelectedCase] = useState<Message | null>(null)
+  const [showKnowledgeBaseModal, setShowKnowledgeBaseModal] = useState(false)
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -373,6 +375,15 @@ export function SearchPage() {
                   {selectedCase?.category && (
                     <Badge variant="outline" className="text-xs">{selectedCase.category}</Badge>
                   )}
+                  <Button
+                    onClick={() => setShowKnowledgeBaseModal(true)}
+                    variant="outline"
+                    size="sm"
+                    className="ml-2"
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Add to Knowledge Base
+                  </Button>
                 </div>
               </div>
               <button
@@ -469,6 +480,15 @@ export function SearchPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Knowledge Base Modal */}
+      {selectedCase && (
+        <AddToKnowledgeBaseModal
+          isOpen={showKnowledgeBaseModal}
+          onClose={() => setShowKnowledgeBaseModal(false)}
+          message={selectedCase}
+        />
       )}
     </div>
   )
