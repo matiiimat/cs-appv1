@@ -96,6 +96,22 @@ function Home() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+  // ROI calculator state
+  const [tickets, setTickets] = useState<number>(500)
+  const [minutes, setMinutes] = useState<number>(6)
+  const [costPerHour, setCostPerHour] = useState<number>(28)
+
+  const formatUSD = (n: number) =>
+    new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.max(0, Math.round(n)))
+
+  const hours = (tickets * minutes) / 60
+  const currentCost = hours * costPerHour
+  const autoLow = 0.60 // conservative automation share
+  const assistSpeedup = 0.40 // faster handling on remaining
+  const afterConservative = currentCost * (1 - autoLow) * (1 - assistSpeedup)
+  const grossSavings = currentCost - afterConservative
+  const planMonthly = 167
+  const netSavings = grossSavings - planMonthly
 
   // Close lightbox with ESC
   useEffect(() => {
@@ -272,15 +288,15 @@ function Home() {
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
                   <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Instant AI-powered responses</h4>
-                    <p className="text-sm text-muted-foreground/80">Never keep customers waiting again</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">High quality answers in seconds</h4>
+                    <p className="text-sm text-muted-foreground/80">Get a ready-to-send answer, edit if needed, then ship it in seconds.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
                   <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
                   <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Always hit your SLAs</h4>
-                    <p className="text-sm text-muted-foreground/80">Reduce average response time by 70%</p>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Aidly gets smarter from your past cases</h4>
+                    <p className="text-sm text-muted-foreground/80">Turn your best manual replies into training data, so next time Aidly delivers a spot on answer from the start</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
@@ -436,7 +452,24 @@ function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Success Story 1 */}
+            {/* Success Story 1
+            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
+                </div>
+                <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
+                  <span>Jean-Pierre L, Founder</span>
+                </div>
+              </CardContent>
+            </Card>*/}
+
+            {/* Success Story 2 */}
             <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
               <CardContent className="p-6">
                 <div className="mb-4">
@@ -453,25 +486,7 @@ function Home() {
               </CardContent>
             </Card>
 
-            {/* Success Story 2 */}
-            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">60% Cost Reduction</div>
-                  <div className="text-sm text-muted-foreground font-medium">Support Operations</div>
-                </div>
-                <h3 className="font-bold mb-2">StartupCo</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  &quot;Instead of hiring 3 more support agents, we automated with Aidly. Saved $180k annually while improving quality.&quot;
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">SC</div>
-                  <span>Mike Rodriguez, COO</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Success Story 3 */}
+            {/* Success Story 3 
             <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
               <CardContent className="p-6">
                 <div className="mb-4">
@@ -487,7 +502,7 @@ function Home() {
                   <span>Lisa Park, Customer Success</span>
                 </div>
               </CardContent>
-            </Card>
+            </Card>*/}
           </div>
 
           {/* Trust Indicators */}
@@ -591,38 +606,92 @@ function Home() {
       {/* Pricing */}
       <section id="pricing" className="container mx-auto px-4 py-16 md:py-24">
         <div className="mx-auto max-w-4xl text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Stop Bleeding Money on Support Costs</h2>
-          <p className="text-lg text-muted-foreground mb-6">Every delayed response costs you customers. Every minute your team spends on repetitive emails costs you money.</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Stop Overspending on Support</h2>
+          <p className="text-lg text-muted-foreground mb-6">Every minute spent on repetitive support emails drains your budget. Every slow reply risks a lost customer.</p>
 
-          {/* Cost Calculator */}
-          <div className="border rounded-2xl p-6 mb-8 text-white" style={{backgroundColor: '#B05755', borderColor: '#B05755'}}>
-            <h3 className="text-xl font-bold mb-4">💸 What slow support is costing you right now:</h3>
-            <div className="grid md:grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
-                <div className="text-2xl font-bold text-white">$3,000</div>
-                <div className="text-xs text-white/80">Monthly cost per support agent</div>
+          {/* Serious ROI Calculator */}
+          <div className="border rounded-2xl p-6 md:p-8 mb-8 bg-background">
+            <h3 className="text-xl font-semibold mb-6 text-foreground">
+              Support Cost & Savings Estimator
+            </h3>
+
+            <div className="grid md:grid-cols-3 gap-4 text-left mb-6">
+              <label className="space-y-2">
+                <span className="text-sm text-muted-foreground">Tickets per month</span>
+                <input
+                  type="number"
+                  value={tickets}
+                  min={0}
+                  onChange={(e) => setTickets(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-foreground"
+                  id="tickets"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm text-muted-foreground">Avg minutes per ticket</span>
+                <input
+                  type="number"
+                  value={minutes}
+                  min={0}
+                  onChange={(e) => setMinutes(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-foreground"
+                  id="minutes"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm text-muted-foreground">Support cost per hour</span>
+                <input
+                  type="number"
+                  value={costPerHour}
+                  min={0}
+                  onChange={(e) => setCostPerHour(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-foreground"
+                  id="costPerHour"
+                />
+              </label>
+            </div>
+
+            {/* Results row */}
+            <div className="grid md:grid-cols-2 gap-4 text-center">
+              <div className="rounded-xl border p-4">
+                <div className="text-sm text-muted-foreground mb-1">Current monthly cost</div>
+                <div className="text-2xl font-bold text-foreground" id="currentCost">{formatUSD(currentCost)}</div>
               </div>
-              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
-                <div className="text-2xl font-bold text-white">$12,000</div>
-                <div className="text-xs text-white/80">Average customer lifetime value lost to churn</div>
+
+              <div className="rounded-xl border p-4">
+                <div className="text-sm text-muted-foreground mb-1">Monthly net savings (after $167 plan)</div>
+                <div
+                  className="text-2xl font-bold text-transparent bg-clip-text"
+                  style={{ backgroundImage: 'linear-gradient(to right, #2fa504ff, #209306ff)' }}
+                  id="savings"
+                >
+                  {formatUSD(Math.max(0, netSavings))}
+                </div>
+                {netSavings <= 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Maybe you don&apos;t need Aidly yet 😉
+                  </div>
+                )}
               </div>
-              <div className="p-4 bg-white/20 rounded-lg backdrop-blur">
-                <div className="text-2xl font-bold text-white">6+ hours</div>
-                <div className="text-xs text-white/80">Daily time wasted on repetitive emails</div>
-              </div>
+            </div>
+
+            {/* Assumptions */}
+            <div className="mt-6 text-center text-sm text-muted-foreground space-y-2">
+              <div>Assumptions, based on typical Aidly customers:</div>
+              <ul className="list-disc inline-block text-left pl-5 space-y-1">
+                <li>Automation of repetitive tickets: <b>60–85%</b></li>
+                <li>Time reduction on remaining tickets: <b>40%</b></li>
+              </ul>
             </div>
           </div>
 
-          {/* ROI Statement */}
-          <div className="border rounded-2xl p-6 mb-8 text-white" style={{backgroundColor: '#3872B9', borderColor: '#3872B9'}}>
-            <h3 className="text-xl font-bold mb-2">💰 Pay $199/month, Save $3,000+ monthly</h3>
-            <p className="text-sm text-white/80">Average ROI: 1,500% in the first year</p>
+          {/* Pricing anchor */}
+          <div className="border rounded-2xl p-6 mb-8 bg-muted/30 text-center">
+            <h3 className="text-xl font-semibold text-foreground">Plans start at $167/month</h3>
+            <p className="text-sm text-muted-foreground mt-1">14 day money back guarantee, no questions asked.</p>
           </div>
-
-          <Badge variant="outline" className="text-white border-white/30" style={{backgroundColor: '#F38135'}}>
-            <div className="h-2 w-2 rounded-full bg-white mr-2"></div>
-            Risk-free: 14-day money-back guarantee
-          </Badge>
         </div>
         <div className="mt-6 flex items-center justify-center gap-3">
 
@@ -645,18 +714,11 @@ function Home() {
             <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full" style={{background: `linear-gradient(to bottom right, #3872B9, transparent)`, opacity: 0.2}}></div>
             <div className="absolute top-4 right-4 text-white text-xs px-2 py-1 rounded-full font-bold" style={{backgroundColor: '#F38135'}}>BEST VALUE</div>
             <CardHeader>
-              <CardTitle className="text-2xl">Stop the Support Chaos</CardTitle>
+              <CardTitle className="text-2xl">Simplify Customer Support</CardTitle>
               <CardDescription className="text-base">Transform your support team in minutes, not months</CardDescription>
             </CardHeader>
             <CardContent>
               {/* ROI Highlight */}
-              <div className="mb-6 p-4 rounded-lg border text-white" style={{backgroundColor: '#3872B9', borderColor: '#3872B9'}}>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-white/90">Instead of hiring 3 more agents at $9,000/month</div>
-                  <div className="text-3xl font-bold text-white mt-1">Pay just ${annual ? "167" : "199"}</div>
-                  <div className="text-sm text-white/90">Save over $8,800 monthly</div>
-                </div>
-              </div>
 
               <div className="mb-6">
                 <div className="flex items-end gap-2 justify-center">
@@ -675,13 +737,13 @@ function Home() {
                     <svg className="h-5 w-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    <span><strong>70% faster responses</strong> - Never miss an SLA again</span>
+                    <span><strong>Faster responses</strong> - Never miss an SLA again</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <svg className="h-5 w-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    <span><strong>10+ hours saved weekly</strong> - Free up your team</span>
+                    <span><strong>Hours saved weekly</strong> - Free up your team</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <svg className="h-5 w-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -703,7 +765,7 @@ function Home() {
                   {loading ? 'Starting your transformation…' : 'Stop losing customers today →'}
                 </Button>
                 {error && <div className="text-sm text-red-600 text-center">{error}</div>}
-                <p className="text-xs text-muted-foreground text-center leading-relaxed">Secure checkout • Start saving immediately • Cancel anytime</p>
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">Secure Stripe checkout • Start saving immediately • Cancel anytime</p>
               </div>
             </CardContent>
           </Card>
@@ -752,26 +814,26 @@ function Home() {
       {/* FAQ */}
       <section id="faq" className="container mx-auto px-4 pt-8 md:pt-16 pb-16 md:pb-24">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Common Concerns (And Why They Shouldn&apos;t Stop You)</h2>
-          <p className="text-lg text-muted-foreground">Real answers to the questions that keep you from transforming your support team</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+          <p className="text-lg text-muted-foreground">Everything you need to know to move forward with confidence.</p>
         </div>
         <div className="mx-auto max-w-4xl space-y-4">
           {[
             {
               q: "What if my team resists AI support tools?",
-              a: "This is the #1 concern we hear. Here's the truth: your team will LOVE Aidly because it eliminates the boring, repetitive work they hate. They'll spend time on interesting problems instead of copy-pasting the same answers. Plus, setup takes 2 minutes - no training required. Start with one person, watch them save 10+ hours/week, and the rest of your team will be begging to use it."
+              a: "This is the #1 concern we hear. Here's the truth: your team will LOVE Aidly because it eliminates the boring, repetitive work they hate. They'll spend time on interesting problems instead of copy-pasting the same answers. Plus, setup takes 2 minutes, no training required."
             },
             {
-              q: "How quickly will I see ROI?",
-              a: "Most customers see ROI within the first week. Here's the math: If Aidly saves your team just 2 hours/day (conservative estimate), that's $100+ in saved labor costs daily. At $199/month, you break even in 6 days. Most teams save 6+ hours daily, meaning 3x ROI in month one."
+              q: "What does AI usage cost?",
+              a: "Aidly uses your AI service via your API key. You only pay what your provider charges per request. Costs rise slightly with longer context, but are still a fraction of the cost of a support agent."
             },
             {
               q: "What if the AI gives wrong answers?",
-              a: "You stay in complete control. AI drafts responses, but nothing sends without your approval. Think of it as the world's smartest assistant - it does the heavy lifting, you do the quality control. Plus, our AI learns from your feedback and gets better over time. Worst case? Delete the draft and write your own (but you'll rarely need to)."
+              a: "You stay in complete control. AI drafts responses, but nothing sends without your approval. Think of it as the world's smartest assistant - it does the heavy lifting, you do the quality control. Plus, Aidly learns from your feedback over time. If a draft misses the mark, tweak it or write your own reply, Aidly will learn from what you chose. The next time this comes up, it will be handled automatically."
             },
             {
               q: "How does this compare to hiring more support staff?",
-              a: "A new support agent costs $36,000+ annually plus benefits, training, and management overhead. Aidly costs $2,388/year and works 24/7 without sick days. One Aidly subscription replaces the workload of 2-3 additional hires while providing better consistency and faster responses."
+              a: "A new support agent costs $36,000+ annually plus benefits, training, and management overhead. Aidly costs $1,999/year and works 24/7 without sick days. One Aidly subscription replaces the workload of 2-3 additional hires while providing better consistency and faster responses."
             },
             {
               q: "What if it doesn't work for our specific industry/use case?",
