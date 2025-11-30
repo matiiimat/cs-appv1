@@ -257,8 +257,8 @@ function Home() {
             <p className="text-base lg:text-lg text-foreground leading-relaxed font-medium">
               <span className="text-green-600 font-bold">Our Solution:</span> Get AI-powered responses running in 2 minutes, not 2 months. Connect your AI, set up mail forwarding. Done.
             </p>
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800 font-medium">⏱️ <strong>Average setup time: 2 minutes</strong> vs 2-8 weeks with competitors</p>
+            <div className="mt-4 p-3 rounded-lg bg-muted">
+              <p className="text-sm font-medium text-foreground"><strong>Average setup time: 2 minutes</strong> vs 2-8 weeks with competitors</p>
             </div>
           </div>
         </div>
@@ -274,8 +274,8 @@ function Home() {
               <span className="text-green-600 font-bold">Our Solution:</span> AI drafts replies instantly. You approve and send. Never miss an SLA, never lose a customer to slow support.
             </p>
             <div className="mt-4 space-y-2">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800 font-medium">🛡️ <strong>You stay in control:</strong> Nothing sends without your approval</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-sm font-medium text-foreground"><strong>You stay in control:</strong> Nothing sends without your approval</p>
               </div>
             </div>
           </div>
@@ -324,8 +324,8 @@ function Home() {
               <span className="text-green-600 font-bold">Our Solution:</span> When a manual reply is spot on, you can have Aidly remember the ticket. Aidly stores that successful case and reuses the same resolution for similar requests.
             </p>
             <div className="mt-4 space-y-2">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">🎯 <strong>Continuous Learning System:</strong> With time and your feedback, Aidly keeps improving, so you rely less on manual reviews.</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-sm font-medium text-foreground"><strong>Continuous Learning System:</strong> With time and your feedback, Aidly keeps improving, so you rely less on manual reviews.</p>
               </div>
             </div>
           </div>
@@ -708,18 +708,18 @@ function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Success Story 2 */}
-            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
+            {/* Success Story */}
+            <Card className="transition-shadow duration-300 hover:shadow-md bg-card border">
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">Support Takes 10% of the Time It Used To</div>
                 </div>
                 <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">JPL</div>
                   <span>Jean-Pierre L, Founder</span>
                 </div>
               </CardContent>
@@ -730,7 +730,7 @@ function Home() {
 
           {/* Trust Indicators */}
           <div className="mt-16 text-center">
-            <p className="text-sm text-white mb-8">Trusted by support teams worldwide</p>
+            <p className="text-sm text-foreground mb-8">Trusted by support teams worldwide</p>
           </div>
         </div>
       </section>
