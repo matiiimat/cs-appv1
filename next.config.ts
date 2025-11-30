@@ -13,9 +13,11 @@ function buildCSP(): string {
     // Allow Next.js/Tailwind inline styles; consider migrating to nonces for stricter prod
     "style-src": ["'self'", "'unsafe-inline'"],
     // Next.js dev overlay may need 'unsafe-eval'; restrict to dev
+    // Next.js injects small inline bootstrap scripts for hydration.
+    // In production we allow 'unsafe-inline' unless you implement nonces.
     "script-src": isDev
       ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
-      : ["'self'"],
+      : ["'self'", "'unsafe-inline'"],
     // Allow images and data URIs
     "img-src": ["'self'", "data:", "blob:"],
     // Restrict media/frame embedding
