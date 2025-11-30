@@ -8,6 +8,7 @@ import { SettingsPage } from "@/components/settings-page"
 import { SearchPage } from "@/components/search-page"
 import { MessageManagerProvider } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
+import { ToastProvider } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { BarChart3, Zap, Inbox, Settings, Search, Menu } from "lucide-react"
@@ -55,7 +56,8 @@ export function MainApp() {
 
   return (
     <SettingsProvider>
-      <MessageManagerProvider>
+      <ToastProvider>
+        <MessageManagerProvider>
         <div className="min-h-screen bg-background">
           {/* Navigation Bar */}
           <nav className="border-b border-border bg-card">
@@ -215,7 +217,8 @@ export function MainApp() {
             <SettingsPage />
           )}
         </div>
-      </MessageManagerProvider>
+        </MessageManagerProvider>
+      </ToastProvider>
     </SettingsProvider>
   )
 }

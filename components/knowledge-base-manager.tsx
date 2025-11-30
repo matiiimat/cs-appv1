@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BookOpen, Edit, Trash2, Search, Eye, EyeOff, Loader2 } from "lucide-react"
 import { format } from "date-fns"
+import { useToast } from "@/components/ui/toast"
 import { KnowledgeBaseStorage, type KnowledgeBaseEntry } from "@/lib/knowledge-base"
 
 export function KnowledgeBaseManager() {
@@ -19,11 +20,25 @@ export function KnowledgeBaseManager() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState<KnowledgeBaseEntry | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { addToast } = useToast()
 
-  const loadEntries = () => {
-    const allEntries = KnowledgeBaseStorage.getAll()
-    setEntries(allEntries)
-    setFilteredEntries(allEntries)
+  const loadEntries = async () => {
+    try {
+      const response = await fetch('/api/knowledge-base')
+      if (!response.ok) {
+        throw new Error('Failed to fetch knowledge base entries')
+      }
+      const data = await response.json()
+      setEntries(data.entries || [])
+      setFilteredEntries(data.entries || [])
+    } catch (error) {
+      console.error('Error loading KB entries:', error)
+      addToast({
+        type: 'error',
+        title: 'Load Failed',
+        message: 'Failed to load knowledge base entries.',
+      })
+    }
   }
 
   useEffect(() => {
@@ -54,20 +69,37 @@ export function KnowledgeBaseManager() {
 
     setIsLoading(true)
     try {
-      const updatedEntry = KnowledgeBaseStorage.update(editingEntry.id, {
-        case_summary: editingEntry.case_summary,
-        resolution: editingEntry.resolution,
-        category: editingEntry.category,
+      const response = await fetch('/api/knowledge-base', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingEntry.id,
+          case_summary: editingEntry.case_summary,
+          resolution: editingEntry.resolution,
+          category: editingEntry.category,
+        }),
       })
 
-      if (updatedEntry) {
-        loadEntries()
-        setIsEditModalOpen(false)
-        setEditingEntry(null)
-        alert("Knowledge base entry updated successfully.")
+      if (!response.ok) {
+        throw new Error('Failed to update knowledge base entry')
       }
+
+      await loadEntries()
+      setIsEditModalOpen(false)
+      setEditingEntry(null)
+      addToast({
+        type: 'success',
+        title: 'Entry Updated',
+        message: 'Knowledge base entry updated successfully.',
+      })
     } catch {
-      alert("Failed to update knowledge base entry.")
+      addToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Failed to update knowledge base entry.',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -79,28 +111,58 @@ export function KnowledgeBaseManager() {
     }
 
     try {
-      const deleted = KnowledgeBaseStorage.delete(entry.id)
-      if (deleted) {
-        loadEntries()
-        alert("Knowledge base entry deleted successfully.")
+      const response = await fetch(`/api/knowledge-base?id=${entry.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete knowledge base entry')
       }
+
+      await loadEntries()
+      addToast({
+        type: 'success',
+        title: 'Entry Deleted',
+        message: 'Knowledge base entry deleted successfully.',
+      })
     } catch {
-      alert("Failed to delete knowledge base entry.")
+      addToast({
+        type: 'error',
+        title: 'Delete Failed',
+        message: 'Failed to delete knowledge base entry.',
+      })
     }
   }
 
   const handleToggleEnabled = async (entry: KnowledgeBaseEntry) => {
     try {
-      const updatedEntry = KnowledgeBaseStorage.update(entry.id, {
-        enabled: !entry.enabled,
+      const response = await fetch('/api/knowledge-base', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: entry.id,
+          enabled: !entry.enabled,
+        }),
       })
 
-      if (updatedEntry) {
-        loadEntries()
-        alert(`Knowledge base entry ${updatedEntry.enabled ? 'enabled' : 'disabled'}.`)
+      if (!response.ok) {
+        throw new Error('Failed to update knowledge base entry')
       }
+
+      await loadEntries()
+      addToast({
+        type: 'success',
+        title: 'Entry Updated',
+        message: `Knowledge base entry ${!entry.enabled ? 'enabled' : 'disabled'}.`,
+      })
     } catch {
-      alert("Failed to update knowledge base entry.")
+      addToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Failed to update knowledge base entry.',
+      })
     }
   }
 

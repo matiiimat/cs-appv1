@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { Loader2, Sparkles } from "lucide-react"
+import { Loader2, Sparkles, Check } from "lucide-react"
+import { useToast } from "@/components/ui/toast"
 
 interface Message {
   id: string
@@ -37,6 +38,8 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
   const [synthesis, setSynthesis] = useState<Synthesis | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const { addToast } = useToast()
 
   const handleGenerateSummary = async () => {
     setIsGenerating(true)
@@ -64,7 +67,11 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
       setSynthesis(data.synthesis)
       setStep('editing')
     } catch {
-      alert("Failed to generate knowledge base summary. Please try again.")
+      addToast({
+        type: 'error',
+        title: 'Generation Failed',
+        message: 'Failed to generate knowledge base summary. Please try again.',
+      })
     } finally {
       setIsGenerating(false)
     }
@@ -75,21 +82,46 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
 
     setIsSaving(true)
     try {
-      // Save directly to localStorage (client-side only)
-      const { KnowledgeBaseStorage } = await import('@/lib/knowledge-base')
-
-      const newEntry = KnowledgeBaseStorage.create({
-        case_summary: synthesis.case_summary,
-        resolution: synthesis.resolution,
-        category: synthesis.category,
+      // Save to PostgreSQL via API
+      const response = await fetch('/api/knowledge-base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          case_summary: synthesis.case_summary,
+          resolution: synthesis.resolution,
+          category: synthesis.category,
+        }),
       })
 
-      console.log('Saved KB entry:', newEntry)
-      alert("Knowledge base entry has been saved successfully.")
-      handleClose()
+      if (!response.ok) {
+        throw new Error('Failed to save knowledge base entry')
+      }
+
+      const data = await response.json()
+      console.log('Saved KB entry:', data.entry)
+
+      // Show success state briefly
+      setSaveSuccess(true)
+
+      addToast({
+        type: 'success',
+        title: 'Knowledge Base Updated',
+        message: 'Entry has been saved successfully.',
+      })
+
+      // Close modal after brief success display
+      setTimeout(() => {
+        handleClose()
+      }, 800)
     } catch (error) {
       console.error('Failed to save KB entry:', error)
-      alert("Failed to save knowledge base entry. Please try again.")
+      addToast({
+        type: 'error',
+        title: 'Save Failed',
+        message: 'Failed to save knowledge base entry. Please try again.',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -98,6 +130,7 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
   const handleClose = () => {
     setStep('initial')
     setSynthesis(null)
+    setSaveSuccess(false)
     onClose()
   }
 
@@ -228,12 +261,18 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={isSaving || !synthesis?.case_summary?.trim() || !synthesis?.resolution?.trim()}
+                disabled={isSaving || saveSuccess || !synthesis?.case_summary?.trim() || !synthesis?.resolution?.trim()}
+                className={saveSuccess ? 'bg-green-600 hover:bg-green-600' : ''}
               >
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Saving...
+                  </>
+                ) : saveSuccess ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Saved!
                   </>
                 ) : (
                   'Save to Knowledge Base'

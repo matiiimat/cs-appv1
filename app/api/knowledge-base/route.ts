@@ -2,10 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from '@/lib/auth/server';
 import { getOrgAndUserByEmail } from '@/lib/tenant';
 import {
-  KnowledgeBaseStorage,
-  CreateKnowledgeBaseEntrySchema,
-  type KnowledgeBaseEntry
-} from '@/lib/knowledge-base';
+  KnowledgeBaseModel,
+  CreateKnowledgeBaseEntryDBSchema,
+  type KnowledgeBaseEntryClient
+} from '@/lib/models/knowledge-base';
 
 async function requireAuth(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -19,18 +19,18 @@ async function requireAuth(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth(request);
+    const orgUser = await requireAuth(request);
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || undefined;
     const search = searchParams.get('search')?.split(',').filter(Boolean) || undefined;
 
-    let entries: KnowledgeBaseEntry[];
+    let entries: KnowledgeBaseEntryClient[];
 
     if (category || search) {
-      entries = KnowledgeBaseStorage.findRelevantEntries(category, search);
+      entries = await KnowledgeBaseModel.findRelevant(orgUser.organizationId, category, search);
     } else {
-      entries = KnowledgeBaseStorage.getAll();
+      entries = await KnowledgeBaseModel.findByOrganizationId(orgUser.organizationId);
     }
 
     return NextResponse.json({ entries });
@@ -50,14 +50,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // Note: Knowledge base operations are now handled client-side with localStorage
-  // This endpoint is kept for future PostgreSQL migration
   try {
-    await requireAuth(request);
+    const orgUser = await requireAuth(request);
 
-    return NextResponse.json({
-      message: "Knowledge base operations are currently handled client-side"
-    }, { status: 200 });
+    const entryData = await request.json();
+    console.log('KB API received data:', entryData);
+
+    const validatedData = CreateKnowledgeBaseEntryDBSchema.parse(entryData);
+    console.log('KB API validated data:', validatedData);
+
+    const newEntry = await KnowledgeBaseModel.create(orgUser.organizationId, validatedData);
+    console.log('KB API created entry:', newEntry);
+
+    return NextResponse.json({ entry: newEntry }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -65,9 +70,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
-    console.error('Error in knowledge base API:', error);
+    console.error('Error creating knowledge base entry:', error);
     return NextResponse.json(
-      { error: "API error" },
+      { error: "Failed to create knowledge base entry" },
       { status: 500 }
     );
   }
@@ -75,7 +80,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    await requireAuth(request);
+    const orgUser = await requireAuth(request);
 
     const { id, ...updates } = await request.json();
 
@@ -83,7 +88,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Entry ID is required" }, { status: 400 });
     }
 
-    const updatedEntry = KnowledgeBaseStorage.update(id, updates);
+    const updatedEntry = await KnowledgeBaseModel.update(id, orgUser.organizationId, updates);
 
     if (!updatedEntry) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
@@ -107,7 +112,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    await requireAuth(request);
+    const orgUser = await requireAuth(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -116,7 +121,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Entry ID is required" }, { status: 400 });
     }
 
-    const deleted = KnowledgeBaseStorage.delete(id);
+    const deleted = await KnowledgeBaseModel.delete(id, orgUser.organizationId);
 
     if (!deleted) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
