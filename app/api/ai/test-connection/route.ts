@@ -1,7 +1,54 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { auth } from '@/lib/auth/server'
+
+// Simple in-memory rate limiter per authenticated user
+// Limits: 5 requests per 5 minutes
+const WINDOW_MS = 5 * 60 * 1000
+const LIMIT = 5
+type Bucket = { count: number; resetAt: number }
+const buckets = new Map<string, Bucket>()
+
+function rateLimitKey(email: string): string {
+  return `ai-test:${email.toLowerCase()}`
+}
+
+function checkRateLimit(email: string): { allowed: boolean; retryAfterSec?: number } {
+  const key = rateLimitKey(email)
+  const now = Date.now()
+  let b = buckets.get(key)
+  if (!b || now > b.resetAt) {
+    b = { count: 0, resetAt: now + WINDOW_MS }
+    buckets.set(key, b)
+  }
+  if (b.count >= LIMIT) {
+    const retryAfterSec = Math.max(1, Math.ceil((b.resetAt - now) / 1000))
+    return { allowed: false, retryAfterSec }
+  }
+  b.count += 1
+  return { allowed: true }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authenticated session
+    const session = await auth.api.getSession({ headers: request.headers })
+    const email = session?.user?.email
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Enforce simple per-user rate limit
+    const rl = checkRateLimit(email)
+    if (!rl.allowed) {
+      return new NextResponse(JSON.stringify({ success: false, error: 'Rate limit exceeded. Try again later.' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(rl.retryAfterSec ? { 'Retry-After': String(rl.retryAfterSec) } : {}),
+        },
+      })
+    }
+
     const { provider, apiKey, model } = await request.json() as {
       provider: 'openai' | 'anthropic';
       apiKey: string;

@@ -482,11 +482,11 @@ Output requirements:
           </div>
         </div>
 
-        <div className="w-2/4 flex flex-col gap-4 min-h-0 overflow-visible">
+        <div className="w-2/4 h-full flex flex-col gap-4 min-h-0 overflow-visible">
           {selectedMessage && (
             <>
-              <div className="bg-card rounded-lg shadow-md md:flex md:flex-col md:min-h-0 md:h-[50vh] overflow-hidden">
-                <div className="pb-3 p-6 md:flex-none">
+              <div className="bg-card rounded-lg shadow-md flex flex-col h-1/2 min-h-0 overflow-hidden">
+                <div className="pb-3 p-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Customer Question</h3>
                     <div className="flex items-center gap-2">
@@ -497,8 +497,8 @@ Output requirements:
                     </div>
                   </div>
                 </div>
-                <div className="px-6 pb-6 md:flex-1 md:min-h-0 md:overflow-hidden">
-                  <div className="space-y-3 md:flex md:flex-col md:min-h-0 md:h-full">
+                <div className="px-6 pb-6 flex-1 min-h-0 overflow-hidden">
+                  <div className="space-y-3 flex flex-col min-h-0 h-full">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">{selectedMessage.customerName}</span>
@@ -508,24 +508,23 @@ Output requirements:
                         {formatFriendlyDate(selectedMessage.timestamp)}
                       </span>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg md:flex-1 md:min-h-0 md:overflow-y-auto">
+                    <div className="p-4 bg-muted rounded-lg flex-1 min-h-0 overflow-y-auto">
                       <EmailText text={selectedMessage.message} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-none bg-card rounded-lg shadow-md flex flex-col">
+              <div className="bg-card rounded-lg shadow-md flex flex-col h-1/2 min-h-0 overflow-hidden">
                 <div className="pb-3 p-6">
                   <h3 className="text-sm font-semibold">Draft Reply</h3>
                 </div>
-                <div className="px-6 pb-6 flex-1 flex flex-col space-y-4 min-h-0">
+                <div className="px-6 pb-6 flex-1 flex flex-col space-y-4 min-h-0 overflow-hidden">
                   <Textarea
                     placeholder="Edit the AI-generated response or write your own..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    rows={10}
-                    className="min-h-[240px] max-h-none resize-y"
+                    className="flex-1 min-h-0 resize-none"
                   />
                   <div className="flex gap-2 items-center relative min-w-0">
                     <div className="relative flex-none">

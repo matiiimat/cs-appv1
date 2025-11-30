@@ -5,6 +5,9 @@ import { getOrgAndUserByEmail } from '@/lib/tenant'
 // Ensure Node.js runtime (SendGrid + server fetch)
 export const runtime = 'nodejs'
 
+// Simple in-memory deduplication to prevent double requests
+const recentRequests = new Map<string, number>()
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({})) as { email?: string; callbackURL?: string }
@@ -33,19 +36,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'no_account' }, { status: 404 })
     }
 
+    // Prevent duplicate requests within 5 seconds
+    const now = Date.now()
+    const requestKey = `magic-link-${email}`
+    const lastRequest = recentRequests.get(requestKey)
+
+    if (lastRequest && (now - lastRequest) < 5000) {
+      console.log(`[magic-link] Duplicate request blocked for ${email} (within 5s)`)
+      return NextResponse.json({ ok: true }) // Return success to avoid confusing the user
+    }
+
+    recentRequests.set(requestKey, now)
+
+    // Clean up old entries (keep map from growing indefinitely)
+    if (recentRequests.size > 1000) {
+      const cutoff = now - 60000 // 1 minute
+      for (const [key, time] of recentRequests.entries()) {
+        if (time < cutoff) {
+          recentRequests.delete(key)
+        }
+      }
+    }
+
     try {
+      console.log(`[magic-link] Attempting direct API call for ${email}`)
       await auth.api.signInMagicLink({
         body: { email, callbackURL },
         headers: request.headers,
       })
-    } catch {
-      // Direct fetch fallback to Better Auth endpoint using absolute URL
+      console.log(`[magic-link] SUCCESS - Direct API worked for ${email}`)
+    } catch (directErr) {
+      console.log(`[magic-link] Direct API failed for ${email}, trying fallback:`, directErr instanceof Error ? directErr.message : directErr)
+
+      // Use fallback but with deduplication
       try {
+        console.log(`[magic-link] Attempting fallback for ${email}`)
         const resp = await fetch(`${origin}/api/auth/sign-in/magic-link`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            // Pass explicit origin/host headers so Better Auth can resolve baseURL correctly
             'origin': origin,
             'host': host,
             'x-forwarded-host': host,
@@ -61,16 +90,16 @@ export async function POST(request: Request) {
           } catch {
             try { detail = await resp.text() } catch {}
           }
+          console.log(`[magic-link] Fallback failed for ${email}:`, detail)
           return NextResponse.json(
             { error: 'email_send_failed', detail },
             { status: 502 }
           )
         }
+        console.log(`[magic-link] SUCCESS - Fallback worked for ${email}`)
       } catch (fallbackErr) {
         const message = fallbackErr instanceof Error ? fallbackErr.message : ''
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[guarded-magic-link] fallback send error:', fallbackErr)
-        }
+        console.error('[magic-link] Both direct and fallback failed for', email, ':', fallbackErr)
         return NextResponse.json({ error: 'email_send_failed', detail: message }, { status: 502 })
       }
     }
