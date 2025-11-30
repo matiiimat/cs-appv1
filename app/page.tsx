@@ -200,7 +200,7 @@ function Home() {
   </span>
 </h1>
           <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
-            Keep your customers happy with instant, high quality replies, without hiring or training a customer support team.
+            Aidly delivers instant, high quality customer support with AI, so you can scale without hiring or training a support team.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
            
@@ -332,8 +332,8 @@ function Home() {
       {/* Features */}
       <section id="features" className="container mx-auto px-4 py-16 md:py-24">
         <div className="mx-auto max-w-4xl text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">How We Solve Your Biggest Support Challenges</h2>
-          <p className="text-lg text-muted-foreground">Real solutions for the problems that keep support managers awake at night</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How Aidly Solves Your Biggest Support Challenges</h2>
+          <p className="text-lg text-muted-foreground">Faster replies, lower costs, and consistent quality, without extra headcount.</p>
         </div>
 
         {/* Feature 1: image left, text right */}
@@ -379,9 +379,6 @@ function Home() {
               <span className="text-green-600 font-bold">Our Solution:</span> AI drafts replies instantly. You approve and send. Never miss an SLA, never lose a customer to slow support.
             </p>
             <div className="mt-4 space-y-2">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">📈 <strong>Average SLA improvement: 70% faster response times</strong></p>
-              </div>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 font-medium">🛡️ <strong>You stay in control:</strong> Nothing sends without your approval</p>
               </div>
@@ -424,94 +421,23 @@ function Home() {
             </div>
           </div>
           <div className="text-left space-y-4">
-            <h3 className="text-2xl lg:text-3xl font-bold">83% of customers leave due to bad support experiences.</h3>
+            <h3 className="text-2xl lg:text-3xl font-bold">Aidly learns from your best support cases.</h3>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
-              <span className="text-red-600 font-medium">The Problem:</span> You&apos;re losing customers but don&apos;t know why. By the time they complain, it&apos;s too late.
+              <span className="text-red-600 font-medium">The Problem:</span> Repetitive tickets force you to solve the same problems over and over.
             </p>
             <p className="text-base lg:text-lg text-foreground leading-relaxed font-medium">
-              <span className="text-green-600 font-bold">Our Solution:</span> Identify at-risk customers before they churn. Get real-time insights into satisfaction trends and response quality.
+              <span className="text-green-600 font-bold">Our Solution:</span> When a manual reply is spot on, you can have Aidly remember the ticket. Aidly stores that successful case and reuses the same resolution for similar requests.
             </p>
             <div className="mt-4 space-y-2">
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">🎯 <strong>Early warning system:</strong> Spot problems before customers complain</p>
-              </div>
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <p className="text-sm text-purple-800 font-medium">📊 <strong>Actionable insights:</strong> See exactly what&apos;s working and what isn&apos;t</p>
+                <p className="text-sm text-green-800 font-medium">🎯 <strong>Continuous Learning System:</strong> With time and your feedback, Aidly keeps improving, so you rely less on manual reviews.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Customer Success Stories */}
-      <section className="container mx-auto px-4 py-16 md:py-24" style={{background: `linear-gradient(to right, #3872B9, #475B88)`, color: 'white'}}>
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Results from Companies Like Yours</h2>
-            <p className="text-lg text-white/80">See how teams transformed their support operations</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Success Story 1
-            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
-                </div>
-                <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
-                  <span>Jean-Pierre L, Founder</span>
-                </div>
-              </CardContent>
-            </Card>*/}
-
-            {/* Success Story 2 */}
-            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
-                </div>
-                <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
-                  <span>Jean-Pierre L, Founder</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Success Story 3 
-            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-green-600">200+ Customers</div>
-                  <div className="text-sm text-muted-foreground font-medium">Churn Prevented</div>
-                </div>
-                <h3 className="font-bold mb-2">ScaleUp</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  &quot;The early warning system caught at-risk customers before they churned. Saved over $2M in revenue.&quot;
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">SU</div>
-                  <span>Lisa Park, Customer Success</span>
-                </div>
-              </CardContent>
-            </Card>*/}
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="mt-16 text-center">
-            <p className="text-sm text-white mb-8">Trusted by support teams worldwide</p>
-
-          </div>
-        </div>
-      </section>
+      
 
       {/* How it works 
       <section id="how-it-works" className="container mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16">
@@ -790,6 +716,42 @@ function Home() {
         </div>
       </section>
 
+      {/* Customer Success Stories */}
+      <section className="container mx-auto px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Results from Companies Like Yours</h2>
+            <p className="text-lg text-muted-foreground">See how teams transformed their support operations</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Success Story 2 */}
+            <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="text-2xl font-bold text-green-600">Support Takes 10% of the Time It Used To</div>
+                </div>
+                <h3 className="font-bold mb-2">Braceletsdemontre.com</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  &quot;What used to take hours every day takes a quick check in now. The quality stayed high, but the workload disappeared.&quot;
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">JPL</div>
+                  <span>Jean-Pierre L, Founder</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Placeholder for additional stories if needed */}
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-16 text-center">
+            <p className="text-sm text-white mb-8">Trusted by support teams worldwide</p>
+          </div>
+        </div>
+      </section>
+
       {/* Subscribe 
       <section id="subscribe" className="container mx-auto px-4 pt-16 md:pt-20 pb-8 md:pb-10">
         <div className="mx-auto max-w-2xl text-center">
@@ -820,8 +782,8 @@ function Home() {
         <div className="mx-auto max-w-4xl space-y-4">
           {[
             {
-              q: "What if my team resists AI support tools?",
-              a: "This is the #1 concern we hear. Here's the truth: your team will LOVE Aidly because it eliminates the boring, repetitive work they hate. They'll spend time on interesting problems instead of copy-pasting the same answers. Plus, setup takes 2 minutes, no training required."
+              q: "What if it doesn't work for our specific industry/use case?",
+              a: "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money. Zero risk, massive upside."
             },
             {
               q: "What does AI usage cost?",
@@ -834,10 +796,6 @@ function Home() {
             {
               q: "How does this compare to hiring more support staff?",
               a: "A new support agent costs $36,000+ annually plus benefits, training, and management overhead. Aidly costs $1,999/year and works 24/7 without sick days. One Aidly subscription replaces the workload of 2-3 additional hires while providing better consistency and faster responses."
-            },
-            {
-              q: "What if it doesn't work for our specific industry/use case?",
-              a: "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money. Zero risk, massive upside."
             },
             {
               q: "Is our data secure?",
