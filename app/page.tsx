@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
 function ParallaxHero({ children }: { children: React.ReactNode }) {
   const backdropRef = useRef<HTMLDivElement | null>(null)
@@ -200,7 +199,9 @@ function Home() {
   </span>
 </h1>
           <p className="mt-6 text-lg text-muted-foreground md:text-xl lg:text-2xl max-w-3xl mx-auto">
-            Aidly delivers instant, high quality customer support with AI, so you can scale without hiring or training a support team.
+            Aidly delivers instant, high quality{' '}
+            <span className="font-bold" style={{ color: '#3872B9' }}>customer support with AI</span>
+            , so you can scale without hiring or training a support team.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
            
@@ -221,113 +222,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Problem/Solution Section */}
-      <section id="problem" className="container mx-auto px-4 py-16 md:py-24" style={{background: 'linear-gradient(to right, rgba(176,87,85,0.1), rgba(179,50,117,0.1))'}}>
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-muted-foreground">The Support Team Struggle is Real</h2>
-            <p className="text-lg text-muted-foreground">Every support team faces the same daily challenges</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Problems */}
-            <div>
-              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What&apos;s killing your productivity:</h3>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Drowning in repetitive emails</h4>
-                    <p className="text-sm text-muted-foreground/80">Same questions, different customers, every single day</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Missing SLA deadlines</h4>
-                    <p className="text-sm text-muted-foreground/80">Customers getting frustrated with slow responses</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Long and cumbersome onboarding</h4>
-                    <p className="text-sm text-muted-foreground/80">  Aidly is live in 5 minutes, no training required.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Losing customers</h4>
-                    <p className="text-sm text-muted-foreground/80">89% switch providers after a bad support experience</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Solution */}
-            <div>
-              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What if you spent less time on support while keeping your customers happy?</h3>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">High quality answers in seconds</h4>
-                    <p className="text-sm text-muted-foreground/80">Get a ready-to-send answer, edit if needed, then ship it in seconds.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Aidly gets smarter from your past cases</h4>
-                    <p className="text-sm text-muted-foreground/80">Turn your best manual replies into training data, so next time Aidly delivers a spot on answer from the start</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Free up your team</h4>
-                    <p className="text-sm text-muted-foreground/80">Focus on complex issues that need human touch</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
-                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
-                  <div>
-                    <h4 className="font-semibold text-muted-foreground mb-1">Boost customer satisfaction</h4>
-                    <p className="text-sm text-muted-foreground/80">Turn frustrated customers into loyal advocates</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Call to Action */}
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center gap-3 p-6 text-white rounded-2xl" style={{background: `linear-gradient(to right, #3872B9, #475B88)`}}>
-              <div className="text-3xl">🎯</div>
-              <div className="text-left">
-                <p className="text-lg font-bold">Ready to transform your support team?</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Features */}
       <section id="features" className="container mx-auto px-4 py-16 md:py-24">
@@ -529,9 +424,9 @@ function Home() {
   </section>
 */}
 
-      {/* Pricing */}
-      <section id="pricing" className="container mx-auto px-4 py-16 md:py-24">
-        <div className="mx-auto max-w-4xl text-center mb-12">
+      {/* Calculator */}
+      <section id="calculator" className="container mx-auto px-4 py-8 md:py-12">
+        <div className="mx-auto max-w-4xl text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Stop Overspending on Support</h2>
           <p className="text-lg text-muted-foreground mb-6">Every minute spent on repetitive support emails drains your budget. Every slow reply risks a lost customer.</p>
 
@@ -613,14 +508,18 @@ function Home() {
             </div>
           </div>
 
-          {/* Pricing anchor */}
-          <div className="border rounded-2xl p-6 mb-8 bg-muted/30 text-center">
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="container mx-auto px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-4xl text-center mb-8">
+          <div className="border rounded-2xl p-6 bg-muted/30 text-center">
             <h3 className="text-xl font-semibold text-foreground">Plans start at $167/month</h3>
             <p className="text-sm text-muted-foreground mt-1">14 day money back guarantee, no questions asked.</p>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-center gap-3">
-
+        <div className="mt-2 flex items-center justify-center gap-3">
           <button
             className={`rounded-md border px-3 py-1 text-sm ${annual ? "bg-card" : "bg-primary text-primary-foreground border-transparent"}`}
             onClick={() => setAnnual(false)}
@@ -634,8 +533,7 @@ function Home() {
             Yearly
           </button>
         </div>
-        <div className="mt-8 grid gap-6 grid-cols-1 place-items-center">
-          {/* Pro plan */}
+        <div className="mt-6 grid gap-6 grid-cols-1 place-items-center">
           <Card className="w-full max-w-lg relative overflow-hidden border-2 transition-colors duration-300 shadow-lg" style={{borderColor: '#3872B9'}}>
             <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full" style={{background: `linear-gradient(to bottom right, #3872B9, transparent)`, opacity: 0.2}}></div>
             <div className="absolute top-4 right-4 text-white text-xs px-2 py-1 rounded-full font-bold" style={{backgroundColor: '#F38135'}}>BEST VALUE</div>
@@ -644,8 +542,6 @@ function Home() {
               <CardDescription className="text-base">Transform your support team in minutes, not months</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* ROI Highlight */}
-
               <div className="mb-6">
                 <div className="flex items-end gap-2 justify-center">
                   <span className="text-4xl font-bold">${annual ? "167" : "199"}</span>
@@ -679,45 +575,132 @@ function Home() {
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <svg className="h-5 w-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    <span><strong>2-minute setup</strong> - No months of implementation</span>
+                    <span><strong>2-minutes setup</strong> - No months of implementation</span>
                   </li>
                 </ul>
               </div>
 
               <div className="space-y-3">
                 <Button className="w-full h-12 text-base font-bold text-white hover:opacity-90" onClick={startCheckout} disabled={loading} style={{backgroundColor: '#3872B9'}}>
-                  {loading ? 'Starting your transformation…' : 'Stop losing customers today →'}
+                  {loading ? 'Setting up secure payment' : 'Try Aidly today →'}
                 </Button>
                 {error && <div className="text-sm text-red-600 text-center">{error}</div>}
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">Secure Stripe checkout • Start saving immediately • Cancel anytime</p>
               </div>
             </CardContent>
           </Card>
+        </div>
+      </section>
 
-          {/* Enterprise plan
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="text-lg font-semibold">Enterprise</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Custom needs, SLAs, and security reviews.</p>
-            <div className="mt-4 flex items-end gap-1">
-              <span className="text-4xl font-bold">Custom</span>
+      {/* Problem/Solution Section */}
+      <section id="problem" className="container mx-auto px-4 py-8 md:py-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">The Support Team Struggle is Real</h2>
+            <p className="text-lg text-muted-foreground">Every support team faces the same daily challenges</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Problems */}
+            <div>
+              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What&apos;s killing your productivity:</h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Drowning in repetitive emails</h4>
+                    <p className="text-sm text-muted-foreground/80">Same questions, different customers, every single day</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Missing SLA deadlines</h4>
+                    <p className="text-sm text-muted-foreground/80">Customers getting frustrated with slow responses</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Long and cumbersome onboarding</h4>
+                    <p className="text-sm text-muted-foreground/80">  Aidly is live in 5 minutes, no training required.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#B05755'}}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6 L18 18 M6 18 L18 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Losing customers</h4>
+                    <p className="text-sm text-muted-foreground/80">89% switch providers after a bad support experience</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <ul className="mt-4 space-y-2 text-sm">
-              <li>Custom onboarding and support</li>
-              <li>Security & compliance reviews</li>
-              <li>Volume-based pricing</li>
-            </ul>
-            <Button asChild variant="outline" className="mt-6 w-full">
-              <a href="mailto:sales@aidly.me">Contact sales</a>
-            </Button>
-          </div> */}
 
+            {/* Solution */}
+            <div>
+              <h3 className="text-2xl font-bold mb-8 text-muted-foreground">What if you spent less time on support while keeping your customers happy?</h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">High quality answers in seconds</h4>
+                    <p className="text-sm text-muted-foreground/80">Get a ready-to-send answer, edit if needed, then ship it in seconds.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Aidly gets smarter from your past cases</h4>
+                    <p className="text-sm text-muted-foreground/80">Turn your best manual replies into training data, so next time Aidly delivers a spot on answer from the start</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Free up your team</h4>
+                    <p className="text-sm text-muted-foreground/80">Focus on complex issues that need human touch</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 bg-white/20 backdrop-blur rounded-lg border border-white/30">
+                  <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center text-sm font-bold" style={{backgroundColor: '#3872B9'}}>✓</div>
+                  <div>
+                    <h4 className="font-semibold text-muted-foreground mb-1">Boost customer satisfaction</h4>
+                    <p className="text-sm text-muted-foreground/80">Turn frustrated customers into loyal advocates</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center mt-8">
+            <Link href="#pricing" className="inline-flex items-center gap-3 p-6 text-white rounded-2xl hover:opacity-90 transition-opacity" style={{background: `linear-gradient(to right, #3872B9, #475B88)`}}>
+              <span className="text-lg font-bold">If this feels familiar, Aidly was built for you.</span>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Customer Success Stories */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
+      <section className="container mx-auto px-4 pt-16 md:pt-20 pb-8 md:pb-12">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Results from Companies Like Yours</h2>
@@ -774,7 +757,7 @@ function Home() {
       </section>*/}
 
       {/* FAQ */}
-      <section id="faq" className="container mx-auto px-4 pt-8 md:pt-16 pb-16 md:pb-24">
+      <section id="faq" className="container mx-auto px-4 pt-6 md:pt-8 pb-16 md:pb-20">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
           <p className="text-lg text-muted-foreground">Everything you need to know to move forward with confidence.</p>
