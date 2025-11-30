@@ -46,7 +46,7 @@ export class KnowledgeBaseModel {
       [organizationId]
     )
 
-    return result.rows.map((row) => ({
+    return result.rows.map((row: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
       id: row.id,
       case_summary: row.case_summary,
       resolution: row.resolution,
@@ -65,7 +65,7 @@ export class KnowledgeBaseModel {
       [organizationId]
     )
 
-    return result.rows.map((row) => ({
+    return result.rows.map((row: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
       id: row.id,
       case_summary: row.case_summary,
       resolution: row.resolution,
@@ -87,7 +87,7 @@ export class KnowledgeBaseModel {
       [organizationId, entryData.case_summary, entryData.resolution, entryData.category || null]
     )
 
-    const row = result.rows[0]
+    const row = result.rows[0] as any // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       id: row.id,
       case_summary: row.case_summary,
@@ -150,7 +150,7 @@ export class KnowledgeBaseModel {
       return null
     }
 
-    const row = result.rows[0]
+    const row = result.rows[0] as any // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       id: row.id,
       case_summary: row.case_summary,
@@ -351,7 +351,7 @@ export class KnowledgeBaseModel {
   /**
    * Helper to map database rows to client format
    */
-  private static mapResultRows(rows: any[]): KnowledgeBaseEntryClient[] {
+  private static mapResultRows(rows: any[]): KnowledgeBaseEntryClient[] { // eslint-disable-line @typescript-eslint/no-explicit-any
     return rows.map((row) => ({
       id: row.id,
       case_summary: row.case_summary,

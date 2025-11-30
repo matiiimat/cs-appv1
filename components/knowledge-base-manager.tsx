@@ -50,7 +50,7 @@ export function KnowledgeBaseManager() {
 
   useEffect(() => {
     loadEntries()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!searchQuery.trim()) {

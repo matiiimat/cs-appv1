@@ -78,10 +78,10 @@ export class AIResponseEnhancer {
 
       const data = await response.json()
       const allEntries = data.entries || []
-      const enabledEntries = allEntries.filter((entry: any) => entry.enabled)
+      const enabledEntries = allEntries.filter((entry: { enabled: boolean }) => entry.enabled)
 
       const categoryCounts: Record<string, number> = {}
-      enabledEntries.forEach((entry: any) => {
+      enabledEntries.forEach((entry: { category?: string }) => {
         if (entry.category) {
           categoryCounts[entry.category] = (categoryCounts[entry.category] || 0) + 1
         }

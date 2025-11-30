@@ -531,7 +531,7 @@ Output requirements:
                         ...
                       </Button>
                       {moreMenuOpen && (
-                        <div className="absolute left-0 mt-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
+                        <div className="absolute left-0 bottom-full mb-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
                           <Button
                             variant="ghost"
                             className="w-full justify-start"
