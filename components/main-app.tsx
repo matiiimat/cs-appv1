@@ -41,15 +41,19 @@ export function MainApp() {
     setIsMenuOpen(false)
   }
 
-  // Listen for cross-component navigation events (e.g., Fix in Settings)
+  // Listen for cross-component navigation events (e.g., Fix in Settings, Go to Triage)
   useEffect(() => {
-    const handler = () => switchToSettings()
+    const settingsHandler = () => switchToSettings()
+    const triageHandler = () => switchToSwipe()
+
     if (typeof window !== 'undefined') {
-      window.addEventListener('aidly:navigate:settings', handler as EventListener)
+      window.addEventListener('aidly:navigate:settings', settingsHandler as EventListener)
+      window.addEventListener('aidly:navigate:triage', triageHandler as EventListener)
     }
     return () => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('aidly:navigate:settings', handler as EventListener)
+        window.removeEventListener('aidly:navigate:settings', settingsHandler as EventListener)
+        window.removeEventListener('aidly:navigate:triage', triageHandler as EventListener)
       }
     }
   }, [])

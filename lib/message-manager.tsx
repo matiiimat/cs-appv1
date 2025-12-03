@@ -98,6 +98,8 @@ interface MessageManagerContextType {
   isProcessingBatch: boolean
   processedCount: number
   totalToProcess: number
+  showTriageButton: boolean
+  hideTriageButton: () => void
   cancelBatchProcessing: () => void
   addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => Promise<void>
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => Promise<void>
@@ -156,6 +158,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const [isProcessingBatch, setIsProcessingBatch] = useState(false)
   const [processedCount, setProcessedCount] = useState(0)
   const [totalToProcess, setTotalToProcess] = useState(0)
+  const [showTriageButton, setShowTriageButton] = useState(false)
   const [recentActivity, setRecentActivity] = useState<ApiActivity[]>([])
   const cancelRequestedRef = useRef(false)
 
@@ -351,6 +354,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     setTotalToProcess(messagesToProcess.length)
     cancelRequestedRef.current = false
 
+    let currentProcessedCount = 0
+
     try {
       for (let i = 0; i < messagesToProcess.length; i++) {
         if (cancelRequestedRef.current) {
@@ -360,7 +365,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
         const message = messagesToProcess[i]
         await generateAIResponse(message)
-        setProcessedCount(i + 1)
+        currentProcessedCount = i + 1
+        setProcessedCount(currentProcessedCount)
 
         // Small delay between requests
         if (i < messagesToProcess.length - 1 && !cancelRequestedRef.current) {
@@ -371,6 +377,17 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       console.error('Error processing batch:', error)
     } finally {
       setIsProcessingBatch(false)
+
+      // Show triage button if we processed any messages successfully
+      if (currentProcessedCount > 0 && !cancelRequestedRef.current) {
+        setShowTriageButton(true)
+
+        // Auto-hide button after 30 seconds
+        setTimeout(() => {
+          setShowTriageButton(false)
+        }, 30000)
+      }
+
       setProcessedCount(0)
       setTotalToProcess(0)
       cancelRequestedRef.current = false
@@ -379,6 +396,10 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
 
   const cancelBatchProcessing = useCallback(() => {
     cancelRequestedRef.current = true
+  }, [])
+
+  const hideTriageButton = useCallback(() => {
+    setShowTriageButton(false)
   }, [])
 
   const moveToNextMessage = () => {
@@ -467,6 +488,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     isProcessingBatch,
     processedCount,
     totalToProcess,
+    showTriageButton,
+    hideTriageButton,
     cancelBatchProcessing,
     addMessage,
     updateMessage,
