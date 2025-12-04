@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
-import { Zap, PlayCircle, Loader2, ArrowRight } from "lucide-react"
+import { PlayCircle, Loader2, ArrowRight } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
 import { useSettings } from "@/lib/settings-context"
 import { useState, useEffect } from "react"
@@ -146,9 +146,9 @@ export function AgentDashboard() {
           )}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-accent" />
-              </div>
+               {/* <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
+                {/* <Zap className="h-6 w-6 text-accent" />  
+              </div>*/}
               <div>
                 <h3 className="text-xl font-semibold">AI Processing Queue</h3>
               </div>

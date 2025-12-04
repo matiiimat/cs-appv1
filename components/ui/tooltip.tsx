@@ -1,108 +1,54 @@
 "use client"
 
 import * as React from "react"
-import { createPortal } from "react-dom"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+
 import { cn } from "@/lib/utils"
 
-interface TooltipProps {
+const TooltipProvider = TooltipPrimitive.Provider
+
+const TooltipRoot = TooltipPrimitive.Root
+
+const TooltipTrigger = TooltipPrimitive.Trigger
+
+const TooltipContent = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <TooltipPrimitive.Content
+    ref={ref}
+    sideOffset={sideOffset}
+    className={cn(
+      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      className
+    )}
+    {...props}
+  />
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+
+// Simple wrapper component for easy migration
+interface SimpleTooltipProps {
   children: React.ReactNode
   content: string
+  side?: "top" | "right" | "bottom" | "left"
   className?: string
-  delay?: number // Delay in milliseconds before tooltip appears
-  inline?: boolean // Use inline-block instead of block w-full
-  side?: 'top' | 'right' | 'bottom' | 'left' // Which side to show tooltip
+  delay?: number
 }
 
-export function Tooltip({ children, content, className, delay = 0, inline = false, side = 'right' }: TooltipProps) {
-  const [isVisible, setIsVisible] = React.useState(false)
-  const [position, setPosition] = React.useState({ top: 0, left: 0 })
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null)
-  const elementRef = React.useRef<HTMLDivElement>(null)
-
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    
-    timeoutRef.current = setTimeout(() => {
-      if (elementRef.current) {
-        const rect = elementRef.current.getBoundingClientRect()
-
-        let top = 0, left = 0
-
-        switch (side) {
-          case 'top':
-            top = rect.top + window.scrollY - 8 // 8px above
-            left = rect.left + window.scrollX + (rect.width / 2) // centered
-            break
-          case 'bottom':
-            top = rect.bottom + window.scrollY + 8 // 8px below
-            left = rect.left + window.scrollX + (rect.width / 2) // centered
-            break
-          case 'left':
-            top = rect.top + window.scrollY
-            left = rect.left + window.scrollX - 8 // 8px to the left
-            break
-          case 'right':
-          default:
-            top = rect.top + window.scrollY
-            left = rect.right + window.scrollX + 8 // 8px to the right
-            break
-        }
-
-        setPosition({ top, left })
-      }
-      setIsVisible(true)
-    }, delay)
-  }
-
-  const handleMouseLeave = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    setIsVisible(false)
-  }
-
-  React.useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
-
+export function Tooltip({ children, content, side = "top", className, delay = 0 }: SimpleTooltipProps) {
   return (
-    <>
-      <div 
-        ref={elementRef}
-        className={inline ? "relative inline-block" : "relative block w-full"}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {children}
-      </div>
-      {isVisible && typeof window !== 'undefined' && createPortal(
-        <div
-          className={cn(
-            "fixed z-[9999] px-3 py-2 text-sm text-white bg-gray-900 rounded-md shadow-lg",
-            "max-w-sm w-max",
-            // Arrow styling based on side
-            side === 'top' && "after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-l-4 after:border-r-4 after:border-t-4 after:border-l-transparent after:border-r-transparent after:border-t-gray-900",
-            side === 'bottom' && "after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-l-4 after:border-r-4 after:border-b-4 after:border-l-transparent after:border-r-transparent after:border-b-gray-900",
-            side === 'left' && "after:content-[''] after:absolute after:top-2 after:left-full after:border-t-4 after:border-b-4 after:border-l-4 after:border-t-transparent after:border-b-transparent after:border-l-gray-900",
-            side === 'right' && "after:content-[''] after:absolute after:top-2 after:right-full after:border-t-4 after:border-b-4 after:border-r-4 after:border-t-transparent after:border-b-transparent after:border-r-gray-900",
-            className
-          )}
-          style={{
-            whiteSpace: 'normal',
-            top: position.top,
-            left: side === 'top' || side === 'bottom' ? position.left - 50 : position.left, // Center for top/bottom
-          }}
-        >
-          {content}
-        </div>,
-        document.body
-      )}
-    </>
+    <TooltipProvider delayDuration={delay}>
+      <TooltipRoot>
+        <TooltipTrigger asChild>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent side={side} className={className}>
+          <p>{content}</p>
+        </TooltipContent>
+      </TooltipRoot>
+    </TooltipProvider>
   )
 }
+
+export { TooltipProvider, TooltipRoot, TooltipTrigger, TooltipContent }
