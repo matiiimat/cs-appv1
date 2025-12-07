@@ -218,6 +218,18 @@ export class MessageModel {
       orderDirection = 'DESC'
     } = options;
 
+    // Security: Validate ORDER BY parameters to prevent SQL injection
+    const validOrderBy = ['created_at', 'updated_at'] as const;
+    const validDirection = ['ASC', 'DESC'] as const;
+
+    if (!validOrderBy.includes(orderBy as typeof validOrderBy[number])) {
+      throw new Error(`Invalid orderBy parameter: ${orderBy}`);
+    }
+
+    if (!validDirection.includes(orderDirection as typeof validDirection[number])) {
+      throw new Error(`Invalid orderDirection parameter: ${orderDirection}`);
+    }
+
     let whereClause = 'WHERE organization_id = $1';
     const params: unknown[] = [organizationId];
 

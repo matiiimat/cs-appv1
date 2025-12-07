@@ -261,9 +261,6 @@ export function AgentDashboard() {
         <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg shadow-lg border border-green-200 dark:border-green-800">
           <div className="p-6 text-center">
             <div className="mb-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-                AI Processing Complete
-              </div>
             </div>
             <h3 className="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">
               {readyForReview.length} messages ready for review
@@ -302,7 +299,6 @@ export function AgentDashboard() {
             <div className="text-sm font-medium">Avg Response Time</div>
           </div>
           <div className="text-2xl font-bold mb-2">{stats.avgResponseTime.toFixed(1)} min</div>
-          <p className="text-xs text-muted-foreground">Processing efficiency</p>
         </div>
 
         <div className="p-6 bg-card rounded-lg shadow-md">

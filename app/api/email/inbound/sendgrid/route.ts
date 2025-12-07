@@ -40,12 +40,17 @@ async function handler(request: NextRequest) {
       // Fallback to Parse envelope JSON if 'to' missing
       if (!to) {
         const envStr = (form.get('envelope') as string) || ''
-        try {
-          const env = JSON.parse(envStr) as { to?: string[] }
-          if (Array.isArray(env?.to) && env.to.length > 0) {
-            to = env.to[0]
+        // Security: Validate input size and safely parse JSON
+        if (envStr && envStr.length > 0 && envStr.length < 10000) {
+          try {
+            const env = JSON.parse(envStr) as { to?: string[] }
+            if (env && typeof env === 'object' && Array.isArray(env.to) && env.to.length > 0) {
+              to = env.to[0]
+            }
+          } catch {
+            // Invalid JSON - ignore silently for email processing
           }
-        } catch {}
+        }
       }
       // If comma-separated, take first
       if (to && to.includes(',')) {

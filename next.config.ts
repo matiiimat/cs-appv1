@@ -29,7 +29,7 @@ function buildCSP(): string {
     // Network calls from the browser
     "connect-src": isDev
       ? ["'self'", "https:", "ws:", "wss:", "http://localhost:*"]
-      : ["'self'"]
+      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com"]
   }
 
   return Object.entries(directives)
@@ -43,6 +43,14 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'no-referrer' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Security: Add HSTS header for production HTTPS enforcement
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+  // Security: Prevent MIME type confusion attacks
+  { key: 'X-XSS-Protection', value: '1; mode=block' },
+  // Security: Control cross-origin requests (no explicit CORS needed for same-origin app)
+  { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
 ]
 
 const nextConfig: NextConfig = {
