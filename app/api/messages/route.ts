@@ -5,6 +5,7 @@ import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { z } from "zod"
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 import { validateEmailData } from '@/lib/email-validation'
+import { withRateLimit } from '@/lib/rate-limiter'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -16,7 +17,7 @@ async function requireOrgId(request: NextRequest): Promise<string> {
   return orgUser.organizationId
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const { searchParams } = new URL(request.url)
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const messageData = await request.json()
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const { id, ...updates } = await request.json()
@@ -398,3 +399,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(body, { status: 500 })
   }
 }
+
+// Apply rate limiting to message endpoints
+export const GET = withRateLimit(getHandler, 'api')
+export const POST = withRateLimit(postHandler, 'email')
+export const PUT = withRateLimit(putHandler, 'api')

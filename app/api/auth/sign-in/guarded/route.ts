@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { withRateLimit } from '@/lib/rate-limiter'
 
 // Ensure Node.js runtime (SendGrid + server fetch)
 export const runtime = 'nodejs'
@@ -8,7 +9,7 @@ export const runtime = 'nodejs'
 // Simple in-memory deduplication to prevent double requests
 const recentRequests = new Map<string, number>()
 
-export async function POST(request: Request) {
+async function handler(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({})) as { email?: string; callbackURL?: string }
     const email = (body.email || '').trim()
@@ -109,3 +110,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'failed_to_send' }, { status: 500 })
   }
 }
+
+// Apply rate limiting: 5 login attempts per 15 minutes
+export const POST = withRateLimit(handler, 'auth')

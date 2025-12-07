@@ -3,6 +3,7 @@ import { MessageModel } from '@/lib/models/message'
 import { parseOrgIdFromRecipient } from '@/lib/email'
 import { db } from '@/lib/database'
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
+import { withRateLimit } from '@/lib/rate-limiter'
 
 // MVP inbound handler for SendGrid Inbound Parse
 // Expects multipart/form-data with fields: to, from, subject, text, headers
@@ -10,7 +11,7 @@ import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 
 // No demo fallback: require a valid org alias in recipient
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const contentType = request.headers.get('content-type') || ''
     let to = ''
@@ -118,3 +119,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Removed demo ensure; inbound requires a pre-provisioned org via alias
+
+
+// Apply rate limiting: 100 emails per minute (public endpoint)
+export const POST = withRateLimit(handler, 'public')

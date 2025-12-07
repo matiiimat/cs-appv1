@@ -85,7 +85,10 @@ export async function POST(request: NextRequest) {
         if (resp.status === 429) msg = 'Rate limit exceeded. Please try again later.'
         try {
           const data = await resp.json()
-          if (data?.error?.message) msg = `OpenAI API error: ${data.error.message}`
+          // Security: Don't expose detailed API error messages in production
+          if (data?.error?.message && process.env.NODE_ENV !== 'production') {
+            msg = `OpenAI API error: ${data.error.message}`
+          }
         } catch {}
         return NextResponse.json({ success: false, error: msg }, { status: 200 })
       }
@@ -117,7 +120,10 @@ export async function POST(request: NextRequest) {
         if (resp.status === 429) msg = 'Rate limit exceeded. Please try again later.'
         try {
           const data = await resp.json()
-          if (data?.error?.message) msg = `Anthropic API error: ${data.error.message}`
+          // Security: Don't expose detailed API error messages in production
+          if (data?.error?.message && process.env.NODE_ENV !== 'production') {
+            msg = `Anthropic API error: ${data.error.message}`
+          }
         } catch {}
         return NextResponse.json({ success: false, error: msg }, { status: 200 })
       }
@@ -127,7 +133,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: `Unknown provider: ${provider}` }, { status: 400 })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
+    // Security: Don't expose detailed error messages in production
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Connection test failed'
+      : (error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }
