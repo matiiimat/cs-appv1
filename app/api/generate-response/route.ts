@@ -6,6 +6,7 @@ import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { KnowledgeBaseModel } from '@/lib/models/knowledge-base'
+import { validateEmailData } from '@/lib/email-validation'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -92,7 +93,15 @@ async function requireOrgId(headers: Headers): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = await request.json()
+    const requestData = await request.json()
+    const { customerName, customerEmail, subject, message, agentName, agentSignature, categories, quickActionInstruction, currentResponse, companyKnowledge }: GenerateResponseRequest = requestData
+
+    // Validate email data for security
+    const emailValidation = validateEmailData({
+      customerEmail,
+      subject,
+      body: message
+    })
 
     // Always load AI configuration from the database to access the stored API key.
     const orgId = await requireOrgId(request.headers)
@@ -172,9 +181,9 @@ Category guidelines:
 Choose the most appropriate category from the available list. For plans and pricing questions, use "Billing".`
 
     const categoryPrompt = `Customer: ${customerName}
-Email: ${customerEmail}
-Subject: ${subject}
-Message: ${message}`
+Email: ${emailValidation.customerEmail}
+Subject: ${emailValidation.subject}
+Message: ${emailValidation.body}`
 
     const categoryResponse = await aiService.generateText(
       categorySystem,
@@ -203,8 +212,8 @@ Message: ${message}`
     // Fetch and process knowledge base entries from database
     let relevantKbEntries = ''
     try {
-      // Extract search terms from the customer message
-      const searchTerms = extractSearchTerms(`${subject} ${message}`)
+      // Extract search terms from the customer message (using validated data)
+      const searchTerms = extractSearchTerms(`${emailValidation.subject} ${emailValidation.body}`)
 
       // Fetch relevant knowledge base entries from database
       const dbEntries = await KnowledgeBaseModel.findRelevant(
@@ -259,9 +268,9 @@ ${relevantKbEntries}
 Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}`
 
     const aiResponsePrompt = `Customer: ${customerName}
-Email: ${customerEmail}
-Subject: ${subject}
-Message: ${message}
+Email: ${emailValidation.customerEmail}
+Subject: ${emailValidation.subject}
+Message: ${emailValidation.body}
 
 Generate a professional customer support response.`
 
@@ -282,6 +291,10 @@ Generate a professional customer support response.`
     }
     if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+    // Handle email validation errors
+    if (error instanceof Error && error.message.includes('Email validation failed')) {
+      return NextResponse.json({ error: 'Invalid email data provided' }, { status: 400 })
     }
     console.error("[v0] Error generating AI response:", error)
     

@@ -1,5 +1,8 @@
 import type { NextConfig } from "next"
 
+// Force environment validation at startup
+import './lib/startup-validation'
+
 // Build a conservative Content Security Policy with dev-friendly allowances
 function buildCSP(): string {
   const isDev = process.env.NODE_ENV !== 'production'

@@ -8,7 +8,10 @@ import { ensureProvisioned } from '@/lib/tenant'
 
 const db = createKysely()
 
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '')
+// Stripe client with safe fallbacks (validation handled at startup)
+const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder_for_dev'
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder_for_dev'
+const stripeClient = new Stripe(stripeKey)
 
 async function resolveProPlan() {
   const priceMonthlyEnv = process.env.STRIPE_PRICE_PRO_MONTHLY
@@ -54,7 +57,7 @@ export const auth = betterAuth({
     }),
     stripePlugin({
       stripeClient,
-      stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+      stripeWebhookSecret: webhookSecret,
       createCustomerOnSignUp: true,
       subscription: {
         enabled: true,

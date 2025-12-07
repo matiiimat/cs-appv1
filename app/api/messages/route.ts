@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { z } from "zod"
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
+import { validateEmailData } from '@/lib/email-validation'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -62,11 +63,26 @@ export async function POST(request: NextRequest) {
     const orgId = await requireOrgId(request)
     const messageData = await request.json()
 
-    // Validate input data
+    // Validate input data with Zod schema
     const validatedData = CreateMessageSchema.parse(messageData)
-    // Drop header-like keys from metadata before persisting
-    const cleanMetaPost = sanitizeMetadata((validatedData as { metadata?: unknown }).metadata)
-    const toCreate = cleanMetaPost ? { ...validatedData, metadata: cleanMetaPost } : validatedData
+
+    // Enhanced email security validation
+    const emailValidation = validateEmailData({
+      customerEmail: (validatedData as { customer_email?: string }).customer_email,
+      subject: (validatedData as { subject?: string }).subject,
+      body: (validatedData as { body?: string }).body,
+      metadata: (validatedData as { metadata?: unknown }).metadata
+    })
+
+    // Apply validated and sanitized data, keeping original values if validation returns empty
+    const originalData = validatedData as { customer_email?: string; subject?: string; body?: string; metadata?: unknown }
+    const toCreate = {
+      ...validatedData,
+      customer_email: emailValidation.customerEmail || originalData.customer_email || '',
+      subject: emailValidation.subject || originalData.subject || '',
+      body: emailValidation.body || originalData.body || '',
+      metadata: { ...emailValidation.metadata, ...(sanitizeMetadata(originalData.metadata) || {}) }
+    }
 
     // Create message in database
     const newMessage = await MessageModel.create(orgId, toCreate)
