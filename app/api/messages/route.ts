@@ -110,7 +110,7 @@ async function postHandler(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid message data", details: error.errors },
+        { error: "Invalid message data", details: error.issues },
         { status: 400 }
       )
     }
@@ -367,9 +367,9 @@ async function putHandler(request: NextRequest) {
     }
 
     if (error instanceof z.ZodError) {
-      console.log('Validation error details:', error.errors)
+      console.log('Validation error details:', error.issues)
       return NextResponse.json(
-        { error: "Invalid update data", details: error.errors },
+        { error: "Invalid update data", details: error.issues },
         { status: 400 }
       )
     }

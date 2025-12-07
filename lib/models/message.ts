@@ -24,7 +24,7 @@ export const MessageSchema = z.object({
   ai_reviewed: z.boolean().default(false),
   is_generating: z.boolean().default(false),
   edit_history: z.array(z.any()).default([]),
-  metadata: z.record(z.any()).default({}),
+  metadata: z.record(z.string(), z.any()).default({}),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -38,7 +38,7 @@ export const CreateMessageSchema = z.object({
   subject: z.string().min(1),
   message: z.string().min(1),
   category: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const UpdateMessageSchema = z.object({
@@ -50,7 +50,7 @@ export const UpdateMessageSchema = z.object({
   ai_reviewed: z.boolean().optional(),
   is_generating: z.boolean().optional(),
   edit_history: z.array(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type CreateMessageInput = z.infer<typeof CreateMessageSchema>;

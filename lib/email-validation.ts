@@ -127,7 +127,7 @@ export function validateCustomerEmail(email: string): string {
   const result = EmailSchema.safeParse(email)
 
   if (!result.success) {
-    throw new Error(`Invalid email: ${result.error.errors[0]?.message}`)
+    throw new Error(`Invalid email: ${result.error.issues[0]?.message}`)
   }
 
   // Additional normalization
@@ -141,7 +141,7 @@ export function validateEmailSubject(subject: string): string {
   const result = EmailSubjectSchema.safeParse(subject)
 
   if (!result.success) {
-    throw new Error(`Invalid subject: ${result.error.errors[0]?.message}`)
+    throw new Error(`Invalid subject: ${result.error.issues[0]?.message}`)
   }
 
   // Normalize whitespace
@@ -155,7 +155,7 @@ export function validateEmailBody(body: string): string {
   const result = EmailBodySchema.safeParse(body)
 
   if (!result.success) {
-    throw new Error(`Invalid email body: ${result.error.errors[0]?.message}`)
+    throw new Error(`Invalid email body: ${result.error.issues[0]?.message}`)
   }
 
   return body
