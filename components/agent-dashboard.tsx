@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
-import { Zap, PlayCircle, Loader2 } from "lucide-react"
+import { PlayCircle, Loader2, ArrowRight } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
 import { useSettings } from "@/lib/settings-context"
 import { useState, useEffect } from "react"
@@ -12,7 +12,7 @@ import { getMessageUrgency } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 
 export function AgentDashboard() {
-  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
+  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, showTriageButton, hideTriageButton, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   
   // Refresh dashboard data on mount/entry
@@ -74,6 +74,13 @@ export function AgentDashboard() {
   const goToSettings = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aidly:navigate:settings'))
+    }
+  }
+
+  const goToTriage = () => {
+    hideTriageButton()
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aidly:navigate:triage'))
     }
   }
 
@@ -139,9 +146,9 @@ export function AgentDashboard() {
           )}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-accent" />
-              </div>
+               {/* <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
+                {/* <Zap className="h-6 w-6 text-accent" />  
+              </div>*/}
               <div>
                 <h3 className="text-xl font-semibold">AI Processing Queue</h3>
               </div>
@@ -187,10 +194,10 @@ export function AgentDashboard() {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Tooltip content={!isAIConfigured ? "AI configuration required. Fix in Settings." : (preflightChecking ? "Running preflight connectivity check..." : "Start AI processing for the selected batch size.")} inline>
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                  <Tooltip content={!isAIConfigured ? "AI configuration required. Fix in Settings." : (preflightChecking ? "Running preflight connectivity check..." : "Start AI processing for the selected batch size.")} side="top">
                     <div className="w-full sm:w-auto">
-                      <Button 
+                      <Button
                         onClick={handleProcessQueue}
                         disabled={isProcessingBatch || unprocessedMessages.length === 0 || !isAIConfigured || preflightChecking}
                         className={`w-full sm:w-auto ${!isAIConfigured ? 'opacity-60 cursor-not-allowed' : 'bg-accent hover:bg-accent/90'}`}
@@ -248,6 +255,33 @@ export function AgentDashboard() {
           )}
         </div>
       </div>
+
+      {/* Triage Button */}
+      {showTriageButton && (
+        <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg shadow-lg border border-green-200 dark:border-green-800">
+          <div className="p-6 text-center">
+            <div className="mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+                AI Processing Complete
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">
+              {readyForReview.length} messages ready for review
+            </h3>
+            <p className="text-green-700 dark:text-green-300 mb-6">
+              Start reviewing AI-generated responses in the triage interface
+            </p>
+            <Button
+              onClick={goToTriage}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              <ArrowRight className="h-5 w-5 mr-2" />
+              Go to Triage
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Essential Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

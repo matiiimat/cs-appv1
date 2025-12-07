@@ -5,6 +5,7 @@ import { searchCompanyKnowledge } from "@/lib/knowledge-search"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { KnowledgeBaseModel } from '@/lib/models/knowledge-base'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -27,10 +28,58 @@ interface GenerateResponseResponse {
 
 function getNormalizedCategories(userCategories?: Category[]): string {
   if (!userCategories || userCategories.length === 0) {
-    // Default categories when none are configured  
+    // Default categories when none are configured
     return "Technical Support, Billing, General Inquiry"
   }
   return userCategories.map(c => c.name).join(', ')
+}
+
+function extractSearchTerms(messageContent: string): string[] {
+  if (!messageContent) return []
+
+  // Remove common words but keep important business terms
+  const commonWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+    'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must',
+    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+    'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+  ])
+
+  // Important short terms to preserve
+  const preserveShortTerms = new Set([
+    'api', 'ui', 'ux', 'ai', 'ml', 'id', 'ip', 'db', 'os', 'app', 'web', 'ios', 'sms', 'pdf',
+    'fee', 'pro', 'dev', 'qa', 'pm', 'hr', 'crm', 'erp', 'roi', 'kpi', 'sla'
+  ])
+
+  // Handle compound terms that should stay together
+  let processedContent = messageContent.toLowerCase()
+
+  // Preserve important compound terms by replacing spaces with underscores
+  const compoundTerms = [
+    'subscription plan', 'pricing plan', 'cost savings', 'annual plan', 'monthly plan',
+    'billing cycle', 'payment method', 'price range', 'cost effective', 'price point',
+    'technical support', 'customer service', 'user account', 'login issue', 'password reset',
+    'bug report', 'feature request', 'error message', 'system error', 'data loss'
+  ]
+
+  compoundTerms.forEach(term => {
+    const regex = new RegExp(term.replace(/\s+/g, '\\s+'), 'gi')
+    processedContent = processedContent.replace(regex, term.replace(/\s+/g, '_'))
+  })
+
+  return processedContent
+    .replace(/[^a-z0-9\s_]/g, ' ') // Remove punctuation but preserve underscores
+    .split(/\s+/) // Split on whitespace
+    .map(word => word.replace(/_/g, ' ')) // Convert underscores back to spaces for compound terms
+    .filter(word => {
+      const trimmed = word.trim()
+      // Keep word if it's long enough, or it's a preserved short term, or it's a compound term
+      return (trimmed.length > 2 && !commonWords.has(trimmed)) ||
+             preserveShortTerms.has(trimmed) ||
+             trimmed.includes(' ') // compound term
+    })
+    .slice(0, 15) // Increased limit for more comprehensive matching
 }
 
 async function requireOrgId(headers: Headers): Promise<string> {
@@ -151,6 +200,29 @@ Message: ${message}`
       }
     }
 
+    // Fetch and process knowledge base entries from database
+    let relevantKbEntries = ''
+    try {
+      // Extract search terms from the customer message
+      const searchTerms = extractSearchTerms(`${subject} ${message}`)
+
+      // Fetch relevant knowledge base entries from database
+      const dbEntries = await KnowledgeBaseModel.findRelevant(
+        orgId,
+        parsedCategory.category, // Use detected category
+        searchTerms
+      )
+
+      if (dbEntries.length > 0) {
+        relevantKbEntries = '\n\nRELEVANT CASE RESOLUTIONS:\n' +
+          dbEntries.map((entry, index) =>
+            `${index + 1}. Issue: ${entry.case_summary}\n   Resolution: ${entry.resolution}`
+          ).join('\n\n')
+      }
+    } catch (error) {
+      console.warn('Knowledge base entry processing failed:', error)
+    }
+
     // Generate AI response
     const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
@@ -178,7 +250,13 @@ IMPORTANT: Use the following company-specific information to provide accurate re
 
 ${relevantKnowledge}
 
-Base your response on this company knowledge when applicable. If the customer's question relates to information in the knowledge base, use that information to provide the most accurate and helpful response.` : ''}`
+Base your response on this company knowledge when applicable. If the customer's question relates to information in the knowledge base, use that information to provide the most accurate and helpful response.` : ''}${relevantKbEntries ? `
+
+IMPORTANT: Learn from the following similar cases that were successfully resolved:
+
+${relevantKbEntries}
+
+Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}`
 
     const aiResponsePrompt = `Customer: ${customerName}
 Email: ${customerEmail}

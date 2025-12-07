@@ -22,29 +22,21 @@ export function ReviewQueue() {
     updateMessage(messageId, { isGenerating: true })
 
     try {
-      const response = await fetch("/api/generate-response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: message.customerName,
-          customerEmail: message.customerEmail,
-          subject: message.subject,
-          message: message.message,
-          aiConfig: settings.aiConfig,
-          agentName: settings.agentName || "Support Agent",
-          agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
-          categories: settings.categories,
-          quickActionInstruction: actionInstruction, // Add the quick action instruction
-          currentResponse: message.aiSuggestedResponse, // Include current response for modification
-          companyKnowledge: settings.companyKnowledge,
-        }),
+      // Use AIResponseEnhancer to include knowledge base entries
+      const { AIResponseEnhancer } = await import('@/lib/ai-response-enhancer')
+      const data = await AIResponseEnhancer.generateResponse({
+        customerName: message.customerName,
+        customerEmail: message.customerEmail,
+        subject: message.subject,
+        message: message.message,
+        aiConfig: settings.aiConfig,
+        agentName: settings.agentName || "Support Agent",
+        agentSignature: settings.agentSignature || "Best regards,\nSupport Team",
+        categories: settings.categories,
+        quickActionInstruction: actionInstruction, // Add the quick action instruction
+        currentResponse: message.aiSuggestedResponse, // Include current response for modification
+        companyKnowledge: settings.companyKnowledge,
       })
-
-      if (!response.ok) {
-        throw new Error(`Failed to process quick action (${response.status})`)
-      }
-
-      const data = await response.json()
 
       // Update message with modified response
       updateMessage(messageId, {

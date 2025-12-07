@@ -3,7 +3,6 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
 export default function GettingStartedPage() {
@@ -22,9 +21,6 @@ export default function GettingStartedPage() {
   return (
     <main className="container mx-auto max-w-6xl px-4 py-16">
       <div className="text-center mb-16">
-        <Badge variant="outline" className="mb-6 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-          📚 Getting Started Guide
-        </Badge>
         <h1 className="text-4xl md:text-5xl font-bold mb-4">Launch Aidly in minutes</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Follow this simple guide to set up your AI-powered customer support workflow and start automating responses today.</p>
       </div>

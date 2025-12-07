@@ -358,29 +358,21 @@ Output requirements:
     setChatMessages((prev) => [...prev, userMessage])
 
     try {
-      // Use existing server route to modify a response via quick actions
-      const resp = await fetch('/api/generate-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: selectedMessage.customerName,
-          customerEmail: selectedMessage.customerEmail,
-          subject: selectedMessage.subject,
-          message: selectedMessage.message,
-          aiConfig: settings.aiConfig,
-          agentName: settings.agentName || 'Support Agent',
-          agentSignature: settings.agentSignature || 'Best regards,\nSupport Team',
-          categories: settings.categories,
-          quickActionInstruction: actionInstruction,
-          currentResponse: currentResponse,
-          companyKnowledge: settings.companyKnowledge,
-        })
+      // Use AIResponseEnhancer to include knowledge base entries
+      const { AIResponseEnhancer } = await import('@/lib/ai-response-enhancer')
+      const data = await AIResponseEnhancer.generateResponse({
+        customerName: selectedMessage.customerName,
+        customerEmail: selectedMessage.customerEmail,
+        subject: selectedMessage.subject,
+        message: selectedMessage.message,
+        aiConfig: settings.aiConfig,
+        agentName: settings.agentName || 'Support Agent',
+        agentSignature: settings.agentSignature || 'Best regards,\nSupport Team',
+        categories: settings.categories,
+        quickActionInstruction: actionInstruction,
+        currentResponse: currentResponse,
+        companyKnowledge: settings.companyKnowledge,
       })
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}))
-        throw new Error(err?.error || `Quick action failed (${resp.status})`)
-      }
-      const data = await resp.json()
       const response = data.aiSuggestedResponse as string
       
       const aiResponse: ChatMessage = {
@@ -539,7 +531,7 @@ Output requirements:
                         ...
                       </Button>
                       {moreMenuOpen && (
-                        <div className="absolute left-0 mt-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
+                        <div className="absolute left-0 bottom-full mb-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
                           <Button
                             variant="ghost"
                             className="w-full justify-start"
