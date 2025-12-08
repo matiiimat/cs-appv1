@@ -34,7 +34,7 @@ export default function PrivacyPage() {
 
           <section className="mt-8 space-y-6 text-sm leading-6 text-slate-600 dark:text-white/70">
             <p>
-              This Privacy Policy describes how Aidly ("we", "us") collects, uses, and safeguards information in connection with our
+              This Privacy Policy describes how Aidly (&quot;we&quot;, &quot;us&quot;) collects, uses, and safeguards information in connection with our
               customer support platform. The Service is intended for lawful business use by individuals 18+.
             </p>
 
