@@ -155,6 +155,33 @@ export default function LuxuryLanding() {
   const heroRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
   const [isDark, setIsDark] = useState(false)
+  const [annual, setAnnual] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  // Checkout function
+  async function startCheckout() {
+    setError("")
+    try {
+      setLoading(true)
+      const resp = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ annual })
+      })
+      if (!resp.ok) throw new Error('Failed to start checkout')
+      const data = await resp.json()
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        setError('Checkout URL not returned')
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Checkout failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Detect system color scheme
   useEffect(() => {
@@ -183,8 +210,8 @@ export default function LuxuryLanding() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
         </svg>
       ),
-      title: "Instant AI Responses",
-      description: "Draft intelligent replies in milliseconds. Your customers get answers before they finish their coffee."
+      title: "Lightning-Fast AI Responses",
+      description: "Get intelligent draft replies in seconds, not hours. Respond to customers while they're still engaged."
     },
     {
       icon: (
@@ -192,8 +219,8 @@ export default function LuxuryLanding() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
         </svg>
       ),
-      title: "Self-Learning Engine",
-      description: "Every approved response trains your AI. Watch accuracy improve automatically over time."
+      title: "Gets Smarter Over Time",
+      description: "Save your best replies and teach Aidly what works. The more you train it, the less you have to review."
     },
     {
       icon: (
@@ -212,7 +239,7 @@ export default function LuxuryLanding() {
         </svg>
       ),
       title: "2-Minute Setup",
-      description: "No complex integrations. Connect your email, add your AI key, start responding beautifully."
+      description: "No complex integrations. Set up email routing from your support address, add your AI API key, start responding beautifully."
     },
     {
       icon: (
@@ -466,7 +493,7 @@ export default function LuxuryLanding() {
                 asChild
               >
                 <Link href="#pricing">
-                  <span className="relative z-10">Start Free Trial</span>
+                  <span className="relative z-10">Try Aidly Today</span>
                   <span className="absolute inset-0 -z-0 bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
               </Button>
@@ -491,19 +518,19 @@ export default function LuxuryLanding() {
                 <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                14-day money-back guarantee
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                No credit card required
+                Cancel anytime
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Setup in 2 minutes
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Full control over responses
               </div>
             </div>
           </div>
@@ -690,12 +717,36 @@ export default function LuxuryLanding() {
                 <span className="block bg-gradient-to-r from-[#F38135] to-[#B33275] bg-clip-text text-transparent">pricing</span>
               </h2>
               <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
-                One plan. Everything included. No surprises.
+                Bring your favorite AI provider. Get a full multilingual support team — deployed in minutes.
               </p>
             </div>
 
+            {/* Billing toggle */}
+            <div className="mt-10 flex items-center justify-center gap-3">
+              <button
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                  !annual
+                    ? "border-[#3872B9] bg-[#3872B9] text-white"
+                    : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-white/[0.12] dark:bg-transparent dark:text-white/60 dark:hover:border-white/25"
+                }`}
+                onClick={() => setAnnual(false)}
+              >
+                Monthly
+              </button>
+              <button
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                  annual
+                    ? "border-[#3872B9] bg-[#3872B9] text-white"
+                    : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-white/[0.12] dark:bg-transparent dark:text-white/60 dark:hover:border-white/25"
+                }`}
+                onClick={() => setAnnual(true)}
+              >
+                Yearly
+              </button>
+            </div>
+
             {/* Pricing card */}
-            <div className="mt-16">
+            <div className="mt-10">
               <div className="relative overflow-hidden rounded-3xl border p-1 shadow-xl border-slate-200 bg-white dark:border-white/[0.1] dark:bg-white/[0.03] dark:shadow-none">
                 {/* Decorative gradient border */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-50 dark:from-[#3872B9]/50 dark:via-[#B33275]/50 dark:to-[#F38135]/50 dark:opacity-20" />
@@ -703,29 +754,37 @@ export default function LuxuryLanding() {
                 <div className="relative rounded-[22px] p-10 bg-white dark:bg-[#0A0A0B]">
                   <div className="flex flex-col items-center text-center">
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F38135]/20 to-[#B33275]/20 px-4 py-1.5 text-sm font-medium text-[#B33275] dark:text-[#F38135]">
-                      Most Popular
-                    </div>
+                    {annual && (
+                      <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F38135]/20 to-[#B33275]/20 px-4 py-1.5 text-sm font-medium text-[#B33275] dark:text-[#F38135]">
+                        Best Value
+                      </div>
+                    )}
 
                     {/* Price */}
                     <div className="mt-8">
                       <div className="flex items-baseline justify-center gap-2">
-                        <span className="font-[var(--font-custom)] text-6xl font-medium text-slate-900 dark:text-white md:text-7xl">$167</span>
+                        <span className="font-[var(--font-custom)] text-6xl font-medium text-slate-900 dark:text-white md:text-7xl">
+                          ${annual ? "167" : "199"}
+                        </span>
                         <span className="text-lg text-slate-500 dark:text-white/50">/month</span>
                       </div>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually at $1,999 • Save $389</p>
+                      {annual ? (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually at $1,999 • Save $389</p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed monthly • Switch to yearly anytime</p>
+                      )}
                     </div>
 
                     {/* Features */}
                     <div className="mt-10 grid gap-4 sm:grid-cols-2">
                       {[
-                        "Unlimited AI responses",
-                        "All AI providers supported",
+                        "Lightning-fast AI drafts",
+                        "Self-learning from your replies",
+                        "Full approval control",
+                        "Multilingual support",
                         "Custom training data",
                         "Priority email support",
                         "Advanced analytics",
-                        "Team collaboration",
-                        "API access",
                         "GDPR compliant",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-3 text-left text-slate-700 dark:text-white/70">
@@ -739,19 +798,26 @@ export default function LuxuryLanding() {
                       ))}
                     </div>
 
+                    {/* BYOK Note */}
+                    <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.02]">
+                      <p className="text-sm text-slate-600 dark:text-white/50">
+                        <span className="font-medium text-slate-700 dark:text-white/70">Bring your own API key</span> — Connect your OpenAI, Anthropic, or other AI provider. You pay them directly for token usage.
+                      </p>
+                    </div>
+
                     {/* CTA */}
                     <Button
                       size="lg"
                       className="mt-10 h-14 w-full max-w-sm px-8 text-base font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-                      asChild
+                      onClick={startCheckout}
+                      disabled={loading}
                     >
-                      <Link href="/app/login">
-                        Start 14-Day Free Trial
-                      </Link>
+                      {loading ? 'Setting up secure payment...' : 'Try Aidly Today'}
                     </Button>
+                    {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
 
                     <p className="mt-4 text-sm text-slate-500 dark:text-white/40">
-                      No credit card required • Cancel anytime
+                      Secure Stripe checkout • Cancel anytime
                     </p>
                   </div>
                 </div>
@@ -776,17 +842,17 @@ export default function LuxuryLanding() {
             </h2>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-white/50">
-              Join hundreds of teams already saving hours every day with Aidly.
-              Start your free trial today—no commitment required.
+              Start saving hours on support today. Cancel anytime.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button
                 size="lg"
                 className="h-14 px-10 text-base font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-                asChild
+                onClick={startCheckout}
+                disabled={loading}
               >
-                <Link href="/app/login">Get Started Free</Link>
+                {loading ? 'Setting up secure payment...' : 'Try Aidly Today'}
               </Button>
               <Button
                 size="lg"
@@ -796,6 +862,54 @@ export default function LuxuryLanding() {
               >
                 <Link href="mailto:hello@aidly.io">Contact Sales</Link>
               </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="relative py-32">
+          <div className="mx-auto max-w-4xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                Frequently Asked
+                <span className="block bg-gradient-to-r from-[#3872B9] to-[#B33275] bg-clip-text text-transparent">Questions</span>
+              </h2>
+              <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
+                Everything you need to know to move forward with confidence.
+              </p>
+            </div>
+
+            <div className="mt-16 space-y-6">
+              {[
+                {
+                  q: "What if it doesn't work for our specific industry/use case?",
+                  a: "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money. Zero risk, massive upside."
+                },
+                {
+                  q: "What does AI usage cost?",
+                  a: "Aidly requires you to bring your own API key from your preferred AI provider (OpenAI, Anthropic, etc.). You pay the provider directly for token usage, which varies based on response length and model choice. This gives you full control over costs and provider choice, and is still a fraction of the cost of a support agent."
+                },
+                {
+                  q: "What if the AI gives wrong answers?",
+                  a: "You stay in complete control. AI drafts responses, but nothing sends without your approval. Think of it as the world's smartest assistant - it does the heavy lifting, you do the quality control. Plus, Aidly learns from your feedback over time. If a draft misses the mark, tweak it or write your own reply, Aidly will learn from what you chose."
+                },
+                {
+                  q: "How does this compare to hiring more support staff?",
+                  a: "A new support agent costs $36,000+ annually plus benefits, training, and management overhead. Aidly costs $1,999/year and works 24/7 without sick days. One Aidly subscription replaces the workload of 2-3 additional hires while providing better consistency and faster responses."
+                },
+                {
+                  q: "Is our data secure?",
+                  a: "Your data is encrypted at rest with per-organization keys, protected by TLS in transit, and accessed only with least-privilege principles. We're EU-based, GDPR-compliant, and offer full DPAs. You own your data and can export or delete it anytime."
+                }
+              ].map((faq, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border p-6 transition-all border-slate-200 bg-white hover:shadow-md dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.05]"
+                >
+                  <h3 className="text-lg font-medium text-[#B33275] dark:text-[#F38135]">{faq.q}</h3>
+                  <p className="mt-3 text-slate-600 leading-relaxed dark:text-white/60">{faq.a}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
