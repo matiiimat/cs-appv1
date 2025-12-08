@@ -333,11 +333,7 @@ export default function LuxuryLanding() {
           {/* Floating branded ring elements - inspired by logo */}
           {/* Large ring - top left */}
           <div
-            className="absolute left-[8%] top-[20%] h-32 w-32 opacity-60 dark:opacity-40"
-            style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * -40}px, ${(mousePos.y - 0.5) * -40 + scrollY * 0.2}px, 0)`,
-              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute left-[8%] top-[20%] h-32 w-32 opacity-60 dark:opacity-40 animate-[float1_10s_ease-in-out_infinite]"
           >
             <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_30s_linear_infinite]">
               <defs>
@@ -354,11 +350,7 @@ export default function LuxuryLanding() {
 
           {/* Medium ring - top right */}
           <div
-            className="absolute right-[12%] top-[15%] h-24 w-24 opacity-50 dark:opacity-30"
-            style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * 50}px, ${(mousePos.y - 0.5) * 50 + scrollY * 0.15}px, 0)`,
-              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute right-[12%] top-[15%] h-24 w-24 opacity-50 dark:opacity-30 animate-[float2_12s_ease-in-out_infinite]"
           >
             <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_25s_linear_infinite_reverse]">
               <defs>
@@ -375,11 +367,7 @@ export default function LuxuryLanding() {
 
           {/* Small ring - bottom left */}
           <div
-            className="absolute bottom-[25%] left-[5%] h-16 w-16 opacity-40 dark:opacity-25"
-            style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${(mousePos.y - 0.5) * 30 + scrollY * 0.25}px, 0)`,
-              transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute bottom-[25%] left-[5%] h-16 w-16 opacity-40 dark:opacity-25 animate-[float3_9s_ease-in-out_infinite]"
           >
             <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_20s_linear_infinite]">
               <defs>
@@ -395,13 +383,9 @@ export default function LuxuryLanding() {
 
           {/* Extra small ring - right side middle */}
           <div
-            className="absolute right-[8%] top-[55%] h-12 w-12 opacity-30 dark:opacity-20"
-            style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * 60}px, ${(mousePos.y - 0.5) * 60 + scrollY * 0.1}px, 0)`,
-              transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute right-[8%] top-[55%] h-12 w-12 opacity-30 dark:opacity-20 animate-[float4_11s_ease-in-out_infinite]"
           >
-            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_15s_linear_infinite_reverse]">
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_17s_linear_infinite_reverse]">
               <defs>
                 <linearGradient id="ring-gradient-4" x1="50%" y1="0%" x2="50%" y2="100%">
                   <stop offset="0%" stopColor="#B33275" />
@@ -415,11 +399,7 @@ export default function LuxuryLanding() {
 
           {/* Large decorative ring - bottom right (partially visible) */}
           <div
-            className="absolute -bottom-[10%] -right-[5%] h-48 w-48 opacity-20 dark:opacity-10"
-            style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * -20}px, ${(mousePos.y - 0.5) * -20 + scrollY * 0.08}px, 0)`,
-              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className="absolute -bottom-[10%] -right-[5%] h-48 w-48 opacity-20 dark:opacity-10 animate-[float5_15s_ease-in-out_infinite]"
           >
             <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_40s_linear_infinite]">
               <defs>
@@ -864,6 +844,45 @@ export default function LuxuryLanding() {
 
           html {
             scroll-behavior: smooth;
+          }
+
+          /* Ambient floating animations for branded rings */
+          @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(8px, -12px); }
+            50% { transform: translate(-5px, -18px); }
+            75% { transform: translate(12px, -8px); }
+          }
+
+          @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-10px, 8px); }
+            50% { transform: translate(6px, 15px); }
+            75% { transform: translate(-8px, -5px); }
+          }
+
+          @keyframes float3 {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(15px, 10px); }
+            66% { transform: translate(-8px, -12px); }
+          }
+
+          @keyframes float4 {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 10px); }
+            40% { transform: translate(10px, 5px); }
+            60% { transform: translate(4px, -12px); }
+            80% { transform: translate(-10px, -6px); }
+          }
+
+          @keyframes float5 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, -8px); }
+          }
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
         `}</style>
       </div>
