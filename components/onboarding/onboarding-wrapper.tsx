@@ -20,14 +20,22 @@ export function OnboardingWrapper({ children }: OnboardingWrapperProps) {
     )
   }
 
-  // TODO: Remove this override after testing onboarding
-  const FORCE_SHOW_ONBOARDING = true
+// For testing: shows onboarding unless already completed. Clear localStorage to test again.
+//   const FORCE_SHOW_ONBOARDING = typeof window !== 'undefined' && localStorage.getItem('aidly-onboarding-completed') !== 'true'
 
-  return (
+//   return (
+//     <>
+//       {(FORCE_SHOW_ONBOARDING || !hasCompletedOnboarding) && (
+//         <OnboardingWizard onComplete={completeOnboarding} />
+//       )}
+//       {children}
+//     </>
+//   )
+// }
+
+// NO FORCED ONBOARDING 
+return (
     <>
-      {(FORCE_SHOW_ONBOARDING || !hasCompletedOnboarding) && (
-        <OnboardingWizard onComplete={completeOnboarding} />
-      )}
       {children}
     </>
   )

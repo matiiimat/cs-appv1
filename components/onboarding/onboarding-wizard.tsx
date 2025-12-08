@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,10 @@ import {
   EyeOff,
   Sparkles,
   PartyPopper,
+  Mail,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react"
 
 type Provider = "openai" | "anthropic" | "local"
@@ -43,6 +47,12 @@ interface OnboardingWizardProps {
   onComplete: () => void
 }
 
+const emailForwardingGuides = [
+  { name: "Cloudflare", url: "https://developers.cloudflare.com/email-routing/setup/email-routing-addresses/" },
+  { name: "Google Workspace", url: "https://support.google.com/a/answer/4524505" },
+  { name: "Microsoft 365", url: "https://learn.microsoft.com/en-us/exchange/recipients/user-mailboxes/email-forwarding" },
+]
+
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const { settings, updateSettings, saveSettings } = useSettings()
   const [step, setStep] = useState(1)
@@ -53,8 +63,47 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     error?: string
   } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [mailbox, setMailbox] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const totalSteps = 3
+
+  // Load mailbox address
+  useEffect(() => {
+    const loadMailbox = async () => {
+      try {
+        const resp = await fetch("/api/organization/mailbox")
+        if (resp.ok) {
+          const data = await resp.json()
+          if (data?.forwardToAddress) {
+            setMailbox(data.forwardToAddress)
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadMailbox()
+  }, [])
+
+  const handleCopyMailbox = async () => {
+    if (!mailbox) return
+    try {
+      await navigator.clipboard.writeText(mailbox)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback
+      const ta = document.createElement("textarea")
+      ta.value = mailbox
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand("copy")
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   // Validation for step 1
   const isStep1Valid = settings.brandName.trim().length > 0 && settings.agentName.trim().length > 0
@@ -396,26 +445,78 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
           {/* Step 3: Complete */}
           {step === 3 && (
-            <div className="text-center py-6 animate-in fade-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                <PartyPopper className="h-8 w-8 text-green-600 dark:text-green-400" />
+            <div className="animate-in fade-in zoom-in-95 duration-300">
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+                  <PartyPopper className="h-7 w-7 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold mb-1">Setup Complete!</h2>
+                <p className="text-sm text-muted-foreground">
+                  Your workspace is ready. One last step to start receiving emails.
+                </p>
               </div>
-              <h2 className="text-xl font-semibold mb-2">Setup Complete!</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Your Aidly workspace is configured and ready to help you deliver amazing customer support.
-              </p>
-              <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
+
+              {/* Email Forwarding Section */}
+              {mailbox && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Mail className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm mb-1">Set up email forwarding</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Forward emails from your support address to receive them in Aidly:
+                      </p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <code className="flex-1 text-xs bg-background px-3 py-2 rounded border font-mono truncate">
+                          {mailbox}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopyMailbox}
+                          className="shrink-0 h-8 px-2"
+                        >
+                          {copied ? (
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {emailForwardingGuides.map((guide) => (
+                          <a
+                            key={guide.name}
+                            href={guide.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                          >
+                            {guide.name}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Summary */}
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
                 <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
                   <span>Brand: <strong>{settings.brandName}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
                   <span>Agent: <strong>{settings.agentName}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>AI Provider: <strong>{providerInfo[settings.aiConfig.provider as Provider]?.name}</strong></span>
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                  <span>AI: <strong>{providerInfo[settings.aiConfig.provider as Provider]?.name}</strong></span>
                 </div>
               </div>
             </div>
@@ -439,6 +540,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           </div>
 
           <div className="flex gap-2">
+            {step === 2 && !isStep2Valid && (
+              <Button variant="outline" onClick={() => setStep(3)}>
+                Set up later
+              </Button>
+            )}
             {step < 3 && (
               <Button
                 onClick={() => setStep(step + 1)}
@@ -453,7 +559,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Go to Dashboard
+                Close
               </Button>
             )}
           </div>
