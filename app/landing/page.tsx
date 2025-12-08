@@ -351,11 +351,11 @@ export default function LuxuryLanding() {
           </div>
 
           {/* Main headline */}
-          <h1 className="font-serif text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-            <span className="block text-white">Support that</span>
+          <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
+            <span className="block text-white">Your entire support team.</span>
             <span className="relative">
               <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
-                scales with you
+                Deployed in minutes.
               </span>
               {/* Decorative underline */}
               <svg
@@ -471,7 +471,7 @@ export default function LuxuryLanding() {
         <div className="mx-auto max-w-7xl px-6">
           {/* Section header */}
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-serif text-4xl font-medium tracking-tight text-white md:text-5xl">
+            <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-white md:text-5xl">
               Everything you need to
               <span className="block bg-gradient-to-r from-[#3872B9] to-[#B33275] bg-clip-text text-transparent">
                 transform support
