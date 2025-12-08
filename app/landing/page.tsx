@@ -257,7 +257,7 @@ export default function LuxuryLanding() {
         </svg>
       ),
       title: "Enterprise Security",
-      description: "End-to-end encryption, GDPR compliance, and SOC 2 ready. Your data stays yours."
+      description: "End-to-end encryption with EU-based infrastructure. Your data stays yours."
     },
   ]
 
@@ -895,7 +895,7 @@ export default function LuxuryLanding() {
                 },
                 {
                   q: "Is our data secure?",
-                  a: "Your data is encrypted at rest with per-organization keys, protected by TLS in transit, and accessed only with least-privilege principles. We're EU-based, GDPR-compliant, and offer full DPAs. You own your data and can export or delete it anytime."
+                  a: "Your data is encrypted at rest with per-organization keys, protected by TLS in transit, and accessed only with least-privilege principles. We're EU-based and working towards full GDPR compliance. You own your data and can export or delete it anytime."
                 }
               ].map((faq, i) => (
                 <div
