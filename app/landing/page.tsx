@@ -599,10 +599,6 @@ export default function LuxuryLanding() {
             <div className="grid items-center gap-16 lg:grid-cols-2">
               {/* Text content */}
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#3872B9]/30 bg-[#3872B9]/10 px-4 py-1.5 text-sm text-[#3872B9]">
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#3872B9]" />
-                  Powerful Interface
-                </div>
 
                 <h2 className="mt-6 font-[var(--font-custom)] text-4xl font-medium leading-tight tracking-tight text-slate-900 dark:text-white md:text-5xl">
                   A workspace designed for
@@ -778,14 +774,14 @@ export default function LuxuryLanding() {
                     {/* Features */}
                     <div className="mt-10 grid gap-4 sm:grid-cols-2">
                       {[
-                        "Lightning-fast AI drafts",
+                        "Lightning-fast AI replies",
                         "Self-learning from your replies",
                         "Full approval control",
                         "Multilingual support",
                         "Custom training data",
                         "Priority email support",
-                        "Advanced analytics",
-                        "GDPR compliant",
+                        "EU-based infrastructure",
+                        "Data encrypted at rest",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-3 text-left text-slate-700 dark:text-white/70">
                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#3872B9]/20 to-[#B33275]/20 dark:from-[#3872B9]/30 dark:to-[#B33275]/30">
@@ -931,7 +927,7 @@ export default function LuxuryLanding() {
               </div>
 
               <div className="text-sm text-slate-500 dark:text-white/40">
-                Made with care in 🇫🇷
+                Made with ❤️ in 🇫🇷
               </div>
             </div>
           </div>
