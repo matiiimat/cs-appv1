@@ -80,26 +80,25 @@ function FeatureCard({
   return (
     <div
       ref={ref}
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-transparent p-8 backdrop-blur-sm transition-all duration-700 ease-out hover:border-white/[0.15] hover:bg-white/[0.03] ${
-        isInView
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-8'
-      }`}
+      className={`group relative overflow-hidden rounded-2xl border p-8 backdrop-blur-sm transition-all duration-700 ease-out
+        border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-lg
+        dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:border-white/[0.15] dark:hover:bg-white/[0.06] dark:shadow-none
+        ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
       {/* Subtle glow on hover */}
-      <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#3872B9]/0 via-[#B33275]/0 to-[#F38135]/0 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-30" />
+      <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#3872B9]/0 via-[#B33275]/0 to-[#F38135]/0 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-20 dark:group-hover:opacity-30" />
 
       {/* Icon */}
-      <div className="relative mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#3872B9]/20 to-[#B33275]/20 text-[#3872B9]">
+      <div className="relative mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#3872B9]/10 to-[#B33275]/10 text-[#3872B9] dark:from-[#3872B9]/20 dark:to-[#B33275]/20">
         {icon}
       </div>
 
       {/* Content */}
-      <h3 className="relative mb-3 font-serif text-xl font-medium tracking-tight text-white">
+      <h3 className="relative mb-3 font-[var(--font-custom)] text-xl font-medium tracking-tight text-slate-900 dark:text-white">
         {title}
       </h3>
-      <p className="relative text-[15px] leading-relaxed text-white/60">
+      <p className="relative text-[15px] leading-relaxed text-slate-600 dark:text-white/60">
         {description}
       </p>
     </div>
@@ -125,17 +124,16 @@ function TestimonialCard({
   return (
     <div
       ref={ref}
-      className={`relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-8 transition-all duration-700 ${
-        isInView
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-12'
-      }`}
+      className={`relative overflow-hidden rounded-3xl border p-8 transition-all duration-700
+        border-slate-200 bg-white shadow-sm hover:shadow-lg
+        dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.05] dark:shadow-none
+        ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       {/* Quote mark decoration */}
-      <div className="absolute -left-2 -top-4 font-serif text-8xl text-white/[0.04]">&ldquo;</div>
+      <div className="absolute -left-2 -top-4 font-serif text-8xl text-slate-100 dark:text-white/[0.04]">&ldquo;</div>
 
-      <p className="relative mb-8 font-serif text-lg italic leading-relaxed text-white/80">
+      <p className="relative mb-8 font-serif text-lg italic leading-relaxed text-slate-700 dark:text-white/80">
         &ldquo;{quote}&rdquo;
       </p>
 
@@ -144,8 +142,8 @@ function TestimonialCard({
           {author.split(' ').map(n => n[0]).join('')}
         </div>
         <div>
-          <div className="font-medium text-white">{author}</div>
-          <div className="text-sm text-white/50">{role}, {company}</div>
+          <div className="font-medium text-slate-900 dark:text-white">{author}</div>
+          <div className="text-sm text-slate-500 dark:text-white/50">{role}, {company}</div>
         </div>
       </div>
     </div>
@@ -156,6 +154,17 @@ export default function LuxuryLanding() {
   const scrollY = useParallax()
   const heroRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
+  const [isDark, setIsDark] = useState(false)
+
+  // Detect system color scheme
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDark(mediaQuery.matches)
+
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, [])
 
   // Mouse parallax for hero
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -247,533 +256,535 @@ export default function LuxuryLanding() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white antialiased">
-      {/* Noise texture overlay */}
-      <div
-        className="pointer-events-none fixed inset-0 z-50 opacity-[0.015]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Ambient gradient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+    <div className={`min-h-screen antialiased ${isDark ? 'dark' : ''}`}>
+      <div className="min-h-screen bg-[#FAFBFC] text-slate-900 dark:bg-[#0A0A0B] dark:text-white">
+        {/* Noise texture overlay */}
         <div
-          className="absolute h-[800px] w-[800px] rounded-full opacity-20 blur-[120px]"
+          className="pointer-events-none fixed inset-0 z-50 opacity-[0.02] dark:opacity-[0.015]"
           style={{
-            background: 'radial-gradient(circle, #3872B9 0%, transparent 70%)',
-            left: '10%',
-            top: '20%',
-            transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${scrollY * 0.1 + (mousePos.y - 0.5) * 30}px, 0)`,
-            transition: 'transform 0.3s ease-out',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           }}
         />
-        <div
-          className="absolute h-[600px] w-[600px] rounded-full opacity-15 blur-[100px]"
-          style={{
-            background: 'radial-gradient(circle, #B33275 0%, transparent 70%)',
-            right: '5%',
-            top: '60%',
-            transform: `translate3d(${(mousePos.x - 0.5) * -20}px, ${scrollY * 0.15 + (mousePos.y - 0.5) * -20}px, 0)`,
-            transition: 'transform 0.3s ease-out',
-          }}
-        />
-        <div
-          className="absolute h-[500px] w-[500px] rounded-full opacity-10 blur-[80px]"
-          style={{
-            background: 'radial-gradient(circle, #F38135 0%, transparent 70%)',
-            left: '60%',
-            top: '10%',
-            transform: `translate3d(${(mousePos.x - 0.5) * 15}px, ${scrollY * 0.08}px, 0)`,
-          }}
-        />
-      </div>
 
-      {/* Navigation */}
-      <nav className="fixed left-0 right-0 top-0 z-40 border-b border-white/[0.06] bg-[#0A0A0B]/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <Image src="/logo-60x.png" alt="Aidly" width={28} height={28} className="rounded-lg" />
-            <span className="text-lg font-semibold tracking-tight">Aidly</span>
-          </Link>
-
-          <div className="hidden items-center gap-8 md:flex">
-            <Link href="#features" className="text-sm text-white/60 transition-colors hover:text-white">Features</Link>
-            <Link href="#testimonials" className="text-sm text-white/60 transition-colors hover:text-white">Testimonials</Link>
-            <Link href="#pricing" className="text-sm text-white/60 transition-colors hover:text-white">Pricing</Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-white/70 hover:bg-white/5 hover:text-white" asChild>
-              <Link href="/app/login">Sign in</Link>
-            </Button>
-            <Button className="bg-white text-[#0A0A0B] hover:bg-white/90" asChild>
-              <Link href="#pricing">Get Started</Link>
-            </Button>
-          </div>
+        {/* Ambient gradient orbs */}
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div
+            className="absolute h-[800px] w-[800px] rounded-full opacity-30 blur-[150px] dark:opacity-20 dark:blur-[120px]"
+            style={{
+              background: 'radial-gradient(circle, #3872B9 0%, transparent 70%)',
+              left: '5%',
+              top: '15%',
+              transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${scrollY * 0.1 + (mousePos.y - 0.5) * 30}px, 0)`,
+              transition: 'transform 0.3s ease-out',
+            }}
+          />
+          <div
+            className="absolute h-[600px] w-[600px] rounded-full opacity-20 blur-[120px] dark:opacity-15 dark:blur-[100px]"
+            style={{
+              background: 'radial-gradient(circle, #B33275 0%, transparent 70%)',
+              right: '0%',
+              top: '50%',
+              transform: `translate3d(${(mousePos.x - 0.5) * -20}px, ${scrollY * 0.15 + (mousePos.y - 0.5) * -20}px, 0)`,
+              transition: 'transform 0.3s ease-out',
+            }}
+          />
+          <div
+            className="absolute h-[500px] w-[500px] rounded-full opacity-15 blur-[100px] dark:opacity-10 dark:blur-[80px]"
+            style={{
+              background: 'radial-gradient(circle, #F38135 0%, transparent 70%)',
+              left: '50%',
+              top: '5%',
+              transform: `translate3d(${(mousePos.x - 0.5) * 15}px, ${scrollY * 0.08}px, 0)`,
+            }}
+          />
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <section
-        ref={heroRef}
-        onMouseMove={handleMouseMove}
-        className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20"
-      >
-        {/* Floating geometric elements */}
-        <div
-          className="absolute left-[15%] top-[30%] h-24 w-24 rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.03] to-transparent"
-          style={{
-            transform: `translate3d(${(mousePos.x - 0.5) * -40}px, ${(mousePos.y - 0.5) * -40 + scrollY * 0.2}px, 0) rotate(12deg)`,
-            transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        />
-        <div
-          className="absolute right-[20%] top-[25%] h-16 w-16 rounded-full border border-[#3872B9]/20 bg-gradient-to-br from-[#3872B9]/10 to-transparent"
-          style={{
-            transform: `translate3d(${(mousePos.x - 0.5) * 50}px, ${(mousePos.y - 0.5) * 50 + scrollY * 0.15}px, 0)`,
-            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        />
-        <div
-          className="absolute bottom-[30%] left-[10%] h-20 w-20 rounded-xl border border-[#B33275]/20 bg-gradient-to-br from-[#B33275]/10 to-transparent"
-          style={{
-            transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${(mousePos.y - 0.5) * 30 + scrollY * 0.25}px, 0) rotate(-8deg)`,
-            transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        />
+        {/* Navigation */}
+        <nav className="fixed left-0 right-0 top-0 z-40 border-b backdrop-blur-xl border-slate-200/80 bg-white/80 dark:border-white/[0.06] dark:bg-[#0A0A0B]/80">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+              <Image src="/logo-60x.png" alt="Aidly" width={28} height={28} className="rounded-lg" />
+              <span className="text-lg font-semibold tracking-tight">Aidly</span>
+            </Link>
 
-        <div className="relative z-10 mx-auto max-w-5xl text-center">
-          {/* Announcement badge */}
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-sm backdrop-blur-sm animate-[fadeInUp_0.8s_ease-out_0.2s_both]">
-            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-            <span className="text-white/60">Now with GPT-4o & Claude support</span>
+            <div className="hidden items-center gap-8 md:flex">
+              <Link href="#features" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Features</Link>
+              <Link href="#testimonials" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Testimonials</Link>
+              <Link href="#pricing" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Pricing</Link>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white" asChild>
+                <Link href="/app/login">Sign in</Link>
+              </Button>
+              <Button className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white/90" asChild>
+                <Link href="#pricing">Get Started</Link>
+              </Button>
+            </div>
           </div>
+        </nav>
 
-          {/* Main headline */}
-          <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-            <span className="block text-white">Your entire support team.</span>
-            <span className="relative">
-              <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
-                Deployed in minutes.
-              </span>
-              {/* Decorative underline */}
-              <svg
-                className="absolute -bottom-2 left-0 w-full opacity-30"
-                viewBox="0 0 400 12"
-                fill="none"
-              >
-                <path
-                  d="M2 10C100 4 300 4 398 10"
-                  stroke="url(#underline-gradient)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="underline-gradient" x1="0" y1="0" x2="400" y2="0">
-                    <stop offset="0%" stopColor="#3872B9" />
-                    <stop offset="50%" stopColor="#B33275" />
-                    <stop offset="100%" stopColor="#F38135" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
-          </h1>
+        {/* Hero Section */}
+        <section
+          ref={heroRef}
+          onMouseMove={handleMouseMove}
+          className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20"
+        >
+          {/* Floating geometric elements */}
+          <div
+            className="absolute left-[15%] top-[30%] h-24 w-24 rounded-2xl border shadow-sm border-slate-200 bg-white/50 dark:border-white/[0.08] dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-transparent dark:shadow-none"
+            style={{
+              transform: `translate3d(${(mousePos.x - 0.5) * -40}px, ${(mousePos.y - 0.5) * -40 + scrollY * 0.2}px, 0) rotate(12deg)`,
+              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
+          <div
+            className="absolute right-[20%] top-[25%] h-16 w-16 rounded-full border border-[#3872B9]/20 bg-[#3872B9]/5 dark:bg-gradient-to-br dark:from-[#3872B9]/10 dark:to-transparent"
+            style={{
+              transform: `translate3d(${(mousePos.x - 0.5) * 50}px, ${(mousePos.y - 0.5) * 50 + scrollY * 0.15}px, 0)`,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
+          <div
+            className="absolute bottom-[30%] left-[10%] h-20 w-20 rounded-xl border border-[#B33275]/20 bg-[#B33275]/5 dark:bg-gradient-to-br dark:from-[#B33275]/10 dark:to-transparent"
+            style={{
+              transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${(mousePos.y - 0.5) * 30 + scrollY * 0.25}px, 0) rotate(-8deg)`,
+              transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
 
-          {/* Subheadline */}
-          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-white/50 md:text-xl animate-[fadeInUp_0.8s_ease-out_0.5s_both]">
-            Aidly transforms customer support with intelligent AI that drafts perfect responses instantly.
-            Reduce costs by 90% while delivering faster, more consistent service.
-          </p>
+          <div className="relative z-10 mx-auto max-w-5xl text-center">
+            {/* Announcement badge */}
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm shadow-sm border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none backdrop-blur-sm animate-[fadeInUp_0.8s_ease-out_0.2s_both]">
+              <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              <span className="text-slate-600 dark:text-white/60">Now with GPT-4o & Claude support</span>
+            </div>
 
-          {/* CTA buttons */}
-          <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row animate-[fadeInUp_0.8s_ease-out_0.7s_both]">
-            <Button
-              size="lg"
-              className="group relative h-14 overflow-hidden bg-white px-8 text-base font-medium text-[#0A0A0B] transition-all hover:bg-white hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]"
-              asChild
-            >
-              <Link href="#pricing">
-                <span className="relative z-10">Start Free Trial</span>
-                <span className="absolute inset-0 -z-0 bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-0 transition-opacity group-hover:opacity-100" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 border-white/[0.12] bg-transparent px-8 text-base font-medium text-white hover:border-white/25 hover:bg-white/[0.03]"
-              asChild
-            >
-              <Link href="#features">
-                See how it works
-                <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            {/* Main headline */}
+            <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
+              <span className="block text-slate-900 dark:text-white">Your entire support team.</span>
+              <span className="relative">
+                <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
+                  Deployed in minutes.
+                </span>
+                {/* Decorative underline */}
+                <svg
+                  className="absolute -bottom-2 left-0 w-full opacity-40 dark:opacity-30"
+                  viewBox="0 0 400 12"
+                  fill="none"
+                >
+                  <path
+                    d="M2 10C100 4 300 4 398 10"
+                    stroke="url(#underline-gradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <defs>
+                    <linearGradient id="underline-gradient" x1="0" y1="0" x2="400" y2="0">
+                      <stop offset="0%" stopColor="#3872B9" />
+                      <stop offset="50%" stopColor="#B33275" />
+                      <stop offset="100%" stopColor="#F38135" />
+                    </linearGradient>
+                  </defs>
                 </svg>
-              </Link>
-            </Button>
-          </div>
-
-          {/* Trust indicators */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm text-white/40 animate-[fadeInUp_0.8s_ease-out_0.9s_both]">
-            <div className="flex items-center gap-2">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              14-day money-back guarantee
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              No credit card required
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Setup in 2 minutes
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-[fadeInUp_0.8s_ease-out_1.1s_both]">
-          <div className="flex flex-col items-center gap-2 text-white/30">
-            <span className="text-xs uppercase tracking-widest">Scroll</span>
-            <div className="h-12 w-[1px] bg-gradient-to-b from-white/30 to-transparent" />
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="relative border-y border-white/[0.06] bg-gradient-to-b from-transparent to-white/[0.01] py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            {[
-              { value: 90, suffix: "%", label: "Cost Reduction" },
-              { value: 2, suffix: "min", label: "Setup Time" },
-              { value: 85, suffix: "%", label: "Automation Rate" },
-              { value: 40, suffix: "%", label: "Faster Responses" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="font-serif text-4xl font-medium text-white md:text-5xl">
-                  <AnimatedNumber target={stat.value} suffix={stat.suffix} />
-                </div>
-                <div className="mt-2 text-sm text-white/50">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="relative py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          {/* Section header */}
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-white md:text-5xl">
-              Everything you need to
-              <span className="block bg-gradient-to-r from-[#3872B9] to-[#B33275] bg-clip-text text-transparent">
-                transform support
               </span>
-            </h2>
-            <p className="mt-6 text-lg text-white/50">
-              A complete platform designed to make your support team unstoppable.
+            </h1>
+
+            {/* Subheadline */}
+            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-white/50 md:text-xl animate-[fadeInUp_0.8s_ease-out_0.5s_both]">
+              Aidly transforms customer support with intelligent AI that drafts perfect responses instantly.
+              Reduce costs by 90% while delivering faster, more consistent service.
             </p>
-          </div>
 
-          {/* Feature grid */}
-          <div className="mt-20 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <FeatureCard key={feature.title} {...feature} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Product Preview Section */}
-      <section className="relative overflow-hidden py-32">
-        {/* Background treatment */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#3872B9]/5 to-transparent" />
-
-        <div className="relative mx-auto max-w-7xl px-6">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            {/* Text content */}
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#3872B9]/30 bg-[#3872B9]/10 px-4 py-1.5 text-sm text-[#3872B9]">
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#3872B9]" />
-                Powerful Interface
-              </div>
-
-              <h2 className="mt-6 font-serif text-4xl font-medium leading-tight tracking-tight text-white md:text-5xl">
-                A workspace designed for
-                <span className="text-white/50"> speed and clarity</span>
-              </h2>
-
-              <p className="mt-6 text-lg leading-relaxed text-white/50">
-                Our thoughtfully crafted interface puts everything you need at your fingertips.
-                Review AI drafts, approve with confidence, and watch your queue shrink in real-time.
-              </p>
-
-              <ul className="mt-8 space-y-4">
-                {[
-                  "Swipe-based review for rapid processing",
-                  "Inline editing with AI regeneration",
-                  "Smart categorization and priority scoring",
-                  "One-click approval and sending",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-white/70">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#3872B9]/20 to-[#B33275]/20">
-                      <svg className="h-3.5 w-3.5 text-[#3872B9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+            {/* CTA buttons */}
+            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row animate-[fadeInUp_0.8s_ease-out_0.7s_both]">
+              <Button
+                size="lg"
+                className="group relative h-14 overflow-hidden px-8 text-base font-medium transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+                asChild
+              >
+                <Link href="#pricing">
+                  <span className="relative z-10">Start Free Trial</span>
+                  <span className="absolute inset-0 -z-0 bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-base font-medium border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 dark:border-white/[0.12] dark:bg-transparent dark:text-white dark:hover:border-white/25 dark:hover:bg-white/[0.03] dark:hover:text-white"
+                asChild
+              >
+                <Link href="#features">
+                  See how it works
+                  <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </Button>
             </div>
 
-            {/* Product mockup */}
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 blur-3xl" />
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-2 shadow-2xl">
-                <div className="aspect-[4/3] rounded-xl bg-[#111113] p-6">
-                  {/* Mock interface */}
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-3 w-3 rounded-full bg-[#EF4444]" />
-                      <div className="h-3 w-3 rounded-full bg-[#F59E0B]" />
-                      <div className="h-3 w-3 rounded-full bg-[#22C55E]" />
-                    </div>
-                    <div className="h-2 w-24 rounded-full bg-white/10" />
-                  </div>
+            {/* Trust indicators */}
+            <div className="mt-16 flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm text-slate-500 dark:text-white/40 animate-[fadeInUp_0.8s_ease-out_0.9s_both]">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                14-day money-back guarantee
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                No credit card required
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Setup in 2 minutes
+              </div>
+            </div>
+          </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-1 space-y-3">
-                      {[1, 2, 3, 4].map(i => (
-                        <div key={i} className={`rounded-lg p-3 ${i === 2 ? 'border border-[#3872B9]/50 bg-[#3872B9]/10' : 'bg-white/[0.03]'}`}>
-                          <div className="mb-2 h-2 w-16 rounded bg-white/20" />
-                          <div className="h-2 w-full rounded bg-white/10" />
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-[fadeInUp_0.8s_ease-out_1.1s_both]">
+            <div className="flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
+              <span className="text-xs uppercase tracking-widest">Scroll</span>
+              <div className="h-12 w-[1px] bg-gradient-to-b from-slate-400 dark:from-white/30 to-transparent" />
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="relative border-y py-20 border-slate-200 bg-white dark:border-white/[0.06] dark:bg-transparent">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+              {[
+                { value: 90, suffix: "%", label: "Cost Reduction" },
+                { value: 2, suffix: "min", label: "Setup Time" },
+                { value: 85, suffix: "%", label: "Automation Rate" },
+                { value: 40, suffix: "%", label: "Faster Responses" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white md:text-5xl">
+                    <AnimatedNumber target={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <div className="mt-2 text-sm text-slate-500 dark:text-white/50">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="relative py-32">
+          <div className="mx-auto max-w-7xl px-6">
+            {/* Section header */}
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                Everything you need to
+                <span className="block bg-gradient-to-r from-[#3872B9] to-[#B33275] bg-clip-text text-transparent">
+                  transform support
+                </span>
+              </h2>
+              <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
+                A complete platform designed to make your support team unstoppable.
+              </p>
+            </div>
+
+            {/* Feature grid */}
+            <div className="mt-20 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, i) => (
+                <FeatureCard key={feature.title} {...feature} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Product Preview Section */}
+        <section className="relative overflow-hidden py-32">
+          {/* Background treatment */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#3872B9]/5 to-transparent" />
+
+          <div className="relative mx-auto max-w-7xl px-6">
+            <div className="grid items-center gap-16 lg:grid-cols-2">
+              {/* Text content */}
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#3872B9]/30 bg-[#3872B9]/10 px-4 py-1.5 text-sm text-[#3872B9]">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#3872B9]" />
+                  Powerful Interface
+                </div>
+
+                <h2 className="mt-6 font-[var(--font-custom)] text-4xl font-medium leading-tight tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                  A workspace designed for
+                  <span className="text-slate-500 dark:text-white/50"> speed and clarity</span>
+                </h2>
+
+                <p className="mt-6 text-lg leading-relaxed text-slate-600 dark:text-white/50">
+                  Our thoughtfully crafted interface puts everything you need at your fingertips.
+                  Review AI drafts, approve with confidence, and watch your queue shrink in real-time.
+                </p>
+
+                <ul className="mt-8 space-y-4">
+                  {[
+                    "Swipe-based review for rapid processing",
+                    "Inline editing with AI regeneration",
+                    "Smart categorization and priority scoring",
+                    "One-click approval and sending",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-slate-700 dark:text-white/70">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#3872B9]/20 to-[#B33275]/20">
+                        <svg className="h-3.5 w-3.5 text-[#3872B9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Product mockup */}
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#3872B9]/10 via-[#B33275]/10 to-[#F38135]/10 blur-3xl dark:from-[#3872B9]/20 dark:via-[#B33275]/20 dark:to-[#F38135]/20" />
+                <div className="relative overflow-hidden rounded-2xl border p-2 shadow-2xl border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none">
+                  <div className="aspect-[4/3] rounded-xl p-6 bg-slate-50 dark:bg-[#111113]">
+                    {/* Mock interface */}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-3 w-3 rounded-full bg-[#EF4444]" />
+                        <div className="h-3 w-3 rounded-full bg-[#F59E0B]" />
+                        <div className="h-3 w-3 rounded-full bg-[#22C55E]" />
+                      </div>
+                      <div className="h-2 w-24 rounded-full bg-slate-200 dark:bg-white/10" />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 space-y-3">
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} className={`rounded-lg p-3 ${i === 2 ? 'border border-[#3872B9]/50 bg-[#3872B9]/10' : 'bg-white border border-slate-200 dark:bg-white/[0.03] dark:border-transparent'}`}>
+                            <div className="mb-2 h-2 w-16 rounded bg-slate-300 dark:bg-white/20" />
+                            <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="col-span-2 rounded-xl border p-4 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.02]">
+                        <div className="mb-3 h-3 w-32 rounded bg-slate-300 dark:bg-white/20" />
+                        <div className="space-y-2">
+                          <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
+                          <div className="h-2 w-5/6 rounded bg-slate-200 dark:bg-white/10" />
+                          <div className="h-2 w-4/6 rounded bg-slate-200 dark:bg-white/10" />
+                        </div>
+                        <div className="mt-4 rounded-lg bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10 p-3 dark:from-[#3872B9]/20 dark:to-[#B33275]/20">
+                          <div className="mb-2 h-2 w-20 rounded bg-[#3872B9]/40 dark:bg-[#3872B9]/50" />
+                          <div className="space-y-1.5">
+                            <div className="h-2 w-full rounded bg-slate-300 dark:bg-white/20" />
+                            <div className="h-2 w-5/6 rounded bg-slate-300 dark:bg-white/20" />
+                            <div className="h-2 w-3/4 rounded bg-slate-300 dark:bg-white/20" />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                          <div className="h-8 w-24 rounded-lg bg-[#22C55E]/20" />
+                          <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-white/10" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section id="testimonials" className="relative py-32">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                Loved by support teams
+                <span className="block text-slate-500 dark:text-white/50">worldwide</span>
+              </h2>
+              <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
+                See how companies are transforming their customer support with Aidly.
+              </p>
+            </div>
+
+            <div className="mt-16 grid gap-8 md:grid-cols-3">
+              {testimonials.map((testimonial, i) => (
+                <TestimonialCard key={testimonial.author} {...testimonial} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="relative py-32">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#B33275]/5 to-transparent" />
+
+          <div className="relative mx-auto max-w-4xl px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                Simple, transparent
+                <span className="block bg-gradient-to-r from-[#F38135] to-[#B33275] bg-clip-text text-transparent">pricing</span>
+              </h2>
+              <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
+                One plan. Everything included. No surprises.
+              </p>
+            </div>
+
+            {/* Pricing card */}
+            <div className="mt-16">
+              <div className="relative overflow-hidden rounded-3xl border p-1 shadow-xl border-slate-200 bg-white dark:border-white/[0.1] dark:bg-white/[0.03] dark:shadow-none">
+                {/* Decorative gradient border */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-50 dark:from-[#3872B9]/50 dark:via-[#B33275]/50 dark:to-[#F38135]/50 dark:opacity-20" />
+
+                <div className="relative rounded-[22px] p-10 bg-white dark:bg-[#0A0A0B]">
+                  <div className="flex flex-col items-center text-center">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F38135]/20 to-[#B33275]/20 px-4 py-1.5 text-sm font-medium text-[#B33275] dark:text-[#F38135]">
+                      Most Popular
+                    </div>
+
+                    {/* Price */}
+                    <div className="mt-8">
+                      <div className="flex items-baseline justify-center gap-2">
+                        <span className="font-[var(--font-custom)] text-6xl font-medium text-slate-900 dark:text-white md:text-7xl">$167</span>
+                        <span className="text-lg text-slate-500 dark:text-white/50">/month</span>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually at $1,999 • Save $389</p>
+                    </div>
+
+                    {/* Features */}
+                    <div className="mt-10 grid gap-4 sm:grid-cols-2">
+                      {[
+                        "Unlimited AI responses",
+                        "All AI providers supported",
+                        "Custom training data",
+                        "Priority email support",
+                        "Advanced analytics",
+                        "Team collaboration",
+                        "API access",
+                        "GDPR compliant",
+                      ].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 text-left text-slate-700 dark:text-white/70">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#3872B9]/20 to-[#B33275]/20 dark:from-[#3872B9]/30 dark:to-[#B33275]/30">
+                            <svg className="h-3 w-3 text-[#3872B9] dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          {feature}
                         </div>
                       ))}
                     </div>
-                    <div className="col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                      <div className="mb-3 h-3 w-32 rounded bg-white/20" />
-                      <div className="space-y-2">
-                        <div className="h-2 w-full rounded bg-white/10" />
-                        <div className="h-2 w-5/6 rounded bg-white/10" />
-                        <div className="h-2 w-4/6 rounded bg-white/10" />
-                      </div>
-                      <div className="mt-4 rounded-lg bg-gradient-to-r from-[#3872B9]/20 to-[#B33275]/20 p-3">
-                        <div className="mb-2 h-2 w-20 rounded bg-[#3872B9]/50" />
-                        <div className="space-y-1.5">
-                          <div className="h-2 w-full rounded bg-white/20" />
-                          <div className="h-2 w-5/6 rounded bg-white/20" />
-                          <div className="h-2 w-3/4 rounded bg-white/20" />
-                        </div>
-                      </div>
-                      <div className="mt-4 flex gap-2">
-                        <div className="h-8 w-24 rounded-lg bg-[#22C55E]/20" />
-                        <div className="h-8 w-20 rounded-lg bg-white/10" />
-                      </div>
-                    </div>
+
+                    {/* CTA */}
+                    <Button
+                      size="lg"
+                      className="mt-10 h-14 w-full max-w-sm px-8 text-base font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                      asChild
+                    >
+                      <Link href="/app/login">
+                        Start 14-Day Free Trial
+                      </Link>
+                    </Button>
+
+                    <p className="mt-4 text-sm text-slate-500 dark:text-white/40">
+                      No credit card required • Cancel anytime
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="relative py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-serif text-4xl font-medium tracking-tight text-white md:text-5xl">
-              Loved by support teams
-              <span className="block text-white/50">worldwide</span>
+        {/* Final CTA Section */}
+        <section className="relative overflow-hidden py-32">
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FAFBFC] via-transparent to-[#FAFBFC] dark:from-[#0A0A0B] dark:to-[#0A0A0B]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#3872B9_0%,_transparent_70%)] opacity-5 dark:opacity-10" />
+          </div>
+
+          <div className="relative mx-auto max-w-4xl px-6 text-center">
+            <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
+              Ready to transform your
+              <span className="block bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
+                customer support?
+              </span>
             </h2>
-            <p className="mt-6 text-lg text-white/50">
-              See how companies are transforming their customer support with Aidly.
+
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-white/50">
+              Join hundreds of teams already saving hours every day with Aidly.
+              Start your free trial today—no commitment required.
             </p>
+
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button
+                size="lg"
+                className="h-14 px-10 text-base font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                asChild
+              >
+                <Link href="/app/login">Get Started Free</Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-10 text-base font-medium border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 dark:border-white/[0.12] dark:bg-transparent dark:text-white dark:hover:border-white/25 dark:hover:bg-white/[0.03] dark:hover:text-white"
+                asChild
+              >
+                <Link href="mailto:hello@aidly.io">Contact Sales</Link>
+              </Button>
+            </div>
           </div>
+        </section>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            {testimonials.map((testimonial, i) => (
-              <TestimonialCard key={testimonial.author} {...testimonial} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* Footer */}
+        <footer className="border-t py-16 border-slate-200 bg-white dark:border-white/[0.06] dark:bg-transparent">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
+              <div className="flex items-center gap-3">
+                <Image src="/logo-60x.png" alt="Aidly" width={24} height={24} className="rounded-lg" />
+                <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly. All rights reserved.</span>
+              </div>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="relative py-32">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#B33275]/5 to-transparent" />
+              <div className="flex items-center gap-8 text-sm text-slate-500 dark:text-white/40">
+                <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
+                <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
+                <Link href="/careers" className="transition-colors hover:text-slate-900 dark:hover:text-white">Careers</Link>
+                <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
+              </div>
 
-        <div className="relative mx-auto max-w-4xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-serif text-4xl font-medium tracking-tight text-white md:text-5xl">
-              Simple, transparent
-              <span className="block bg-gradient-to-r from-[#F38135] to-[#B33275] bg-clip-text text-transparent">pricing</span>
-            </h2>
-            <p className="mt-6 text-lg text-white/50">
-              One plan. Everything included. No surprises.
-            </p>
-          </div>
-
-          {/* Pricing card */}
-          <div className="mt-16">
-            <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-1">
-              {/* Decorative gradient border */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#3872B9]/50 via-[#B33275]/50 to-[#F38135]/50 opacity-20" />
-
-              <div className="relative rounded-[22px] bg-[#0A0A0B] p-10">
-                <div className="flex flex-col items-center text-center">
-                  {/* Badge */}
-                  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F38135]/20 to-[#B33275]/20 px-4 py-1.5 text-sm font-medium text-[#F38135]">
-                    Most Popular
-                  </div>
-
-                  {/* Price */}
-                  <div className="mt-8">
-                    <div className="flex items-baseline justify-center gap-2">
-                      <span className="font-serif text-6xl font-medium text-white md:text-7xl">$167</span>
-                      <span className="text-lg text-white/50">/month</span>
-                    </div>
-                    <p className="mt-2 text-sm text-white/40">Billed annually at $1,999 • Save $389</p>
-                  </div>
-
-                  {/* Features */}
-                  <div className="mt-10 grid gap-4 sm:grid-cols-2">
-                    {[
-                      "Unlimited AI responses",
-                      "All AI providers supported",
-                      "Custom training data",
-                      "Priority email support",
-                      "Advanced analytics",
-                      "Team collaboration",
-                      "API access",
-                      "GDPR compliant",
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3 text-left text-white/70">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#3872B9]/30 to-[#B33275]/30">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        {feature}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CTA */}
-                  <Button
-                    size="lg"
-                    className="mt-10 h-14 w-full max-w-sm bg-white px-8 text-base font-semibold text-[#0A0A0B] transition-all hover:bg-white hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-                    asChild
-                  >
-                    <Link href="/app/login">
-                      Start 14-Day Free Trial
-                    </Link>
-                  </Button>
-
-                  <p className="mt-4 text-sm text-white/40">
-                    No credit card required • Cancel anytime
-                  </p>
-                </div>
+              <div className="text-sm text-slate-500 dark:text-white/40">
+                Made with care in 🇫🇷
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </footer>
 
-      {/* Final CTA Section */}
-      <section className="relative overflow-hidden py-32">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-transparent to-[#0A0A0B]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#3872B9_0%,_transparent_70%)] opacity-10" />
-        </div>
+        {/* Global animations */}
+        <style jsx global>{`
+          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
-        <div className="relative mx-auto max-w-4xl px-6 text-center">
-          <h2 className="font-serif text-4xl font-medium tracking-tight text-white md:text-5xl lg:text-6xl">
-            Ready to transform your
-            <span className="block bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
-              customer support?
-            </span>
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-white/50">
-            Join hundreds of teams already saving hours every day with Aidly.
-            Start your free trial today—no commitment required.
-          </p>
-
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-14 bg-white px-10 text-base font-semibold text-[#0A0A0B] transition-all hover:bg-white hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-              asChild
-            >
-              <Link href="/app/login">Get Started Free</Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 border-white/[0.12] bg-transparent px-10 text-base font-medium text-white hover:border-white/25 hover:bg-white/[0.03]"
-              asChild
-            >
-              <Link href="mailto:hello@aidly.io">Contact Sales</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-16">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-            <div className="flex items-center gap-3">
-              <Image src="/logo-60x.png" alt="Aidly" width={24} height={24} className="rounded-lg" />
-              <span className="text-sm text-white/40">© {new Date().getFullYear()} Aidly. All rights reserved.</span>
-            </div>
-
-            <div className="flex items-center gap-8 text-sm text-white/40">
-              <Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link>
-              <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
-              <Link href="/careers" className="transition-colors hover:text-white">Careers</Link>
-              <Link href="/dpa" className="transition-colors hover:text-white">DPA</Link>
-            </div>
-
-            <div className="text-sm text-white/40">
-              Made with care in 🇫🇷
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Global animations */}
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-
-        .font-serif {
-          font-family: 'Playfair Display', Georgia, serif;
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
+          .font-serif {
+            font-family: 'Playfair Display', Georgia, serif;
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        html {
-          scroll-behavior: smooth;
-        }
-      `}</style>
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          html {
+            scroll-behavior: smooth;
+          }
+        `}</style>
+      </div>
     </div>
   )
 }
