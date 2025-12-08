@@ -330,28 +330,110 @@ export default function LuxuryLanding() {
           onMouseMove={handleMouseMove}
           className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20"
         >
-          {/* Floating geometric elements */}
+          {/* Floating branded ring elements - inspired by logo */}
+          {/* Large ring - top left */}
           <div
-            className="absolute left-[15%] top-[30%] h-24 w-24 rounded-2xl border shadow-sm border-slate-200 bg-white/50 dark:border-white/[0.08] dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-transparent dark:shadow-none"
+            className="absolute left-[8%] top-[20%] h-32 w-32 opacity-60 dark:opacity-40"
             style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * -40}px, ${(mousePos.y - 0.5) * -40 + scrollY * 0.2}px, 0) rotate(12deg)`,
+              transform: `translate3d(${(mousePos.x - 0.5) * -40}px, ${(mousePos.y - 0.5) * -40 + scrollY * 0.2}px, 0)`,
               transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-          />
+          >
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_30s_linear_infinite]">
+              <defs>
+                <linearGradient id="ring-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3872B9" />
+                  <stop offset="50%" stopColor="#B33275" />
+                  <stop offset="100%" stopColor="#F38135" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="45" fill="none" stroke="url(#ring-gradient-1)" strokeWidth="3" />
+              <circle cx="50" cy="50" r="38" fill="none" stroke="url(#ring-gradient-1)" strokeWidth="2" opacity="0.6" />
+            </svg>
+          </div>
+
+          {/* Medium ring - top right */}
           <div
-            className="absolute right-[20%] top-[25%] h-16 w-16 rounded-full border border-[#3872B9]/20 bg-[#3872B9]/5 dark:bg-gradient-to-br dark:from-[#3872B9]/10 dark:to-transparent"
+            className="absolute right-[12%] top-[15%] h-24 w-24 opacity-50 dark:opacity-30"
             style={{
               transform: `translate3d(${(mousePos.x - 0.5) * 50}px, ${(mousePos.y - 0.5) * 50 + scrollY * 0.15}px, 0)`,
               transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-          />
+          >
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_25s_linear_infinite_reverse]">
+              <defs>
+                <linearGradient id="ring-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#F38135" />
+                  <stop offset="50%" stopColor="#B33275" />
+                  <stop offset="100%" stopColor="#3872B9" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="45" fill="none" stroke="url(#ring-gradient-2)" strokeWidth="2.5" />
+              <circle cx="50" cy="50" r="36" fill="none" stroke="url(#ring-gradient-2)" strokeWidth="1.5" opacity="0.5" />
+            </svg>
+          </div>
+
+          {/* Small ring - bottom left */}
           <div
-            className="absolute bottom-[30%] left-[10%] h-20 w-20 rounded-xl border border-[#B33275]/20 bg-[#B33275]/5 dark:bg-gradient-to-br dark:from-[#B33275]/10 dark:to-transparent"
+            className="absolute bottom-[25%] left-[5%] h-16 w-16 opacity-40 dark:opacity-25"
             style={{
-              transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${(mousePos.y - 0.5) * 30 + scrollY * 0.25}px, 0) rotate(-8deg)`,
+              transform: `translate3d(${(mousePos.x - 0.5) * 30}px, ${(mousePos.y - 0.5) * 30 + scrollY * 0.25}px, 0)`,
               transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-          />
+          >
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_20s_linear_infinite]">
+              <defs>
+                <linearGradient id="ring-gradient-3" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3872B9" />
+                  <stop offset="100%" stopColor="#B33275" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ring-gradient-3)" strokeWidth="3" />
+              <circle cx="50" cy="50" r="32" fill="none" stroke="url(#ring-gradient-3)" strokeWidth="2" opacity="0.5" />
+            </svg>
+          </div>
+
+          {/* Extra small ring - right side middle */}
+          <div
+            className="absolute right-[8%] top-[55%] h-12 w-12 opacity-30 dark:opacity-20"
+            style={{
+              transform: `translate3d(${(mousePos.x - 0.5) * 60}px, ${(mousePos.y - 0.5) * 60 + scrollY * 0.1}px, 0)`,
+              transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_15s_linear_infinite_reverse]">
+              <defs>
+                <linearGradient id="ring-gradient-4" x1="50%" y1="0%" x2="50%" y2="100%">
+                  <stop offset="0%" stopColor="#B33275" />
+                  <stop offset="100%" stopColor="#F38135" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="url(#ring-gradient-4)" strokeWidth="4" />
+              <circle cx="50" cy="50" r="28" fill="none" stroke="url(#ring-gradient-4)" strokeWidth="2" opacity="0.4" />
+            </svg>
+          </div>
+
+          {/* Large decorative ring - bottom right (partially visible) */}
+          <div
+            className="absolute -bottom-[10%] -right-[5%] h-48 w-48 opacity-20 dark:opacity-10"
+            style={{
+              transform: `translate3d(${(mousePos.x - 0.5) * -20}px, ${(mousePos.y - 0.5) * -20 + scrollY * 0.08}px, 0)`,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <svg viewBox="0 0 100 100" className="h-full w-full animate-[spin_40s_linear_infinite]">
+              <defs>
+                <linearGradient id="ring-gradient-5" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3872B9" />
+                  <stop offset="50%" stopColor="#B33275" />
+                  <stop offset="100%" stopColor="#F38135" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="46" fill="none" stroke="url(#ring-gradient-5)" strokeWidth="2" />
+              <circle cx="50" cy="50" r="38" fill="none" stroke="url(#ring-gradient-5)" strokeWidth="1.5" opacity="0.6" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="url(#ring-gradient-5)" strokeWidth="1" opacity="0.3" />
+            </svg>
+          </div>
 
           <div className="relative z-10 mx-auto max-w-5xl text-center">
             {/* Announcement badge */}
