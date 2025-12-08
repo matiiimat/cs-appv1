@@ -3,7 +3,7 @@ import { DataEncryption } from '@/lib/encryption'
 
 export async function getOrgAndUserByEmail(email: string): Promise<{ organizationId: string; userId: string } | null> {
   const result = await db.query<{ organization_id: string; id: string }>(
-    'SELECT organization_id, id FROM users WHERE lower(email) = lower($1) ORDER BY created_at ASC LIMIT 1',
+    'SELECT organization_id, id FROM users WHERE email = $1 ORDER BY created_at ASC LIMIT 1',
     [email]
   )
   if (result.rows.length === 0) return null

@@ -95,11 +95,22 @@ Create a knowledge base entry that captures the essence of this issue and its re
       const cleanedResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
       console.log('AI Response for synthesis:', cleanedResponse);
 
+      // Security: Validate input size and safely parse JSON
+      if (cleanedResponse.length > 50000) {
+        throw new Error('AI response too large');
+      }
+
       synthesis = JSON.parse(cleanedResponse);
 
-      // Validate the parsed response has required fields
-      if (!synthesis.case_summary || !synthesis.resolution) {
-        throw new Error('Missing required fields in AI response');
+      // Validate the parsed response structure and required fields
+      if (!synthesis || typeof synthesis !== 'object') {
+        throw new Error('Invalid response format from AI');
+      }
+
+      if (!synthesis.case_summary || !synthesis.resolution ||
+          typeof synthesis.case_summary !== 'string' ||
+          typeof synthesis.resolution !== 'string') {
+        throw new Error('Missing or invalid required fields in AI response');
       }
     } catch (error) {
       console.error('Failed to parse AI synthesis response:', error);

@@ -3,18 +3,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ==========================================================================
+   AIDLY DESIGN SYSTEM
+   Linear/Raycast-inspired dark-first theme
+   ========================================================================== */
+
 :root {
   /* Brand palette */
-  /* Primary (blue) */
+  --aidly-blue: #3872B9;
+  --aidly-orange: #F38135;
+  --aidly-coral: #B05755;
+  --aidly-magenta: #B33275;
+  --aidly-slate: #475B88;
+
+  /* Semantic colors */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+
+  /* Light mode (fallback) */
   --primary: #3872b9;
   --primary-foreground: #ffffff;
-  /* Secondary (orange) */
   --secondary: #f38135;
   --secondary-foreground: #ffffff;
-  /* Accent (magenta) */
   --accent: #b33275;
   --accent-foreground: #ffffff;
-  /* Supportive UI colors */
   --background: #ffffff;
   --foreground: #2a2f3a;
   --card: #f8fafc;
@@ -22,12 +35,12 @@
   --popover: #ffffff;
   --popover-foreground: #2a2f3a;
   --muted: #e5e7eb;
-  --muted-foreground: #475b88; /* deep slate from palette */
+  --muted-foreground: #475b88;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #d1d5db;
   --input: #f8fafc;
-  --ring: rgba(56, 114, 185, 0.5); /* primary tint */
+  --ring: rgba(56, 114, 185, 0.5);
   --chart-1: #3872b9;
   --chart-2: #f38135;
   --chart-3: #b33275;
@@ -45,39 +58,54 @@
 }
 
 .dark {
-  /* Dark mode with brand accents */
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #0a0a0a;
-  --card-foreground: #ffffff;
-  --popover: #0a0a0a;
-  --popover-foreground: #ffffff;
-  --primary: #3872b9;
-  --primary-foreground: #ffffff;
-  --secondary: #f38135;
-  --secondary-foreground: #000000;
-  --muted: #141414;
-  --muted-foreground: #a1a1aa;
-  --accent: #b33275;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #000000;
-  --border: #262626;
-  --input: #0a0a0a;
-  --ring: rgba(56, 114, 185, 0.5);
+  /* =======================================================================
+     DARK THEME - Primary theme for Aidly
+     Inspired by Linear, Raycast - sharp, professional, fast-feeling
+     ======================================================================= */
+
+  /* Backgrounds - layered depth */
+  --background: #09090B;        /* App base - near black */
+  --card: #111113;              /* Elevated surfaces */
+  --popover: #18181B;           /* Dropdowns, modals */
+  --muted: #1C1C1F;             /* Subtle backgrounds, hover states */
+  --input: #141416;             /* Input fields */
+
+  /* Text hierarchy */
+  --foreground: #FAFAFA;        /* Primary text */
+  --card-foreground: #FAFAFA;
+  --popover-foreground: #FAFAFA;
+  --muted-foreground: #A1A1AA;  /* Secondary text */
+
+  /* Borders - subtle definition */
+  --border: #27272A;            /* Default borders */
+  --ring: rgba(56, 114, 185, 0.4);
+
+  /* Brand colors - unchanged */
+  --primary: #3872B9;
+  --primary-foreground: #FAFAFA;
+  --secondary: #F38135;
+  --secondary-foreground: #09090B;
+  --accent: #B33275;
+  --accent-foreground: #FAFAFA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FAFAFA;
+
+  /* Charts */
   --chart-1: #3872b9;
   --chart-2: #f38135;
   --chart-3: #b33275;
   --chart-4: #b05755;
   --chart-5: #475b88;
-  --sidebar: #000000;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #0a0a0a;
-  --sidebar-primary-foreground: #ffffff;
+
+  /* Sidebar */
+  --sidebar: #0C0C0E;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #111113;
+  --sidebar-primary-foreground: #FAFAFA;
   --sidebar-accent: #f38135;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #262626;
-  --sidebar-ring: rgba(56, 114, 185, 0.5);
+  --sidebar-accent-foreground: #09090B;
+  --sidebar-border: #27272A;
+  --sidebar-ring: rgba(56, 114, 185, 0.4);
 }
 
 @theme inline {
@@ -124,6 +152,166 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ==========================================================================
+   AIDLY COMPONENT STYLES
+   ========================================================================== */
+
+@layer components {
+  /* Keyboard shortcut badges */
+  .kbd {
+    @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono
+           bg-muted text-muted-foreground rounded border border-border
+           min-w-[1.5rem] h-5;
+  }
+
+  .kbd-sm {
+    @apply inline-flex items-center justify-center px-1 py-0.5 text-[10px] font-mono
+           bg-muted text-muted-foreground rounded border border-border
+           min-w-[1.25rem] h-4;
+  }
+
+  /* Navigation pill style */
+  .nav-item {
+    @apply relative flex items-center gap-2 px-3 py-1.5 text-sm font-medium
+           text-muted-foreground rounded-md transition-colors
+           hover:text-foreground hover:bg-muted/50;
+  }
+
+  .nav-item-active {
+    @apply text-foreground;
+  }
+
+  .nav-item-active::after {
+    content: '';
+    @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-primary rounded-full;
+  }
+
+  /* Card styles - elevated surfaces */
+  .surface {
+    @apply bg-card border border-border rounded-lg;
+  }
+
+  .surface-elevated {
+    @apply bg-card border border-border rounded-lg shadow-lg shadow-black/20;
+  }
+
+  /* Action button states */
+  .btn-action-approve {
+    @apply bg-emerald-600 hover:bg-emerald-500 text-white;
+  }
+
+  .btn-action-review {
+    @apply bg-amber-600 hover:bg-amber-500 text-white;
+  }
+
+  /* Swipe card feedback */
+  .swipe-approve {
+    @apply border-2 border-emerald-500 bg-emerald-500/10;
+  }
+
+  .swipe-review {
+    @apply border-2 border-amber-500 bg-amber-500/10;
+  }
+
+  /* Command palette styles */
+  .command-palette {
+    @apply fixed inset-0 z-50 flex items-start justify-center pt-[20vh];
+  }
+
+  .command-palette-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm;
+  }
+
+  .command-palette-content {
+    @apply relative w-full max-w-xl bg-popover border border-border rounded-xl
+           shadow-2xl shadow-black/40 overflow-hidden;
+  }
+
+  .command-palette-input {
+    @apply w-full px-4 py-3 bg-transparent border-b border-border
+           text-foreground placeholder:text-muted-foreground
+           focus:outline-none text-base;
+  }
+
+  .command-palette-item {
+    @apply flex items-center justify-between px-4 py-2.5
+           cursor-pointer transition-colors
+           hover:bg-muted/50;
+  }
+
+  .command-palette-item-active {
+    @apply bg-muted;
+  }
+
+  .command-palette-shortcut {
+    @apply flex items-center gap-1 text-xs text-muted-foreground;
+  }
+
+  /* Focus states - only visible on keyboard navigation */
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+           focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Quick edit modal */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/70 backdrop-blur-sm
+           flex items-center justify-center p-4;
+  }
+
+  .modal-content {
+    @apply relative w-full max-w-2xl max-h-[85vh]
+           bg-card border border-border rounded-xl
+           shadow-2xl shadow-black/50 overflow-hidden
+           flex flex-col;
+  }
+
+  /* Inline AI input */
+  .ai-inline-input {
+    @apply flex items-center gap-2 px-3 py-2
+           bg-accent/10 border border-accent/30 rounded-lg
+           text-sm;
+  }
+
+  /* Status badges - refined */
+  .status-badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .status-new {
+    @apply bg-blue-500/15 text-blue-400;
+  }
+
+  .status-sent {
+    @apply bg-emerald-500/15 text-emerald-400;
+  }
+
+  .status-review {
+    @apply bg-amber-500/15 text-amber-400;
+  }
+
+  .status-pending {
+    @apply bg-purple-500/15 text-purple-400;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+
+  .empty-state-icon {
+    @apply w-12 h-12 mb-4 text-muted-foreground/30;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-medium text-foreground mb-1;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-muted-foreground;
   }
 }

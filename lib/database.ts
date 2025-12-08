@@ -248,9 +248,25 @@ export class DatabaseUtils {
   }
 
   /**
-   * Add tenant filter to any query
+   * Add tenant filter to any query (DEPRECATED - Security Risk)
+   * @deprecated Use buildTenantWhereClause or explicit parameterized queries instead
+   * This method is kept for backward compatibility but should not be used for new code
    */
   static addTenantFilter(query: string, organizationId: string): { query: string; params: unknown[] } {
+    // Security: Validate that input query comes from a whitelist of safe base queries
+    const safeQueries = [
+      /^SELECT \* FROM messages$/i,
+      /^SELECT .+ FROM messages$/i,
+      /^SELECT .+ FROM knowledge_base_entries$/i,
+      /^SELECT .+ FROM users$/i,
+      /^SELECT .+ FROM organizations$/i
+    ];
+
+    const isSafe = safeQueries.some(pattern => pattern.test(query.trim()));
+    if (!isSafe) {
+      throw new Error('Unsafe query detected - use explicit parameterized queries');
+    }
+
     const matches = query.match(/\$\d+/g);
     const tenantParam = '$' + ((matches?.length ?? 0) + 1);
 
@@ -293,11 +309,16 @@ export class DatabaseUtils {
   }
 
   /**
-   * Paginate query results
+   * Paginate query results (DEPRECATED - Use parameterized pagination)
+   * @deprecated Use explicit LIMIT and OFFSET parameters in queries instead
    */
   static addPagination(query: string, page: number = 1, limit: number = 20): { query: string; offset: number } {
-    const offset = (page - 1) * limit;
-    const paginatedQuery = `${query} LIMIT ${limit} OFFSET ${offset}`;
+    // Security: Validate numeric inputs
+    const validatedPage = Math.max(1, Math.floor(Math.abs(page)));
+    const validatedLimit = Math.max(1, Math.min(1000, Math.floor(Math.abs(limit)))); // Cap at 1000
+
+    const offset = (validatedPage - 1) * validatedLimit;
+    const paginatedQuery = `${query} LIMIT ${validatedLimit} OFFSET ${offset}`;
     return { query: paginatedQuery, offset };
   }
 }

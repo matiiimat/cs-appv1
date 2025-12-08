@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
@@ -12,60 +11,32 @@ import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDa
 import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
-import { Clock, User, Send, Bot, Zap, MessageSquare } from "lucide-react"
-
-interface ChatMessage {
-  id: string
-  content: string
-  sender: "agent" | "ai"
-  timestamp: Date
-}
+import { Clock, User, Send, Sparkles, MessageSquare, Loader2, MoreHorizontal, X } from "lucide-react"
+import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
 
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
   const { settings, aiConfigHasKey } = useSettings()
+  const { handleAIError } = useAIErrorHandler()
 
-  // Get agent ID - use demo agent for demo organization, otherwise require auth
+  // Get agent ID
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
-
   const getAgentId = () => {
-    // TODO: Replace with real user authentication
-    // const { user } = useAuth()
-    // return user?.id
-
-    // For demo organization, use demo agent
-    if (DEMO_AGENT_ID) {
-      // console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
-      return DEMO_AGENT_ID
-    }
-
-    throw new Error('No agent context available. Implement user authentication.')
+    if (DEMO_AGENT_ID) return DEMO_AGENT_ID
+    throw new Error('No agent context available.')
   }
-
   const agentId = getAgentId()
+
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [aiChatInput, setAiChatInput] = useState("")
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [aiInput, setAiInput] = useState("")
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [showAiInput, setShowAiInput] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
-  
-  // Generate unique IDs for chat items to avoid key collisions
-  const genId = () => {
-    try {
-      // Prefer cryptographically-strong UUIDs when available
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const g: any = globalThis as any
-      if (g?.crypto?.randomUUID) return g.crypto.randomUUID()
-    } catch {
-      // ignore
-    }
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-  }
-  
+  const aiInputRef = useRef<HTMLInputElement>(null)
+
   // Get current draft reply for selected message
   const replyText = selectedMessageId ? getDraftReply(selectedMessageId) : ""
-  
-  // Function to update reply text
+
   const setReplyText = (text: string) => {
     if (selectedMessageId) {
       updateDraftReply(selectedMessageId, text)
@@ -74,18 +45,20 @@ export function DetailedReviewInterface() {
 
   const reviewMessages = messages
     .filter((msg) => msg.status === "to_review_queue")
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort by date, oldest first
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+
   const selectedMessage = reviewMessages.find((msg) => msg.id === selectedMessageId)
 
+  // Auto-select first message
   useEffect(() => {
     if (reviewMessages.length > 0 && !selectedMessageId) {
       setSelectedMessageId(reviewMessages[0].id)
     }
   }, [reviewMessages, selectedMessageId])
 
+  // Initialize draft from AI suggestion
   useEffect(() => {
     if (selectedMessage?.aiSuggestedResponse && selectedMessageId) {
-      // Only set draft if no existing draft exists
       const existingDraft = getDraftReply(selectedMessageId)
       if (!existingDraft) {
         updateDraftReply(selectedMessageId, formatEmailText(selectedMessage.aiSuggestedResponse))
@@ -93,29 +66,9 @@ export function DetailedReviewInterface() {
     }
   }, [selectedMessage, selectedMessageId, getDraftReply, updateDraftReply])
 
-  const handleApprove = useCallback(async () => {
-    if (!selectedMessage) return
-    const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
-    if (!finalResponse.trim()) {
-      alert('Draft reply is empty. Please write or insert a reply before sending.')
-      return
-    }
-    try {
-      // Persist the current draft as the final response, then mark as sent
-      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: "sent", agentId, metadata: { ...(selectedMessage.metadata || {}), pending_followup: false } })
-      clearDraftReply(selectedMessage.id)
-      setChatMessages([])
-      // Navigation will be handled by useEffect when reviewMessages updates
-    } catch (error) {
-      console.error('Failed to approve message:', error)
-      alert('Authentication required.')
-    }
-  }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
-
-  // Auto-navigate when reviewMessages changes (after approve/etc)
+  // Auto-navigate when message is removed
   useEffect(() => {
     if (selectedMessageId && !reviewMessages.find(msg => msg.id === selectedMessageId)) {
-      // Current message was removed, select the first available message
       if (reviewMessages.length > 0) {
         setSelectedMessageId(reviewMessages[0].id)
       } else {
@@ -124,293 +77,189 @@ export function DetailedReviewInterface() {
     }
   }, [reviewMessages, selectedMessageId])
 
-
-
-  // Auto-scroll to bottom when new chat messages are added
+  // Focus AI input when shown
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight
+    if (showAiInput) {
+      aiInputRef.current?.focus()
+    }
+  }, [showAiInput])
+
+  // Define handlers before effects that use them
+  const handleApprove = useCallback(async () => {
+    if (!selectedMessage) return
+    const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
+    if (!finalResponse.trim()) {
+      alert('Draft reply is empty.')
+      return
+    }
+    try {
+      await updateMessage(selectedMessage.id, {
+        aiSuggestedResponse: finalResponse,
+        status: "sent",
+        agentId,
+        metadata: { ...(selectedMessage.metadata || {}), pending_followup: false }
+      })
+      clearDraftReply(selectedMessage.id)
+      setShowAiInput(false)
+      setAiInput("")
+    } catch (error) {
+      console.error('Failed to approve message:', error)
+    }
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if in input field (except for specific shortcuts)
+      const target = e.target as HTMLElement
+      const isInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA"
+
+      // Cmd+Enter to send
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault()
+        handleApprove()
+        return
+      }
+
+      // Cmd+I to toggle AI input
+      if ((e.metaKey || e.ctrlKey) && e.key === "i") {
+        e.preventDefault()
+        setShowAiInput(prev => !prev)
+        return
+      }
+
+      // Escape to close AI input or more menu
+      if (e.key === "Escape") {
+        if (showAiInput) {
+          setShowAiInput(false)
+          setAiInput("")
+        }
+        if (moreMenuOpen) {
+          setMoreMenuOpen(false)
+        }
+        return
+      }
+
+      // Don't process other shortcuts if in input
+      if (isInInput) return
+
+      // Arrow keys to navigate messages
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault()
+        const currentIndex = reviewMessages.findIndex(m => m.id === selectedMessageId)
+        if (e.key === "ArrowDown" && currentIndex < reviewMessages.length - 1) {
+          setSelectedMessageId(reviewMessages[currentIndex + 1].id)
+        } else if (e.key === "ArrowUp" && currentIndex > 0) {
+          setSelectedMessageId(reviewMessages[currentIndex - 1].id)
+        }
       }
     }
-  }, [chatMessages])
 
-  // No-op: pending follow-up is stored in DB metadata now
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [selectedMessageId, reviewMessages, showAiInput, moreMenuOpen, handleApprove])
 
   const handleCloseWithoutReply = useCallback(async () => {
     if (!selectedMessage) return
-    const confirmed = window.confirm(
-      'Close this case without sending a reply? This removes it from Inbox.'
-    )
-    if (!confirmed) return
+    if (!window.confirm('Close this case without replying?')) return
 
     try {
-      await updateMessage(selectedMessage.id, { status: 'sent', agentId, metadata: { ...(selectedMessage.metadata || {}), close_without_reply: true, pending_followup: false } })
+      await updateMessage(selectedMessage.id, {
+        status: 'sent',
+        agentId,
+        metadata: { ...(selectedMessage.metadata || {}), close_without_reply: true, pending_followup: false }
+      })
       clearDraftReply(selectedMessage.id)
-      setChatMessages([])
       setMoreMenuOpen(false)
-      // Auto-navigation handled by effect monitoring reviewMessages
     } catch (error) {
-      console.error('Failed to close case without reply:', error)
-      alert('Authentication required.')
+      console.error('Failed to close case:', error)
     }
-  }, [selectedMessage, updateMessage, clearDraftReply, setChatMessages, agentId])
+  }, [selectedMessage, updateMessage, clearDraftReply, agentId])
 
   const handleSendKeepOpen = useCallback(async () => {
     if (!selectedMessage) return
     const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
     if (!finalResponse.trim()) {
-      alert('Draft reply is empty. Please write or insert a reply before sending.')
+      alert('Draft reply is empty.')
       return
     }
     try {
-      await updateMessage(selectedMessage.id, { aiSuggestedResponse: finalResponse, status: 'to_review_queue', agentId, metadata: { ...(selectedMessage.metadata || {}), pending_followup: true, send_and_keep_open: true } })
+      await updateMessage(selectedMessage.id, {
+        aiSuggestedResponse: finalResponse,
+        status: 'to_review_queue',
+        agentId,
+        metadata: { ...(selectedMessage.metadata || {}), pending_followup: true, send_and_keep_open: true }
+      })
       clearDraftReply(selectedMessage.id)
-      setChatMessages([])
       setMoreMenuOpen(false)
     } catch (error) {
-      console.error('Failed to send message and keep case open:', error)
-      alert('Authentication required.')
+      console.error('Failed to send message:', error)
     }
-  }, [selectedMessage, replyText, updateMessage, clearDraftReply, setChatMessages, agentId])
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId])
 
+  const handleAiRefine = async () => {
+    if (!aiInput.trim() || !selectedMessage) return
 
-  const handleAiChat = async () => {
-    if (!aiChatInput.trim() || !selectedMessage) return
-
-    // Check for category change commands
-    const categoryChangeRegex = /(?:change|set|update).*category.*(?:to|as)\s+(.+)/i
-    const categoryMatch = aiChatInput.match(categoryChangeRegex)
-    
-    if (categoryMatch) {
-      const requested = categoryMatch[1].trim().replace(/['"]/g, '')
-      const available = settings.categories || []
-      const match = available.find(c => c.name.toLowerCase() === requested.toLowerCase())
-
-      if (!match) {
-        console.info(
-          `Category change ignored: "${requested}" not found. Available: ${available.map(c => c.name).join(', ')}`
-        )
-        // Do nothing else per requirement (no UI change)
-        return
-      }
-
-      // Use canonical category name from settings
-      updateMessageCategory(selectedMessage.id, match.name)
-      
-      const confirmMessage: ChatMessage = {
-        id: genId(),
-        content: `✅ Category changed to "${match.name}" for this message.`,
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, 
-        { id: genId(), content: aiChatInput, sender: "agent", timestamp: new Date() },
-        confirmMessage
-      ])
-      setAiChatInput("")
-      return
-    }
-
-    // Check if AI is configured
+    // Check AI configuration
     const isLocal = settings.aiConfig.provider === 'local'
     const hasClientKey = Boolean(settings.aiConfig.apiKey)
     const hasServerKey = Boolean(aiConfigHasKey)
     const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
 
     if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
-      const errorMessage: ChatMessage = {
-        id: genId(),
-        content: "Please configure your AI settings first to use the AI assistant.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, errorMessage])
+      handleAIError("AI provider not configured", "AI Refinement")
       return
     }
 
-    const userMessage: ChatMessage = {
-      id: genId(),
-      content: aiChatInput,
-      sender: "agent",
-      timestamp: new Date(),
-    }
-
-    setChatMessages((prev) => [...prev, userMessage])
-    setAiChatInput("")
-
+    setIsAiLoading(true)
     try {
-      // Build conversation context for the AI
-      const conversationContext = chatMessages
-        .map(msg => `${msg.sender === "agent" ? "Agent" : "AI"}: ${msg.content}`)
-        .join("\n")
-      
-      const currentDraft = replyText || selectedMessage.aiSuggestedResponse || ""
+      const systemPrompt = `You are an expert customer support AI assistant. Refine the draft response based on the user's instruction.
 
-      const systemPrompt = `You are an expert customer support AI assistant helping a human agent craft the perfect response to send directly to a customer. Your role is to:
+Customer message: ${selectedMessage.message}
+Current draft: ${replyText || selectedMessage.aiSuggestedResponse || ""}
+User instruction: ${aiInput}
 
-1. Generate customer-ready responses that can be sent directly to the customer
-2. Adapt and improve responses based on the agent's feedback and questions  
-3. Consider the customer's specific situation, tone, and urgency
-4. Maintain a professional, helpful, and empathetic tone
-5. Provide specific, actionable solutions when possible
+Return ONLY the refined response text. No explanation, no quotes, no markdown.
+End with the signature: "${settings.agentSignature}"`
 
-Customer Information:
-- Name: ${selectedMessage.customerName}
-- Email: ${selectedMessage.customerEmail}  
-- Subject: ${selectedMessage.subject}
-- Message: ${selectedMessage.message}
-- Category: ${selectedMessage.category}
-
-Current draft response: ${currentDraft}
-
-Previous conversation with agent:
-${conversationContext}
-
-Agent's latest input: ${aiChatInput}
-
-Generate a customer-ready response that addresses the agent's input while helping resolve the customer's issue.
-
-Output requirements:
-- Return only the final, customer-ready email body.
-- Do not include any prefaces, labels, quotes, code fences, or markdown.
-- Do not say things like "Here is the response" or "Translated version:".
-- End your response with this exact signature once: "${settings.agentSignature}". If the current draft already includes a signature, keep only one copy.`
-
-      // Call server route to avoid browser CORS and keep keys server-side
       const resp = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           aiConfig: settings.aiConfig,
           system: systemPrompt,
-          prompt: aiChatInput,
+          prompt: aiInput,
         })
       })
+
       if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}))
-        throw new Error(data?.error || `AI chat failed (${resp.status})`)
+        // Parse error response for better message
+        const errorData = await resp.json().catch(() => ({}))
+        const errorMsg = errorData.error || `Request failed (${resp.status})`
+        throw new Error(errorMsg)
       }
+
       const data = await resp.json()
-      const response = data.content as string
-      
-      const aiResponse: ChatMessage = {
-        id: genId(),
-        content: response,
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      
-      setChatMessages((prev) => [...prev, aiResponse])
-      
+      setReplyText(data.content)
+      setAiInput("")
+      setShowAiInput(false)
     } catch (error) {
-      console.error("AI chat error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      const errorResponse: ChatMessage = {
-        id: genId(),
-        content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration and try again.`,
-        sender: "ai", 
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, errorResponse])
+      handleAIError(error, "AI Refinement")
+    } finally {
+      setIsAiLoading(false)
     }
   }
 
-  const handleQuickAction = async (actionTitle: string, actionInstruction: string) => {
-    if (!selectedMessage) return
-
-    // Allow quick actions when a server-side key exists or a client key is present (non-local).
-    const isLocal = settings.aiConfig.provider === 'local'
-    const hasClientKey = Boolean(settings.aiConfig.apiKey)
-    const hasServerKey = Boolean(aiConfigHasKey)
-    const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
-    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
-      const errorMessage: ChatMessage = {
-        id: genId(),
-        content: "Please configure your AI settings first to use quick actions.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, errorMessage])
-      return
-    }
-
-    const currentResponse = replyText || selectedMessage.aiSuggestedResponse || ""
-    if (!currentResponse) {
-      const errorMessage: ChatMessage = {
-        id: genId(),
-        content: "Please have some content in the draft reply first to use quick actions.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, errorMessage])
-      return
-    }
-
-    const userMessage: ChatMessage = {
-      id: genId(),
-      content: `Quick Action: ${actionTitle}`,
-      sender: "agent",
-      timestamp: new Date(),
-    }
-
-    setChatMessages((prev) => [...prev, userMessage])
-
-    try {
-      // Use AIResponseEnhancer to include knowledge base entries
-      const { AIResponseEnhancer } = await import('@/lib/ai-response-enhancer')
-      const data = await AIResponseEnhancer.generateResponse({
-        customerName: selectedMessage.customerName,
-        customerEmail: selectedMessage.customerEmail,
-        subject: selectedMessage.subject,
-        message: selectedMessage.message,
-        aiConfig: settings.aiConfig,
-        agentName: settings.agentName || 'Support Agent',
-        agentSignature: settings.agentSignature || 'Best regards,\nSupport Team',
-        categories: settings.categories,
-        quickActionInstruction: actionInstruction,
-        currentResponse: currentResponse,
-        companyKnowledge: settings.companyKnowledge,
-      })
-      const response = data.aiSuggestedResponse as string
-      
-      const aiResponse: ChatMessage = {
-        id: genId(),
-        content: response,
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      
-      setChatMessages((prev) => [...prev, aiResponse])
-      
-    } catch (error) {
-      console.error("Quick action error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      const errorResponse: ChatMessage = {
-        id: genId(),
-        content: `Sorry, I encountered an error: ${errorMessage}. Please check your AI configuration.`,
-        sender: "ai",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, errorResponse])
-    }
-  }
-
-
+  // Empty state
   if (reviewMessages.length === 0) {
     return (
       <div className="container mx-auto px-6 py-8">
-        <div className="text-center py-12">
-          <div className="relative">
-            <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-full flex items-center justify-center">
-                <MessageSquare className="h-6 w-6 text-green-500" />
-              </div>
-            </div>
+        <div className="surface rounded-xl p-12">
+          <div className="empty-state">
+            <MessageSquare className="empty-state-icon" />
+            <h3 className="empty-state-title">Inbox Empty</h3>
+            <p className="empty-state-description">No cases need review right now</p>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Queue Empty!</h3>
         </div>
       </div>
     )
@@ -418,252 +267,230 @@ Output requirements:
 
   return (
     <div className="container mx-auto px-6 py-6">
-
-      <div className="flex gap-6 h-[calc(100vh-180px)]">
-        <div className="w-1/6 min-w-[200px]">
-          <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
-            <div className="pb-3 flex-shrink-0 p-6">
-              <h3 className="text-sm font-semibold">Cases to Review ({reviewMessages.length})</h3>
+      <div className="flex gap-6 h-[calc(100vh-140px)]">
+        {/* Left Panel - Case List */}
+        <div className="w-64 flex-shrink-0">
+          <div className="surface h-full rounded-lg flex flex-col">
+            <div className="p-4 border-b border-border">
+              <h2 className="text-sm font-semibold">Cases ({reviewMessages.length})</h2>
             </div>
-            <div className="p-0 flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto overflow-x-visible p-3">
-                <div className="space-y-2">
-                  {reviewMessages.map((message) => (
-                    <div key={message.id} className="w-full">
-                      <Tooltip 
-                        content={stripQuotedForTooltip(message.message)} 
-                        delay={1000}
-                        className="text-xs whitespace-pre-wrap"
-                      >
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {reviewMessages.map((message) => {
+                  const isSelected = selectedMessageId === message.id
+                  const isPending = message.metadata &&
+                    typeof message.metadata === 'object' &&
+                    (message.metadata as Record<string, unknown>)['pending_followup'] === true
+
+                  return (
+                    <Tooltip
+                      key={message.id}
+                      content={stripQuotedForTooltip(message.message)}
+                      delay={800}
+                    >
                       <div
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors w-full ${
-                          selectedMessageId === message.id ? "bg-accent border-accent-foreground" : "hover:bg-muted"
+                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                          isSelected
+                            ? "bg-primary/10 border border-primary/20"
+                            : "hover:bg-muted/50"
                         }`}
                         onClick={() => setSelectedMessageId(message.id)}
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <User className="h-3 w-3 flex-shrink-0" />
-                          <span className="text-xs font-medium truncate">{message.customerName}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <User className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm font-medium truncate">{message.customerName}</span>
                         </div>
-                        <Badge variant="outline" className="text-xs mb-1">
-                          {message.category}
-                        </Badge>
-                    <div className="flex items-center gap-1 text-xs">
-                          {(
-                            message.metadata &&
-                            typeof message.metadata === 'object' &&
-                            (message.metadata as Record<string, unknown>)['pending_followup'] === true
-                          ) ? (
-                            <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-300">PENDING</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">
+                            {message.category}
+                          </Badge>
+                          {isPending ? (
+                            <span className="status-badge status-pending text-[10px]">PENDING</span>
                           ) : (
-                            <>
-                              <Clock className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                              <span className={`px-2 py-1 rounded text-xs font-medium truncate ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
-                                {formatFriendlyDate(message.timestamp)}
-                              </span>
-                            </>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
+                              {formatFriendlyDate(message.timestamp)}
+                            </span>
                           )}
                         </div>
                       </div>
-                      </Tooltip>
-                    </div>
-                  ))}
-                </div>
+                    </Tooltip>
+                  )
+                })}
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
 
-        <div className="w-2/4 h-full flex flex-col gap-4 min-h-0 overflow-visible">
-          {selectedMessage && (
-            <>
-              <div className="bg-card rounded-lg shadow-md flex flex-col h-1/2 min-h-0 overflow-hidden">
-                <div className="pb-3 p-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">Customer Question</h3>
-                    <div className="flex items-center gap-2">
-                      <CategorySelector
-                        currentCategory={selectedMessage.category || ""}
-                        onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
-                      />
-                    </div>
-                  </div>
+        {/* Main Content */}
+        {selectedMessage && (
+          <div className="flex-1 flex flex-col gap-4 min-h-0">
+            {/* Customer Question */}
+            <div className="surface rounded-lg flex flex-col h-[45%] min-h-0">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Customer Question</h3>
+                <CategorySelector
+                  currentCategory={selectedMessage.category || ""}
+                  onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
+                />
+              </div>
+              <div className="p-4 flex-1 overflow-y-auto">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+                  <span className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    {selectedMessage.customerName}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span className={`px-2 py-0.5 rounded text-xs ${getUrgencyBgClass(getMessageUrgency(selectedMessage.timestamp, settings.messageAgeThresholds))}`}>
+                      {formatFriendlyDate(selectedMessage.timestamp)}
+                    </span>
+                  </span>
                 </div>
-                <div className="px-6 pb-6 flex-1 min-h-0 overflow-hidden">
-                  <div className="space-y-3 flex flex-col min-h-0 h-full">
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{selectedMessage.customerName}</span>
-                      <Separator orientation="vertical" className="h-4" />
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className={`px-2 py-1 rounded text-sm font-medium ${getUrgencyBgClass(getMessageUrgency(selectedMessage.timestamp, settings.messageAgeThresholds))}`}>
-                        {formatFriendlyDate(selectedMessage.timestamp)}
-                      </span>
-                    </div>
-                    <div className="p-4 bg-muted rounded-lg flex-1 min-h-0 overflow-y-auto">
-                      <EmailText text={selectedMessage.message} />
-                    </div>
-                  </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <EmailText text={selectedMessage.message} />
                 </div>
               </div>
-
-              <div className="bg-card rounded-lg shadow-md flex flex-col h-1/2 min-h-0 overflow-hidden">
-                <div className="pb-3 p-6">
-                  <h3 className="text-sm font-semibold">Draft Reply</h3>
-                </div>
-                <div className="px-6 pb-6 flex-1 flex flex-col space-y-4 min-h-0 overflow-hidden">
-                  <Textarea
-                    placeholder="Edit the AI-generated response or write your own..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    className="flex-1 min-h-0 resize-none"
-                  />
-                  <div className="flex gap-2 items-center relative min-w-0">
-                    <div className="relative flex-none">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setMoreMenuOpen(v => !v)}
-                        aria-haspopup="menu"
-                        aria-expanded={moreMenuOpen}
-                        aria-label="More actions"
-                      >
-                        ...
-                      </Button>
-                      {moreMenuOpen && (
-                        <div className="absolute left-0 bottom-full mb-2 z-50 w-64 bg-card border rounded-md shadow-md p-1">
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={handleSendKeepOpen}
-                          >
-                            Send message and keep case open
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start text-destructive"
-                            onClick={handleCloseWithoutReply}
-                          >
-                            Close case without replying
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <Button onClick={handleApprove} className="flex-1 min-w-0">
-                      <Send className="h-4 w-4 mr-2" />
-                      Send
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="w-1/3">
-          <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
-            <div className="pb-3 p-6">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Bot className="h-4 w-4" />
-                AI Assistant
-              </h3>
             </div>
-            <div className="flex-1 flex flex-col p-0">
-              <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 max-h-[300px] overflow-hidden">
-                <div className="space-y-3">
-                  {chatMessages.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-xs">Ask me anything about this case</p>
-                    </div>
-                  )}
-                  {chatMessages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === "agent" ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-[80%] ${
-                          msg.sender === "agent" ? "" : "w-full"
-                        }`}
-                      >
-                        <div
-                          className={`p-2 rounded-lg text-xs ${
-                            msg.sender === "agent" ? "bg-accent text-accent-foreground" : "bg-muted"
-                          }`}
+
+            {/* Draft Reply */}
+            <div className="surface rounded-lg flex flex-col h-[55%] min-h-0">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Draft Reply</h3>
+                <Button
+                  variant={showAiInput ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setShowAiInput(!showAiInput)}
+                  className="h-7 text-xs"
+                >
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  AI
+                  <kbd className="kbd-sm ml-2">⌘I</kbd>
+                </Button>
+              </div>
+
+              {/* AI Refinement Input */}
+              {showAiInput && (
+                <div className="px-4 py-3 border-b border-border bg-accent/5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-accent flex-shrink-0" />
+                    <input
+                      ref={aiInputRef}
+                      type="text"
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault()
+                          handleAiRefine()
+                        }
+                      }}
+                      placeholder="Refine response: 'make shorter', 'add empathy', 'translate to Spanish'..."
+                      className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                      disabled={isAiLoading}
+                    />
+                    {isAiLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setShowAiInput(false)
+                            setAiInput("")
+                          }}
+                          className="h-6 px-2"
                         >
-                          <p>{msg.content}</p>
-                          <p className="text-xs opacity-70 mt-1">{new Date(msg.timestamp).toLocaleTimeString()}</p>
-                        </div>
-                        {msg.sender === "ai" && (
-                          <div className="mt-1 flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setReplyText(msg.content)}
-                              className="text-xs h-6 px-2"
-                            >
-                              Replace Draft
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setReplyText(replyText ? `${replyText}\n\n${msg.content}` : msg.content)}
-                              className="text-xs h-6 px-2"
-                            >
-                              Add to Draft
-                            </Button>
-                          </div>
+                          <X className="h-3 w-3" />
+                        </Button>
+                        {aiInput.trim() && (
+                          <Button
+                            size="sm"
+                            onClick={handleAiRefine}
+                            className="h-6 px-2 text-xs bg-accent hover:bg-accent/90"
+                          >
+                            Refine
+                          </Button>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <div className="p-3 border-t border-b bg-muted/30">
-                <div className="mb-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <Zap className="h-3 w-3" />
-                    Quick Actions
-                  </p>
-                  <div className="flex gap-1">
-                    {settings.quickActions.map((action, index) => (
+                    )}
+                  </div>
+                  {/* Quick Actions */}
+                  <div className="flex items-center gap-1 mt-2">
+                    {settings.quickActions.slice(0, 4).map((action, idx) => (
                       <Button
                         key={action.id}
                         variant="outline"
                         size="sm"
-                        onClick={() => handleQuickAction(action.title, action.action)}
-                        className="flex-1 justify-center text-xs h-8 bg-background hover:bg-accent"
-                        title={action.action}
+                        onClick={() => {
+                          setAiInput(action.action)
+                          setTimeout(() => handleAiRefine(), 100)
+                        }}
+                        className="h-6 text-xs px-2"
+                        disabled={isAiLoading}
                       >
-                        <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs mr-1">{index + 1}</span>
+                        <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[10px] mr-1">
+                          {idx + 1}
+                        </span>
                         {action.title}
                       </Button>
                     ))}
                   </div>
                 </div>
+              )}
+
+              <div className="p-4 flex-1 flex flex-col min-h-0">
+                <Textarea
+                  placeholder="Edit the AI-generated response or write your own..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="flex-1 min-h-0 resize-none"
+                />
               </div>
 
-              <div className="p-3 border-t mt-auto">
-                <div className="flex gap-2 items-end">
-                  <Textarea
-                    placeholder="Ask AI about this case..."
-                    value={aiChatInput}
-                    onChange={(e) => setAiChatInput(e.target.value)}
-                    className="flex-1 min-h-[60px] max-h-[80px] resize-none text-xs"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleAiChat()
-                      }
-                    }}
-                  />
-                  <Button size="sm" onClick={handleAiChat} disabled={!aiChatInput.trim()} className="mb-0">
-                    <Send className="h-3 w-3" />
+              <div className="p-4 border-t border-border flex items-center justify-between">
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                    className="h-9 w-9"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                  {moreMenuOpen && (
+                    <div className="absolute left-0 bottom-full mb-2 w-56 bg-popover border border-border rounded-lg shadow-lg p-1 z-50">
+                      <button
+                        onClick={handleSendKeepOpen}
+                        className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+                      >
+                        Send & keep case open
+                      </button>
+                      <button
+                        onClick={handleCloseWithoutReply}
+                        className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+                      >
+                        Close without replying
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground hidden sm:block">
+                    <kbd className="kbd-sm">⌘</kbd>
+                    <kbd className="kbd-sm ml-0.5">↵</kbd>
+                    <span className="ml-1">to send</span>
+                  </div>
+                  <Button onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-500">
+                    <Send className="h-4 w-4 mr-2" />
+                    Send
                   </Button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

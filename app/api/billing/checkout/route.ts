@@ -58,8 +58,7 @@ export async function POST(req: Request) {
     } catch (priceError) {
       console.error('[billing/checkout] Failed to resolve price:', priceError)
       return NextResponse.json({
-        error: 'Stripe pricing configuration error',
-        details: priceError instanceof Error ? priceError.message : 'Unknown pricing error'
+        error: 'Payment configuration error'
       }, { status: 500 })
     }
 
@@ -84,8 +83,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error('[billing/checkout] Unexpected error:', err)
     return NextResponse.json({
-      error: 'Failed to create checkout session',
-      details: err instanceof Error ? err.message : 'Unknown error'
+      error: 'Failed to create checkout session'
     }, { status: 500 })
   }
 }

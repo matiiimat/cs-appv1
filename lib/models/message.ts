@@ -24,7 +24,7 @@ export const MessageSchema = z.object({
   ai_reviewed: z.boolean().default(false),
   is_generating: z.boolean().default(false),
   edit_history: z.array(z.any()).default([]),
-  metadata: z.record(z.any()).default({}),
+  metadata: z.record(z.string(), z.any()).default({}),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -38,7 +38,7 @@ export const CreateMessageSchema = z.object({
   subject: z.string().min(1),
   message: z.string().min(1),
   category: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const UpdateMessageSchema = z.object({
@@ -50,7 +50,7 @@ export const UpdateMessageSchema = z.object({
   ai_reviewed: z.boolean().optional(),
   is_generating: z.boolean().optional(),
   edit_history: z.array(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type CreateMessageInput = z.infer<typeof CreateMessageSchema>;
@@ -217,6 +217,18 @@ export class MessageModel {
       orderBy = 'created_at',
       orderDirection = 'DESC'
     } = options;
+
+    // Security: Validate ORDER BY parameters to prevent SQL injection
+    const validOrderBy = ['created_at', 'updated_at'] as const;
+    const validDirection = ['ASC', 'DESC'] as const;
+
+    if (!validOrderBy.includes(orderBy as typeof validOrderBy[number])) {
+      throw new Error(`Invalid orderBy parameter: ${orderBy}`);
+    }
+
+    if (!validDirection.includes(orderDirection as typeof validDirection[number])) {
+      throw new Error(`Invalid orderDirection parameter: ${orderDirection}`);
+    }
 
     let whereClause = 'WHERE organization_id = $1';
     const params: unknown[] = [organizationId];

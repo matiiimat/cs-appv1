@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { z } from "zod"
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
+import { validateEmailData } from '@/lib/email-validation'
+import { withRateLimit } from '@/lib/rate-limiter'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -15,7 +17,7 @@ async function requireOrgId(request: NextRequest): Promise<string> {
   return orgUser.organizationId
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const { searchParams } = new URL(request.url)
@@ -57,16 +59,31 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const messageData = await request.json()
 
-    // Validate input data
+    // Validate input data with Zod schema
     const validatedData = CreateMessageSchema.parse(messageData)
-    // Drop header-like keys from metadata before persisting
-    const cleanMetaPost = sanitizeMetadata((validatedData as { metadata?: unknown }).metadata)
-    const toCreate = cleanMetaPost ? { ...validatedData, metadata: cleanMetaPost } : validatedData
+
+    // Enhanced email security validation
+    const emailValidation = validateEmailData({
+      customerEmail: (validatedData as { customer_email?: string }).customer_email,
+      subject: (validatedData as { subject?: string }).subject,
+      body: (validatedData as { body?: string }).body,
+      metadata: (validatedData as { metadata?: unknown }).metadata
+    })
+
+    // Apply validated and sanitized data, keeping original values if validation returns empty
+    const originalData = validatedData as { customer_email?: string; subject?: string; body?: string; metadata?: unknown }
+    const toCreate = {
+      ...validatedData,
+      customer_email: emailValidation.customerEmail || originalData.customer_email || '',
+      subject: emailValidation.subject || originalData.subject || '',
+      body: emailValidation.body || originalData.body || '',
+      metadata: { ...emailValidation.metadata, ...(sanitizeMetadata(originalData.metadata) || {}) }
+    }
 
     // Create message in database
     const newMessage = await MessageModel.create(orgId, toCreate)
@@ -93,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid message data", details: error.errors },
+        { error: "Invalid message data", details: error.issues },
         { status: 400 }
       )
     }
@@ -129,7 +146,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request)
     const { id, ...updates } = await request.json()
@@ -350,9 +367,9 @@ export async function PUT(request: NextRequest) {
     }
 
     if (error instanceof z.ZodError) {
-      console.log('Validation error details:', error.errors)
+      console.log('Validation error details:', error.issues)
       return NextResponse.json(
-        { error: "Invalid update data", details: error.errors },
+        { error: "Invalid update data", details: error.issues },
         { status: 400 }
       )
     }
@@ -382,3 +399,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(body, { status: 500 })
   }
 }
+
+// Apply rate limiting to message endpoints
+export const GET = withRateLimit(getHandler, 'api')
+export const POST = withRateLimit(postHandler, 'email')
+export const PUT = withRateLimit(putHandler, 'api')

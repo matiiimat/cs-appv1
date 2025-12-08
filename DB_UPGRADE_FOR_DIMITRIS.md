@@ -10,12 +10,23 @@ This document summarizes issues found in the current schema and proposes non‑b
 
 ## Key Findings
 - Email lookup uses `LOWER(email)` without uniqueness; ambiguous and slow at scale.
+  - Least of my worries, if the DB col is CI it doesn't matter anyways, right? Otherwise proceed with the simplest plan that doesn't overcomplicate everything :D
 - Foreign keys exist but referencing columns lack indexes → expensive joins/filters.
+  - Do that, overindexing at the beginning is also not bad
 - Message queries frequently filter/sort by `organization_id`, `status`, `created_at`.
+  - Add any indexes if needed
 - Ticket ID generation uses `MAX(SUBSTRING(...))` per org → full scans, poor scalability.
+  - Proposed solution looks ok, but will it work under load, jsut check
 - Redundant settings storage: `organizations.settings` (jsonb) AND `organization_settings.settings_data` (encrypted).
+  - keep the encrypted ones only I guess, no migrations needed
 - Status mismatch between code and DB; and `ai_reviewed` (code) vs `auto_reviewed` (DB) drift.
+  - Fix it
 - RLS is enabled globally but no policies are defined → either ineffective or confusing.
+  - Disable RLS to reflect that isolation is enforced in the app layer.
+
+Also these were mentioned and are good:
+- Billing correctness: Prefer org‑based gating (store Stripe IDs on `organizations` and check subscription by org) instead of email search.
+
 
 ## Indexing Recommendations (SQL)
 Apply these in a migration; names are suggestions.
