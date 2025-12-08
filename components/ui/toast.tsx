@@ -10,6 +10,10 @@ export interface Toast {
   title: string
   message?: string
   duration?: number
+  action?: {
+    label: string
+    onClick: () => void
+  }
 }
 
 interface ToastContextType {
@@ -105,6 +109,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
         <p className="font-medium text-sm">{toast.title}</p>
         {toast.message && (
           <p className="text-sm opacity-90 mt-1">{toast.message}</p>
+        )}
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick()
+              handleRemove()
+            }}
+            className="mt-2 text-sm font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+          >
+            {toast.action.label}
+          </button>
         )}
       </div>
       <button

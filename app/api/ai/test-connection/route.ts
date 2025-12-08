@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { auth } from '@/lib/auth/server'
+import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { OrganizationSettingsModel } from '@/lib/models/organization-settings'
 
 // Simple in-memory rate limiter per authenticated user
 // Limits: 5 requests per 5 minutes
@@ -49,14 +51,32 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { provider, apiKey, model } = await request.json() as {
+    const { provider, apiKey: clientApiKey, model } = await request.json() as {
       provider: 'openai' | 'anthropic';
-      apiKey: string;
+      apiKey?: string;
       model?: string;
     }
 
-    if (!provider || !apiKey) {
-      return NextResponse.json({ success: false, error: 'provider and apiKey are required' }, { status: 400 })
+    if (!provider) {
+      return NextResponse.json({ success: false, error: 'provider is required' }, { status: 400 })
+    }
+
+    // Use client-provided key if available, otherwise fetch from database
+    let apiKey = clientApiKey?.trim() || ''
+
+    if (!apiKey) {
+      // Fetch API key from database
+      const orgUser = await getOrgAndUserByEmail(email)
+      if (!orgUser) {
+        return NextResponse.json({ success: false, error: 'Organization not found' }, { status: 404 })
+      }
+
+      const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgUser.organizationId)
+      if (!orgSettings?.aiConfig?.apiKey) {
+        return NextResponse.json({ success: false, error: 'No API key configured. Please add your API key in Settings.' }, { status: 400 })
+      }
+
+      apiKey = orgSettings.aiConfig.apiKey
     }
 
     if (provider === 'openai') {

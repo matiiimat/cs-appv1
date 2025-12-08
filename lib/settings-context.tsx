@@ -53,6 +53,7 @@ interface SettingsContextType {
   isLoading: boolean
   lastSaved: Date | null
   aiConfigHasKey: boolean
+  setAiConfigHasKey: (hasKey: boolean) => void
   hasSavedSettings?: boolean
   hasCompletedOnboarding: boolean
   completeOnboarding: () => void
@@ -355,6 +356,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         isLoading,
         lastSaved,
         aiConfigHasKey,
+        setAiConfigHasKey,
         hasSavedSettings,
         hasCompletedOnboarding,
         completeOnboarding,

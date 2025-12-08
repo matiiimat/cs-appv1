@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useSettings } from "@/lib/settings-context"
+import { useToast } from "@/components/ui/toast"
 import { SectionHeader } from "../section-header"
 import { SettingCard, SettingField } from "../setting-card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import {
   XCircle,
   Zap,
   Sparkles,
+  Pencil,
 } from "lucide-react"
 
 type Provider = "openai" | "anthropic" | "local"
@@ -41,7 +43,8 @@ const providerInfo: Record<Provider, { name: string; description: string; icon: 
 }
 
 export function SetupSection() {
-  const { settings, updateSettings, saveSettings, aiConfigHasKey } = useSettings()
+  const { settings, updateSettings, saveSettings, aiConfigHasKey, setAiConfigHasKey } = useSettings()
+  const { addToast } = useToast()
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
@@ -49,6 +52,10 @@ export function SetupSection() {
     success: boolean
     error?: string
   } | null>(null)
+  // API key editing state
+  const [isEditingApiKey, setIsEditingApiKey] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState("")
+  const [savingApiKey, setSavingApiKey] = useState(false)
 
   const [initialSnapshot, setInitialSnapshot] = useState(() =>
     JSON.stringify({
@@ -185,7 +192,7 @@ export function SetupSection() {
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = async (showToast = false) => {
     setSaveStatus("saving")
     try {
       await saveSettings()
@@ -203,11 +210,70 @@ export function SetupSection() {
           },
         })
       )
+      if (showToast) {
+        addToast({
+          type: "success",
+          title: "Settings saved",
+          message: "Your AI configuration has been saved",
+          duration: 3000,
+        })
+      }
       setTimeout(() => setSaveStatus("idle"), 2000)
     } catch {
       setSaveStatus("error")
+      addToast({
+        type: "error",
+        title: "Failed to save",
+        message: "Please try again",
+        duration: 4000,
+      })
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
+  }
+
+  // Save API key explicitly
+  const handleSaveApiKey = async () => {
+    if (!apiKeyInput.trim()) return
+
+    setSavingApiKey(true)
+    try {
+      // Update settings with new API key
+      updateSettings({
+        aiConfig: { ...settings.aiConfig, apiKey: apiKeyInput.trim() },
+      })
+
+      // Save to database
+      await saveSettings()
+
+      // Update state
+      setAiConfigHasKey(true)
+      setIsEditingApiKey(false)
+      setApiKeyInput("")
+      setConnectionResult(null)
+
+      addToast({
+        type: "success",
+        title: "API key saved",
+        message: "Your API key has been securely stored",
+        duration: 3000,
+      })
+    } catch {
+      addToast({
+        type: "error",
+        title: "Failed to save API key",
+        message: "Please try again",
+        duration: 4000,
+      })
+    } finally {
+      setSavingApiKey(false)
+    }
+  }
+
+  // Cancel API key editing
+  const handleCancelApiKeyEdit = () => {
+    setIsEditingApiKey(false)
+    setApiKeyInput("")
+    setShowApiKey(false)
   }
 
   // Calculate setup completion
@@ -225,29 +291,6 @@ export function SetupSection() {
       <SectionHeader
         title="Setup"
         description="Configure your brand identity and AI provider to get started"
-        action={
-          hasChanges
-            ? {
-                label:
-                  saveStatus === "saved"
-                    ? "Saved"
-                    : saveStatus === "saving"
-                    ? "Saving..."
-                    : "Save Changes",
-                onClick: handleSave,
-                loading: saveStatus === "saving",
-                disabled: saveStatus === "saving" || saveStatus === "saved",
-                icon:
-                  saveStatus === "saved" ? (
-                    <Check className="h-4 w-4" />
-                  ) : saveStatus === "saving" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  ),
-              }
-            : undefined
-        }
       />
 
       {/* Setup Progress */}
@@ -459,43 +502,85 @@ export function SetupSection() {
                   <SettingField
                     label="API Key"
                     description={
-                      aiConfigHasKey && !settings.aiConfig.apiKey
-                        ? "A key is saved. Enter a new key to replace it."
+                      aiConfigHasKey && !isEditingApiKey
+                        ? "Your API key is securely stored"
                         : `Your ${settings.aiConfig.provider === "openai" ? "OpenAI" : "Anthropic"} API key`
                     }
                   >
-                    <div className="flex items-center gap-2 max-w-md">
-                      <div className="relative flex-1">
-                        <Input
-                          type={showApiKey ? "text" : "password"}
-                          value={settings.aiConfig.apiKey}
-                          onChange={(e) => {
-                            updateSettings({
-                              aiConfig: { ...settings.aiConfig, apiKey: e.target.value },
-                            })
-                            setConnectionResult(null)
-                          }}
-                          placeholder={
-                            aiConfigHasKey && !settings.aiConfig.apiKey
-                              ? "••••••••••••••••••••••••"
-                              : "Enter your API key"
-                          }
-                          className="pr-10 font-mono text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      {aiConfigHasKey && !settings.aiConfig.apiKey && (
-                        <span className="shrink-0 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/40 dark:text-green-200 dark:border-green-800">
+                    {/* State: Key saved, not editing */}
+                    {aiConfigHasKey && !isEditingApiKey && (
+                      <div className="flex items-center gap-3 max-w-md">
+                        <div className="flex-1 px-3 py-2 rounded-md bg-muted/50 border border-border font-mono text-sm text-muted-foreground">
+                          ••••••••••••••••••••••••
+                        </div>
+                        <span className="shrink-0 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/40 dark:text-green-200 dark:border-green-800 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
                           Saved
                         </span>
-                      )}
-                    </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditingApiKey(true)}
+                          className="shrink-0"
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Change
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* State: No key saved OR editing existing key */}
+                    {(!aiConfigHasKey || isEditingApiKey) && (
+                      <div className="space-y-3 max-w-md">
+                        <div className="relative">
+                          <Input
+                            type={showApiKey ? "text" : "password"}
+                            value={apiKeyInput}
+                            onChange={(e) => {
+                              setApiKeyInput(e.target.value)
+                              setConnectionResult(null)
+                            }}
+                            placeholder={
+                              settings.aiConfig.provider === "openai"
+                                ? "sk-..."
+                                : "sk-ant-..."
+                            }
+                            className="pr-10 font-mono text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={handleSaveApiKey}
+                            disabled={!apiKeyInput.trim() || savingApiKey}
+                            size="sm"
+                          >
+                            {savingApiKey ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                            ) : (
+                              <Save className="h-4 w-4 mr-1.5" />
+                            )}
+                            {savingApiKey ? "Saving..." : "Save Key"}
+                          </Button>
+                          {isEditingApiKey && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleCancelApiKeyEdit}
+                              disabled={savingApiKey}
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </SettingField>
                 </>
               )}
@@ -575,6 +660,55 @@ export function SetupSection() {
           </div>
         )}
       </div>
+
+      {/* Sticky Save Footer */}
+      {hasChanges && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-64">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-4 px-4 py-3 rounded-lg bg-card border border-border shadow-lg flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-muted-foreground">You have unsaved changes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Reset to initial state by reloading
+                    window.location.reload()
+                  }}
+                  disabled={saveStatus === "saving"}
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={saveStatus === "saving" || saveStatus === "saved"}
+                >
+                  {saveStatus === "saving" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                      Saving...
+                    </>
+                  ) : saveStatus === "saved" ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5" />
+                      Saved
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-1.5" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

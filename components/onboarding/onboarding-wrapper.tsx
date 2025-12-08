@@ -2,14 +2,14 @@
 
 import { ReactNode } from "react"
 import { useSettings } from "@/lib/settings-context"
-import { OnboardingWizard } from "./onboarding-wizard"
+// import { OnboardingWizard } from "./onboarding-wizard"
 
 interface OnboardingWrapperProps {
   children: ReactNode
 }
 
 export function OnboardingWrapper({ children }: OnboardingWrapperProps) {
-  const { hasCompletedOnboarding, completeOnboarding, isSettingsLoaded } = useSettings()
+  const { isSettingsLoaded } = useSettings()
 
   // Don't render anything until settings are loaded to avoid flash
   if (!isSettingsLoaded) {
