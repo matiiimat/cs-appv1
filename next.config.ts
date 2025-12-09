@@ -44,7 +44,8 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   // Security: Add HSTS header for production HTTPS enforcement
-  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+  // Note: Removed includeSubDomains to allow Vercel preview deployments with different subdomains
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
   // Security: Prevent MIME type confusion attacks
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   // Security: Control cross-origin requests (no explicit CORS needed for same-origin app)
