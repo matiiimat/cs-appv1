@@ -13,19 +13,18 @@ import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
 import { PieChart } from "@/components/ui/pie-chart"
 import { Tooltip } from "@/components/ui/tooltip"
+import { useToast } from "@/components/ui/toast"
 import {
   Zap,
   Clock,
   User,
   Loader2,
-  MessageSquare,
   PlayCircle,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react"
-
-type QueueMode = "processing" | "triage"
 
 export function QueueView() {
   const {
@@ -37,8 +36,9 @@ export function QueueView() {
     isProcessingBatch,
     processedCount,
     totalToProcess,
-    showTriageButton,
-    hideTriageButton,
+    isTriageActive,
+    enterTriage,
+    exitTriage,
     processBatch,
     cancelBatchProcessing,
     refreshData,
@@ -46,6 +46,7 @@ export function QueueView() {
 
   const { settings, aiConfigHasKey } = useSettings()
   const { handleAIError } = useAIErrorHandler()
+  const { addToast } = useToast()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   const [preflightChecking, setPreflightChecking] = useState(false)
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
@@ -73,9 +74,8 @@ export function QueueView() {
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
 
-  // Determine mode: show triage if there are messages ready for review
-  const mode: QueueMode = readyForReview.length > 0 && showTriageButton === false ? "triage" : "processing"
-  const isInTriageMode = mode === "triage" && currentMessage
+  // Determine mode: triage is active when user explicitly enters it
+  const isInTriageMode = isTriageActive && currentMessage
 
   // AI configuration check
   const provider = settings.aiConfig.provider
@@ -92,7 +92,7 @@ export function QueueView() {
   }
 
   const startTriage = () => {
-    hideTriageButton()
+    enterTriage()
   }
 
   const handleProcessQueue = async () => {
@@ -179,6 +179,10 @@ export function QueueView() {
       }
 
       switch (event.key.toLowerCase()) {
+        case 'escape':
+          event.preventDefault()
+          exitTriage()
+          break
         case ' ':
         case 'arrowright':
           event.preventDefault()
@@ -198,7 +202,20 @@ export function QueueView() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isInTriageMode, handleKeyboardApprove, handleKeyboardReview])
+  }, [isInTriageMode, handleKeyboardApprove, handleKeyboardReview, exitTriage])
+
+  // Auto-exit triage when queue is empty
+  useEffect(() => {
+    if (isTriageActive && readyForReview.length === 0) {
+      addToast({
+        type: 'success',
+        title: 'All caught up!',
+        message: 'No more messages to triage',
+        duration: 2000,
+      })
+      exitTriage()
+    }
+  }, [isTriageActive, readyForReview.length, addToast, exitTriage])
 
   // Category pie chart data
   const categoryCounts = messages.reduce<Record<string, number>>((acc, m) => {
@@ -251,6 +268,15 @@ export function QueueView() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={exitTriage}
+                className="text-muted-foreground hover:text-foreground -ml-2"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
               <h1 className="text-xl font-semibold">Triage</h1>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <span className="px-2 py-1 bg-muted rounded-md font-medium">
@@ -259,6 +285,10 @@ export function QueueView() {
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <kbd className="kbd-sm">Esc</kbd>
+                <span>Exit</span>
+              </span>
               <span className="flex items-center gap-1">
                 <kbd className="kbd-sm">→</kbd>
                 <span>Send</span>
@@ -566,7 +596,7 @@ export function QueueView() {
       </div>
 
       {/* Start Triage CTA */}
-      {showTriageButton && readyForReview.length > 0 && (
+      {readyForReview.length > 0 && (
         <div className="surface-elevated rounded-xl p-6 mb-6 border-emerald-500/20 bg-emerald-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -582,17 +612,6 @@ export function QueueView() {
               <ArrowRight className="h-4 w-4 mr-2" />
               Start Triage
             </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State for Triage */}
-      {mode === "triage" && !currentMessage && (
-        <div className="surface rounded-xl p-12">
-          <div className="empty-state">
-            <MessageSquare className="empty-state-icon" />
-            <h3 className="empty-state-title">Queue Empty</h3>
-            <p className="empty-state-description">All messages have been reviewed</p>
           </div>
         </div>
       )}

@@ -98,8 +98,9 @@ interface MessageManagerContextType {
   isProcessingBatch: boolean
   processedCount: number
   totalToProcess: number
-  showTriageButton: boolean
-  hideTriageButton: () => void
+  isTriageActive: boolean
+  enterTriage: () => void
+  exitTriage: () => void
   cancelBatchProcessing: () => void
   addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => Promise<void>
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => Promise<void>
@@ -158,7 +159,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const [isProcessingBatch, setIsProcessingBatch] = useState(false)
   const [processedCount, setProcessedCount] = useState(0)
   const [totalToProcess, setTotalToProcess] = useState(0)
-  const [showTriageButton, setShowTriageButton] = useState(false)
+  const [isTriageActive, setIsTriageActive] = useState(false)
   const [recentActivity, setRecentActivity] = useState<ApiActivity[]>([])
   const cancelRequestedRef = useRef(false)
 
@@ -377,17 +378,6 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       console.error('Error processing batch:', error)
     } finally {
       setIsProcessingBatch(false)
-
-      // Show triage button if we processed any messages successfully
-      if (currentProcessedCount > 0 && !cancelRequestedRef.current) {
-        setShowTriageButton(true)
-
-        // Auto-hide button after 30 seconds
-        setTimeout(() => {
-          setShowTriageButton(false)
-        }, 30000)
-      }
-
       setProcessedCount(0)
       setTotalToProcess(0)
       cancelRequestedRef.current = false
@@ -398,8 +388,13 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     cancelRequestedRef.current = true
   }, [])
 
-  const hideTriageButton = useCallback(() => {
-    setShowTriageButton(false)
+  const enterTriage = useCallback(() => {
+    setIsTriageActive(true)
+    setCurrentMessageIndex(0)
+  }, [])
+
+  const exitTriage = useCallback(() => {
+    setIsTriageActive(false)
   }, [])
 
   const moveToNextMessage = () => {
@@ -488,8 +483,9 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     isProcessingBatch,
     processedCount,
     totalToProcess,
-    showTriageButton,
-    hideTriageButton,
+    isTriageActive,
+    enterTriage,
+    exitTriage,
     cancelBatchProcessing,
     addMessage,
     updateMessage,

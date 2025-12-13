@@ -12,7 +12,7 @@ import { getMessageUrgency } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 
 export function AgentDashboard() {
-  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, showTriageButton, hideTriageButton, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
+  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, enterTriage, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   
   // Refresh dashboard data on mount/entry
@@ -78,7 +78,7 @@ export function AgentDashboard() {
   }
 
   const goToTriage = () => {
-    hideTriageButton()
+    enterTriage()
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aidly:navigate:triage'))
     }
@@ -257,7 +257,7 @@ export function AgentDashboard() {
       </div>
 
       {/* Triage Button */}
-      {showTriageButton && (
+      {readyForReview.length > 0 && (
         <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg shadow-lg border border-green-200 dark:border-green-800">
           <div className="p-6 text-center">
             <div className="mb-4">
