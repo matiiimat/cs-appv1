@@ -418,6 +418,7 @@ export class MessageModel {
        SET status = 'sent',
            agent_id = COALESCE($3, agent_id),
            processed_at = COALESCE($4::timestamptz, processed_at, NOW()),
+           response_time_ms = EXTRACT(EPOCH FROM (COALESCE($4::timestamptz, NOW()) - created_at)) * 1000,
            updated_at = NOW()
        WHERE organization_id = $1 AND id = $2 AND status <> 'sent'
        RETURNING *`,
