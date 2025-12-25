@@ -8,6 +8,7 @@ import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { KnowledgeBaseModel } from '@/lib/models/knowledge-base'
 import { validateEmailData } from '@/lib/email-validation'
 import { withRateLimit } from '@/lib/rate-limiter'
+import { EmailUsageModel } from '@/lib/models/email-usage'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -106,6 +107,20 @@ async function handler(request: NextRequest) {
 
     // Always load AI configuration from the database to access the stored API key.
     const orgId = await requireOrgId(request.headers)
+
+    // Check usage limits before allowing AI generation
+    // (Block AI generation if user can't send - no point generating drafts they can't use)
+    const usageCheck = await EmailUsageModel.canSendEmail(orgId)
+    if (!usageCheck.allowed) {
+      return NextResponse.json({
+        error: usageCheck.reason,
+        code: 'USAGE_LIMIT_REACHED',
+        usage: usageCheck.usage,
+      }, { status: 429 })
+    }
+
+    // Note: Usage is incremented when actually SENDING, not when generating AI draft
+
     const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     if (!orgSettings || !orgSettings.aiConfig) {

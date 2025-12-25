@@ -111,8 +111,8 @@ interface MessageManagerContextType {
   editMessage: (id: string, editedResponse: string, reason: string, agentId: string) => Promise<void>
   moveToNextMessage: () => void
   moveToPreviousMessage: () => void
-  generateAIResponse: (message: CustomerMessage) => Promise<void>
-  processBatch: (batchSize: number) => Promise<void>
+  generateAIResponse: (message: CustomerMessage) => Promise<{ success: boolean; usageLimitHit?: boolean }>
+  processBatch: (batchSize: number) => Promise<{ usageLimitHit?: boolean }>
   getMessagesByStatus: (status: CustomerMessage["status"]) => CustomerMessage[]
   getRecentActivity: () => Array<{
     id: string
@@ -301,7 +301,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const generateAIResponse = useCallback(async (message: CustomerMessage) => {
+  const generateAIResponse = useCallback(async (message: CustomerMessage): Promise<{ success: boolean; usageLimitHit?: boolean }> => {
     try {
       // Update local state to show generating
       setMessages(prev =>
@@ -333,20 +333,32 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         isGenerating: false,
       })
 
+      return { success: true }
+
     } catch (error) {
       console.error("Error generating AI response:", error)
 
-      // Update with error response
+      // Check if this is a usage limit error
+      const errorWithCode = error as Error & { code?: string }
+      if (errorWithCode.code === 'USAGE_LIMIT_REACHED') {
+        // Reset generating state but don't mark as reviewed
+        await updateMessage(message.id, { isGenerating: false })
+        return { success: false, usageLimitHit: true }
+      }
+
+      // Update with error response for other errors
       await updateMessage(message.id, {
         category: "General Inquiry",
         aiSuggestedResponse: "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
         aiReviewed: true,
         isGenerating: false,
       })
+
+      return { success: false }
     }
   }, [settings, updateMessage])
 
-  const processBatch = useCallback(async (batchSize: number) => {
+  const processBatch = useCallback(async (batchSize: number): Promise<{ usageLimitHit?: boolean }> => {
     const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
     const messagesToProcess = unprocessedMessages.slice(0, batchSize)
 
@@ -356,6 +368,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     cancelRequestedRef.current = false
 
     let currentProcessedCount = 0
+    let usageLimitHit = false
 
     try {
       for (let i = 0; i < messagesToProcess.length; i++) {
@@ -365,7 +378,15 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         }
 
         const message = messagesToProcess[i]
-        await generateAIResponse(message)
+        const result = await generateAIResponse(message)
+
+        // Stop batch processing if usage limit is hit
+        if (result.usageLimitHit) {
+          console.log('Batch processing stopped: usage limit reached')
+          usageLimitHit = true
+          break
+        }
+
         currentProcessedCount = i + 1
         setProcessedCount(currentProcessedCount)
 
@@ -382,6 +403,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       setTotalToProcess(0)
       cancelRequestedRef.current = false
     }
+
+    return { usageLimitHit }
   }, [messages, generateAIResponse])
 
   const cancelBatchProcessing = useCallback(() => {

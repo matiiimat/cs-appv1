@@ -133,7 +133,7 @@ export function UsageWidget() {
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            Upgrade for 100/month
+            Upgrade
           </Button>
         </div>
       )}

@@ -44,26 +44,34 @@ export class AIResponseEnhancer {
       companyKnowledge?: string
     }
   ) {
-    try {
-      // The API route now handles knowledge base fetching directly from the database
-      // so we just pass the original payload without pre-fetching entries
-      const response = await fetch('/api/generate-response', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+    // The API route now handles knowledge base fetching directly from the database
+    // so we just pass the original payload without pre-fetching entries
+    const response = await fetch('/api/generate-response', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
 
-      if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`)
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+
+      // Handle usage limit error specifically
+      if (response.status === 429 && errorData.code === 'USAGE_LIMIT_REACHED') {
+        const error = new Error(errorData.error || 'Usage limit reached') as Error & {
+          code: string
+          usage: unknown
+        }
+        error.code = 'USAGE_LIMIT_REACHED'
+        error.usage = errorData.usage
+        throw error
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Enhanced generate response failed:', error)
-      throw error
+      throw new Error(errorData.error || `API call failed: ${response.statusText}`)
     }
+
+    return await response.json()
   }
 
   /**

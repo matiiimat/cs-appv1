@@ -18,20 +18,33 @@ export function useAIErrorHandler(options: AIErrorOptions = {}) {
     }
   }, [options])
 
+  const navigateToBilling = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("aidly:navigate:billing"))
+    }
+  }, [])
+
   const handleAIError = useCallback(
     (error: unknown, context?: string) => {
       // Parse error message
       let errorMessage = "An error occurred"
       let isAuthError = false
+      let isUsageLimitError = false
 
       if (error instanceof Error) {
         errorMessage = error.message
+        // Check for usage limit error code
+        const errorWithCode = error as Error & { code?: string }
+        if (errorWithCode.code === 'USAGE_LIMIT_REACHED') {
+          isUsageLimitError = true
+        }
       } else if (typeof error === "string") {
         errorMessage = error
       } else if (error && typeof error === "object") {
         const errObj = error as Record<string, unknown>
         if (errObj.message) errorMessage = String(errObj.message)
         if (errObj.error) errorMessage = String(errObj.error)
+        if (errObj.code === 'USAGE_LIMIT_REACHED') isUsageLimitError = true
       }
 
       // Check for auth/API key errors
@@ -46,8 +59,24 @@ export function useAIErrorHandler(options: AIErrorOptions = {}) {
         isAuthError = true
       }
 
+      // Also detect usage limit from message
+      if (lowerMessage.includes("limit reached") || lowerMessage.includes("upgrade to pro")) {
+        isUsageLimitError = true
+      }
+
       // Show appropriate toast
-      if (isAuthError) {
+      if (isUsageLimitError) {
+        addToast({
+          type: "error",
+          title: "Email Limit Reached",
+          message: errorMessage,
+          duration: 10000,
+          action: {
+            label: "Upgrade to Pro",
+            onClick: navigateToBilling,
+          },
+        })
+      } else if (isAuthError) {
         addToast({
           type: "error",
           title: "Invalid API Key",
@@ -83,8 +112,11 @@ export function useAIErrorHandler(options: AIErrorOptions = {}) {
 
       // Log for debugging
       console.error(`[AI Error${context ? ` - ${context}` : ""}]:`, error)
+
+      // Return whether this was a usage limit error (for callers to handle)
+      return isUsageLimitError
     },
-    [addToast, navigateToSettings]
+    [addToast, navigateToSettings, navigateToBilling]
   )
 
   // Helper to wrap async AI calls

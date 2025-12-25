@@ -99,6 +99,18 @@ export function QueueView() {
   }
 
   const handleProcessQueue = async () => {
+    // Check if user has any remaining quota before starting
+    if (!canSendEmail) {
+      handleAIError(
+        { code: 'USAGE_LIMIT_REACHED', message: usage?.isFreePlan
+          ? 'Free trial limit reached. Upgrade to Pro for more emails.'
+          : 'Monthly email limit reached. Your quota resets soon.'
+        },
+        "AI Processing"
+      )
+      return
+    }
+
     try {
       setPreflightChecking(true)
       const resp = await fetch('/api/ai/status?checkConnectivity=true', { method: 'GET' })
@@ -127,7 +139,33 @@ export function QueueView() {
     } finally {
       setPreflightChecking(false)
     }
-    await processBatch(selectedBatchSize)
+
+    // Cap batch size to remaining quota (don't generate AI for emails we can't send)
+    const remaining = usage?.remaining ?? selectedBatchSize
+    const effectiveBatchSize = Math.min(selectedBatchSize, remaining)
+
+    if (effectiveBatchSize < selectedBatchSize && remaining > 0) {
+      addToast({
+        type: 'info',
+        title: 'Limited by quota',
+        message: `Processing ${effectiveBatchSize} of ${selectedBatchSize} emails (${remaining} remaining in your plan).`,
+        duration: 5000,
+      })
+    }
+
+    const result = await processBatch(effectiveBatchSize)
+
+    // Show error toast if usage limit was hit during processing
+    if (result.usageLimitHit) {
+      handleAIError(
+        { code: 'USAGE_LIMIT_REACHED', message: usage?.isFreePlan
+          ? 'Free trial limit reached. Upgrade to Pro for more emails.'
+          : 'Monthly email limit reached. Your quota resets soon.'
+        },
+        "AI Processing"
+      )
+      await refreshUsage()
+    }
   }
 
   // Triage handlers
