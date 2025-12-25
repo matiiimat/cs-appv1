@@ -23,7 +23,7 @@ export function UsageWidget() {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-card rounded-lg shadow-md animate-pulse">
+      <div className="surface p-4 rounded-lg animate-pulse">
         <div className="h-4 bg-muted rounded w-1/2 mb-4" />
         <div className="h-8 bg-muted rounded w-1/3 mb-2" />
         <div className="h-2 bg-muted rounded" />
@@ -38,7 +38,7 @@ export function UsageWidget() {
   // Unlimited plan (enterprise)
   if (usage.limit === null) {
     return (
-      <div className="p-6 bg-card rounded-lg shadow-md">
+      <div className="surface p-4 rounded-lg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-muted-foreground" />
@@ -57,8 +57,8 @@ export function UsageWidget() {
   const percentage = Math.min(100, (usage.used / usage.limit) * 100)
 
   return (
-    <div className="p-6 bg-card rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-4">
+    <div className="surface p-4 rounded-lg">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Email Usage</span>
@@ -75,14 +75,14 @@ export function UsageWidget() {
         )}
       </div>
 
-      <div className="flex items-baseline gap-1 mb-2">
+      <div className="flex items-baseline gap-1 mb-1">
         <span className="text-2xl font-bold">{usage.used}</span>
         <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
       </div>
 
       <Progress
         value={percentage}
-        className={`h-2 mb-3 ${
+        className={`h-2 mb-2 ${
           usage.isAtLimit
             ? '[&>div]:bg-red-500'
             : usage.isNearLimit
