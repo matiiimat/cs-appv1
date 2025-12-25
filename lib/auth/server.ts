@@ -5,6 +5,8 @@ import { sendMagicLinkEmail } from '@/lib/email/sendgrid'
 import Stripe from 'stripe'
 import { stripe as stripePlugin } from '@better-auth/stripe'
 import { ensureProvisioned } from '@/lib/tenant'
+import { EmailUsageModel } from '@/lib/models/email-usage'
+import { db as pgDb } from '@/lib/database'
 
 const db = createKysely()
 
@@ -98,8 +100,49 @@ export const auth = betterAuth({
               return
             }
 
+            // Upgrade plan to pro and reset billing period (upgrade takes effect immediately)
+            try {
+              await EmailUsageModel.updatePlan(provisionResult.organizationId, 'pro', true)
+              console.log(`[Stripe onEvent] Upgraded org ${provisionResult.organizationId} to pro plan`)
+            } catch (e) {
+              console.error('[Stripe onEvent] Failed to upgrade plan:', e)
+              // Continue anyway - plan can be fixed manually
+            }
+
             // Auto magic-link send removed by request; users can sign in via the standard login flow.
-            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}. Not sending auto magic link.`)
+            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}. Upgraded to pro plan.`)
+          }
+
+          // Handle subscription cancellation - downgrade to free at period end
+          if (event.type === 'customer.subscription.deleted') {
+            const subscription = event.data.object as Stripe.Subscription
+            const customerId = subscription.customer as string
+
+            console.log(`[Stripe onEvent] Subscription deleted for customer: ${customerId}`)
+
+            // Find org by Stripe customer ID and downgrade to free
+            // Note: Downgrade doesn't reset period - they keep their current usage
+            try {
+              const orgResult = await pgDb.query<{ id: string }>(
+                `SELECT o.id FROM organizations o
+                 JOIN users u ON u.organization_id = o.id
+                 JOIN stripe_customers sc ON sc.user_id = u.id
+                 WHERE sc.stripe_customer_id = $1
+                 LIMIT 1`,
+                [customerId]
+              )
+
+              if (orgResult.rows.length > 0) {
+                const orgId = orgResult.rows[0].id
+                // Downgrade without resetting period (next billing cycle)
+                await EmailUsageModel.updatePlan(orgId, 'free', false)
+                console.log(`[Stripe onEvent] Downgraded org ${orgId} to free plan`)
+              } else {
+                console.warn(`[Stripe onEvent] No org found for customer ${customerId}`)
+              }
+            } catch (e) {
+              console.error('[Stripe onEvent] Failed to downgrade plan:', e)
+            }
           }
         } catch (err) {
           console.error('[Stripe onEvent] error handling event', event.type, err)

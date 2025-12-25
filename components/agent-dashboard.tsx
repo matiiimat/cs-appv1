@@ -6,6 +6,7 @@ import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
 import { PlayCircle, Loader2, ArrowRight } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
+import { UsageWidget } from "@/components/usage-widget"
 import { useSettings } from "@/lib/settings-context"
 import { useState, useEffect } from "react"
 import { getMessageUrgency } from "@/lib/utils"
@@ -350,8 +351,12 @@ export function AgentDashboard() {
         </div>
       </div>
 
-      {/* Category Distribution */}
+      {/* Usage & Category Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* Email Usage Widget */}
+        <UsageWidget />
+
+        {/* Category Distribution */}
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Cases by Category</div>

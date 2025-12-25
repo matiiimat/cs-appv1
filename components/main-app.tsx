@@ -8,6 +8,7 @@ import { KnowledgePage } from "@/components/knowledge-page"
 import { CommandPalette } from "@/components/command-palette"
 import { MessageManagerProvider, useMessageManager } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
+import { UsageProvider } from "@/lib/usage-context"
 import { ToastProvider } from "@/components/ui/toast"
 import { OnboardingWrapper } from "@/components/onboarding/onboarding-wrapper"
 import { useKeyboardNavigation } from "@/lib/use-keyboard-navigation"
@@ -50,17 +51,20 @@ function AppContent() {
     const settingsHandler = () => setCurrentView("settings")
     const triageHandler = () => setCurrentView("queue")
     const inboxHandler = () => setCurrentView("inbox")
+    const billingHandler = () => setCurrentView("settings") // Billing is in settings for now
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aidly:navigate:settings', settingsHandler as EventListener)
       window.addEventListener('aidly:navigate:triage', triageHandler as EventListener)
       window.addEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
+      window.addEventListener('aidly:navigate:billing', billingHandler as EventListener)
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aidly:navigate:settings', settingsHandler as EventListener)
         window.removeEventListener('aidly:navigate:triage', triageHandler as EventListener)
         window.removeEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
+        window.removeEventListener('aidly:navigate:billing', billingHandler as EventListener)
       }
     }
   }, [])
@@ -182,9 +186,11 @@ export function MainApp() {
     <SettingsProvider>
       <ToastProvider>
         <MessageManagerProvider>
-          <OnboardingWrapper>
-            <AppContent />
-          </OnboardingWrapper>
+          <UsageProvider>
+            <OnboardingWrapper>
+              <AppContent />
+            </OnboardingWrapper>
+          </UsageProvider>
         </MessageManagerProvider>
       </ToastProvider>
     </SettingsProvider>

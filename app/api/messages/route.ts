@@ -6,6 +6,7 @@ import { z } from "zod"
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 import { validateEmailData } from '@/lib/email-validation'
 import { withRateLimit } from '@/lib/rate-limiter'
+import { EmailUsageModel } from '@/lib/models/email-usage'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -172,6 +173,23 @@ async function putHandler(request: NextRequest) {
       // Safely read boolean flag from metadata without using `any`
       const meta = (validatedUpdates as { metadata?: unknown }).metadata
       const skipEmail = !!(meta && typeof meta === 'object' && (meta as Record<string, unknown>)['close_without_reply'] === true)
+
+      // USAGE LIMIT CHECK - Only if actually sending email
+      if (!skipEmail) {
+        const usageCheck = await EmailUsageModel.canSendEmail(orgId)
+        if (!usageCheck.allowed) {
+          return NextResponse.json(
+            {
+              error: 'Email limit reached',
+              code: 'USAGE_LIMIT_REACHED',
+              reason: usageCheck.reason,
+              usage: usageCheck.usage,
+            },
+            { status: 429 }
+          )
+        }
+      }
+
       // If client passed a modified ai_suggested_response with the send action,
       // persist it first so the outbound email uses the latest content.
       if (typeof (validatedUpdates as Record<string, unknown>).ai_suggested_response === 'string') {
@@ -267,6 +285,14 @@ async function putHandler(request: NextRequest) {
 
         if (to && text) {
           const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
+
+          // INCREMENT USAGE after email send attempt (count even if SendGrid fails)
+          try {
+            await EmailUsageModel.incrementUsage(orgId)
+          } catch (usageErr) {
+            console.error('Failed to increment usage:', usageErr)
+          }
+
           await MessageModel.addActivity(
             orgId,
             updatedMessage.id,
@@ -279,12 +305,34 @@ async function putHandler(request: NextRequest) {
         }
       } catch (sendErr) {
         console.error('Failed to send outbound email:', sendErr)
-        // Do not fail the PUT response; sending can be retried later
+        // Still increment usage even on failure (as per requirements)
+        try {
+          await EmailUsageModel.incrementUsage(orgId)
+        } catch (usageErr) {
+          console.error('Failed to increment usage after error:', usageErr)
+        }
       }
     } else {
       // Non-'sent' updates use the regular update path
       const meta2 = (validatedUpdates as { metadata?: unknown }).metadata
       const keepOpenSend = !!(meta2 && typeof meta2 === 'object' && (meta2 as Record<string, unknown>)['send_and_keep_open'] === true)
+
+      // USAGE LIMIT CHECK - for send_and_keep_open path
+      if (keepOpenSend) {
+        const usageCheck = await EmailUsageModel.canSendEmail(orgId)
+        if (!usageCheck.allowed) {
+          return NextResponse.json(
+            {
+              error: 'Email limit reached',
+              code: 'USAGE_LIMIT_REACHED',
+              reason: usageCheck.reason,
+              usage: usageCheck.usage,
+            },
+            { status: 429 }
+          )
+        }
+      }
+
       const safeUpdates = validatedUpdates.metadata
         ? { ...validatedUpdates, metadata: sanitizeMetadata(validatedUpdates.metadata) || {} }
         : validatedUpdates
@@ -340,6 +388,14 @@ async function putHandler(request: NextRequest) {
 
           if (to && text) {
             const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
+
+            // INCREMENT USAGE after email send attempt
+            try {
+              await EmailUsageModel.incrementUsage(orgId)
+            } catch (usageErr) {
+              console.error('Failed to increment usage (keep open):', usageErr)
+            }
+
             await MessageModel.addActivity(
               orgId,
               updatedMessage.id,
@@ -352,6 +408,12 @@ async function putHandler(request: NextRequest) {
           }
         } catch (sendErr) {
           console.error('Failed to send outbound email (keep open):', sendErr)
+          // Still increment usage even on failure
+          try {
+            await EmailUsageModel.incrementUsage(orgId)
+          } catch (usageErr) {
+            console.error('Failed to increment usage after error (keep open):', usageErr)
+          }
         }
       }
     }

@@ -7,6 +7,7 @@ import { SwipeableCard } from "@/components/swipeable-card"
 import { QuickEditModal } from "@/components/quick-edit-modal"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
+import { useUsage } from "@/lib/usage-context"
 import { useAIErrorHandler, parseAPIError } from "@/lib/use-ai-error-handler"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, formatRelativeTime } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
@@ -45,6 +46,7 @@ export function QueueView() {
   } = useMessageManager()
 
   const { settings, aiConfigHasKey } = useSettings()
+  const { usage, canSendEmail, refreshUsage } = useUsage()
   const { handleAIError } = useAIErrorHandler()
   const { addToast } = useToast()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
@@ -135,15 +137,51 @@ export function QueueView() {
 
   const handleApprove = useCallback(async () => {
     if (!currentMessage || isActing) return
+
+    // Check usage limit before attempting to send
+    if (!canSendEmail) {
+      addToast({
+        type: 'error',
+        title: 'Email limit reached',
+        message: usage?.isFreePlan
+          ? 'Your free trial has ended. Upgrade to Pro to continue sending emails.'
+          : 'You\'ve reached your monthly email limit. Your quota resets soon.',
+        duration: 5000,
+      })
+      return
+    }
+
+    // Show warning at 90% usage
+    if (usage?.isNearLimit && !usage?.isAtLimit) {
+      addToast({
+        type: 'info',
+        title: 'Approaching limit',
+        message: `${usage.remaining} emails remaining this month.`,
+        duration: 3000,
+      })
+    }
+
     setIsActing(true)
     try {
       await approveMessage(currentMessage.id, agentId)
+      // Refresh usage after successful send
+      await refreshUsage()
     } catch (error) {
       console.error('Failed to approve message:', error)
+      // Check if it's a usage limit error from API
+      if (error instanceof Error && error.message.includes('429')) {
+        addToast({
+          type: 'error',
+          title: 'Email limit reached',
+          message: 'Your monthly email limit has been reached.',
+          duration: 5000,
+        })
+        await refreshUsage()
+      }
     } finally {
       setIsActing(false)
     }
-  }, [currentMessage, approveMessage, agentId, isActing])
+  }, [currentMessage, approveMessage, agentId, isActing, canSendEmail, usage, addToast, refreshUsage])
 
   const handleSendToReview = useCallback(async () => {
     if (!currentMessage || isActing) return
