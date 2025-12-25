@@ -100,7 +100,11 @@ export function DetailedReviewInterface() {
         message: usage?.isFreePlan
           ? 'Your free trial has ended. Upgrade to Pro to continue sending emails.'
           : 'You\'ve reached your monthly email limit. Your quota resets soon.',
-        duration: 5000,
+        duration: 8000,
+        action: usage?.isFreePlan ? {
+          label: 'Upgrade to Pro',
+          onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+        } : undefined,
       })
       return
     }
@@ -140,7 +144,11 @@ export function DetailedReviewInterface() {
           type: 'error',
           title: 'Email limit reached',
           message: 'Your monthly email limit has been reached.',
-          duration: 5000,
+          duration: 8000,
+          action: {
+            label: 'Upgrade to Pro',
+            onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+          },
         })
         await refreshUsage()
       }
