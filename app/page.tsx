@@ -842,8 +842,8 @@ export default function LuxuryLanding() {
             <div className="mt-10 grid gap-8 md:grid-cols-2">
               {/* Free Trial */}
               <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
-                <div className="relative rounded-[22px] p-8 bg-white dark:bg-[#0A0A0B]">
-                  <div className="flex flex-col">
+                <div className="relative h-full rounded-[22px] p-8 bg-white dark:bg-[#0A0A0B]">
+                  <div className="flex h-full flex-col">
                     {/* Header */}
                     <div className="mb-6">
                       <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Free Trial</h3>
@@ -878,14 +878,16 @@ export default function LuxuryLanding() {
                     </div>
 
                     {/* CTA */}
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full h-12 text-base font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
-                      asChild
-                    >
-                      <Link href="/app/login">Start Free</Link>
-                    </Button>
+                    <div className="mt-auto">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full h-12 text-base font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
+                        asChild
+                      >
+                        <Link href="/app/login">Start Free</Link>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
