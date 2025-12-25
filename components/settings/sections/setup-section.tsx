@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
+import Image from "next/image"
 import { useSettings } from "@/lib/settings-context"
 import { useToast } from "@/components/ui/toast"
 import { SectionHeader } from "../section-header"
@@ -24,21 +25,24 @@ import {
 
 type Provider = "openai" | "anthropic" | "local"
 
-const providerInfo: Record<Provider, { name: string; description: string; icon: string; comingSoon?: boolean }> = {
+const providerInfo: Record<Provider, { name: string; description: string; iconLight: string; iconDark: string; comingSoon?: boolean }> = {
   openai: {
     name: "OpenAI",
     description: "GPT-4o, GPT-4o-mini",
-    icon: "◯",
+    iconLight: "/ai_providers/openai-light.png",
+    iconDark: "/ai_providers/openai-dark.png",
   },
   anthropic: {
     name: "Anthropic",
     description: "Claude 3.5 Sonnet, Haiku",
-    icon: "◈",
+    iconLight: "/ai_providers/claude-icon.png",
+    iconDark: "/ai_providers/claude-icon.png",
   },
   local: {
     name: "Local AI",
     description: "Coming Soon",
-    icon: "⬡",
+    iconLight: "/ai_providers/lm_studio_icon.png",
+    iconDark: "/ai_providers/lm_studio_icon.png",
     comingSoon: true,
   },
 }
@@ -437,7 +441,22 @@ export function SetupSection() {
                           </span>
                         </div>
                       )}
-                      <div className={`text-2xl mb-2 ${isDisabled ? "opacity-50" : ""}`}>{info.icon}</div>
+                      <div className={`w-full flex justify-center mb-2 ${isDisabled ? "opacity-50" : ""}`}>
+                        <Image
+                          src={info.iconLight}
+                          alt={info.name}
+                          width={16}
+                          height={16}
+                          className="object-contain dark:hidden"
+                        />
+                        <Image
+                          src={info.iconDark}
+                          alt={info.name}
+                          width={16}
+                          height={16}
+                          className="object-contain hidden dark:block"
+                        />
+                      </div>
                       <div className={`font-medium ${isDisabled ? "text-muted-foreground" : "text-foreground"}`}>{info.name}</div>
                       <div className="text-xs text-muted-foreground mt-1">{info.description}</div>
                     </button>
