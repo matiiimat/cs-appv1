@@ -1,5 +1,5 @@
 -- Migration 004: Add email usage tracking
--- Supports: Free plan (5 total, no reset) and Pro plan (100/month, anniversary reset)
+-- Supports: Free plan (5 total, no reset) and Pro plan (1000/month, anniversary reset)
 
 -- Add email usage table
 CREATE TABLE IF NOT EXISTS email_usage (

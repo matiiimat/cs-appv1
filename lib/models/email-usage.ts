@@ -3,13 +3,13 @@ import { db } from '@/lib/database'
 /**
  * Plan configuration
  * - free: 5 emails total, no reset (one-time allowance)
- * - pro: 100 emails per month, resets on plan anniversary
+ * - pro: 1000 emails per month, resets on plan anniversary
  */
 export const PLAN_LIMITS = {
   free: { limit: 5, resetsMonthly: false },
-  pro: { limit: 100, resetsMonthly: true },
+  pro: { limit: 1000, resetsMonthly: true },
   // Legacy plans map to pro behavior
-  basic: { limit: 100, resetsMonthly: true },
+  basic: { limit: 1000, resetsMonthly: true },
   enterprise: { limit: null, resetsMonthly: true }, // unlimited
 } as const
 

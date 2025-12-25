@@ -356,14 +356,6 @@ export default function LuxuryLanding() {
           </div>
         </nav>
 
-        {/* Limited Time Offer Banner */}
-        <div className="fixed left-0 right-0 top-[65px] z-30 bg-gradient-to-r from-[#3872B9] to-[#B33275] py-2.5 text-center text-white">
-          <p className="text-sm font-medium">
-            <span className="font-bold">Limited Time:</span> Get your first month FREE with code{" "}
-            <span className="rounded bg-white/20 px-2 py-0.5 font-bold">BF26FREEMONTH</span>
-          </p>
-        </div>
-
         {/* Hero Section */}
         <section
           ref={heroRef}
@@ -531,7 +523,7 @@ export default function LuxuryLanding() {
                 <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                Free to start
+                5 free emails to try
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
@@ -848,14 +840,14 @@ export default function LuxuryLanding() {
 
             {/* Pricing cards - Two tiers */}
             <div className="mt-10 grid gap-8 md:grid-cols-2">
-              {/* Free Tier */}
+              {/* Free Trial */}
               <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
                 <div className="relative rounded-[22px] p-8 bg-white dark:bg-[#0A0A0B]">
                   <div className="flex flex-col">
                     {/* Header */}
                     <div className="mb-6">
-                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Free</h3>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Perfect to test Aidly</p>
+                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Free Trial</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Full product, 5 emails</p>
                     </div>
 
                     {/* Price */}
@@ -864,17 +856,17 @@ export default function LuxuryLanding() {
                         <span className="font-[var(--font-custom)] text-5xl font-medium text-slate-900 dark:text-white">$0</span>
                         <span className="text-slate-500 dark:text-white/50">forever</span>
                       </div>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">5 emails total • No credit card</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">5 emails included • No credit card</p>
                     </div>
 
                     {/* Features */}
                     <div className="mb-8 space-y-3">
                       {[
-                        "5 AI-generated emails",
+                        "All Pro features included",
+                        "Lightning-fast AI replies",
+                        "Self-learning from your replies",
                         "Full approval control",
-                        "All AI providers supported",
-                        "Basic analytics",
-                        "EU-based infrastructure",
+                        "5 emails to try it out",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm text-slate-700 dark:text-white/70">
                           <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -936,7 +928,7 @@ export default function LuxuryLanding() {
                     {/* Features */}
                     <div className="mb-8 space-y-3">
                       {[
-                        "100 emails per month",
+                        "1,000 emails per month",
                         "Lightning-fast AI replies",
                         "Self-learning from your replies",
                         "Full approval control",
