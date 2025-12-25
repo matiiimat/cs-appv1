@@ -1,3 +1,11 @@
+/**
+ * @deprecated This component is no longer used. The dashboard UI is now part of QueueView.
+ * Kept for reference only. Will be removed in a future cleanup.
+ *
+ * Deprecated on: 2025-12-25
+ * Reason: QueueView now handles all dashboard functionality including UsageWidget
+ */
+
 "use client"
 
 import { Button } from "@/components/ui/button"

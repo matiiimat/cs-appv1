@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { PieChart } from "@/components/ui/pie-chart"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/toast"
+import { UsageWidget } from "@/components/usage-widget"
 import {
   Zap,
   Clock,
@@ -697,7 +698,7 @@ export function QueueView() {
         </div>
       </div>
 
-      {/* Category Chart */}
+      {/* Category Chart & Usage Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="surface p-6 rounded-lg">
           <h3 className="text-sm font-medium text-muted-foreground mb-4">Cases by Category</h3>
@@ -707,6 +708,7 @@ export function QueueView() {
             <PieChart data={pieData} totalLabel="Total" />
           )}
         </div>
+        <UsageWidget />
       </div>
     </div>
   )
