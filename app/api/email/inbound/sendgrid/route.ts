@@ -4,6 +4,7 @@ import { parseOrgIdFromRecipient } from '@/lib/email'
 import { db } from '@/lib/database'
 import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 import { withRateLimit } from '@/lib/rate-limiter'
+import { SlackNotifier } from '@/lib/slack-notifier'
 
 // MVP inbound handler for SendGrid Inbound Parse
 // Expects multipart/form-data with fields: to, from, subject, text, headers
@@ -115,6 +116,14 @@ async function handler(request: NextRequest) {
     })
 
     await MessageModel.addActivity(orgId, newMessage.id, null, 'received', { source: 'email' })
+
+    // Send Slack notification (fire-and-forget, don't block response)
+    SlackNotifier.notifyNewEmail(orgId, {
+      customerEmail: customerEmail,
+      subject: subject || '(no subject)'
+    }).catch(err => {
+      console.error('[Slack] Notification failed:', err)
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

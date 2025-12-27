@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
+import { useUsage } from "@/lib/usage-context"
+import { useToast } from "@/components/ui/toast"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, stripQuotedForTooltip } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
@@ -17,6 +19,8 @@ import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
   const { settings, aiConfigHasKey } = useSettings()
+  const { usage, canSendEmail, refreshUsage } = useUsage()
+  const { addToast } = useToast()
   const { handleAIError } = useAIErrorHandler()
 
   // Get agent ID
@@ -87,6 +91,34 @@ export function DetailedReviewInterface() {
   // Define handlers before effects that use them
   const handleApprove = useCallback(async () => {
     if (!selectedMessage) return
+
+    // Check usage limit before attempting to send
+    if (!canSendEmail) {
+      addToast({
+        type: 'error',
+        title: 'Email limit reached',
+        message: usage?.isFreePlan
+          ? 'Your free trial has ended. Upgrade to Pro to continue sending emails.'
+          : 'You\'ve reached your monthly email limit. Your quota resets soon.',
+        duration: 8000,
+        action: usage?.isFreePlan ? {
+          label: 'Upgrade to Pro',
+          onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+        } : undefined,
+      })
+      return
+    }
+
+    // Show warning at 90% usage
+    if (usage?.isNearLimit && !usage?.isAtLimit) {
+      addToast({
+        type: 'info',
+        title: 'Approaching limit',
+        message: `${usage.remaining} emails remaining this month.`,
+        duration: 3000,
+      })
+    }
+
     const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
     if (!finalResponse.trim()) {
       alert('Draft reply is empty.')
@@ -102,10 +134,26 @@ export function DetailedReviewInterface() {
       clearDraftReply(selectedMessage.id)
       setShowAiInput(false)
       setAiInput("")
+      // Refresh usage after successful send
+      await refreshUsage()
     } catch (error) {
       console.error('Failed to approve message:', error)
+      // Check if it's a usage limit error from API
+      if (error instanceof Error && error.message.includes('429')) {
+        addToast({
+          type: 'error',
+          title: 'Email limit reached',
+          message: 'Your monthly email limit has been reached.',
+          duration: 8000,
+          action: {
+            label: 'Upgrade to Pro',
+            onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+          },
+        })
+        await refreshUsage()
+      }
     }
-  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId])
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId, canSendEmail, usage, addToast, refreshUsage])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -178,6 +226,34 @@ export function DetailedReviewInterface() {
 
   const handleSendKeepOpen = useCallback(async () => {
     if (!selectedMessage) return
+
+    // Check usage limit before attempting to send
+    if (!canSendEmail) {
+      addToast({
+        type: 'error',
+        title: 'Email limit reached',
+        message: usage?.isFreePlan
+          ? 'Your free trial has ended. Upgrade to Pro to continue sending emails.'
+          : 'You\'ve reached your monthly email limit. Your quota resets soon.',
+        duration: 8000,
+        action: usage?.isFreePlan ? {
+          label: 'Upgrade to Pro',
+          onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+        } : undefined,
+      })
+      return
+    }
+
+    // Show warning at 90% usage
+    if (usage?.isNearLimit && !usage?.isAtLimit) {
+      addToast({
+        type: 'info',
+        title: 'Approaching limit',
+        message: `${usage.remaining} emails remaining this month.`,
+        duration: 3000,
+      })
+    }
+
     const finalResponse = replyText || selectedMessage.aiSuggestedResponse || ''
     if (!finalResponse.trim()) {
       alert('Draft reply is empty.')
@@ -192,10 +268,26 @@ export function DetailedReviewInterface() {
       })
       clearDraftReply(selectedMessage.id)
       setMoreMenuOpen(false)
+      // Refresh usage after successful send
+      await refreshUsage()
     } catch (error) {
       console.error('Failed to send message:', error)
+      // Check if it's a usage limit error from API
+      if (error instanceof Error && error.message.includes('429')) {
+        addToast({
+          type: 'error',
+          title: 'Email limit reached',
+          message: 'Your monthly email limit has been reached.',
+          duration: 8000,
+          action: {
+            label: 'Upgrade to Pro',
+            onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+          },
+        })
+        await refreshUsage()
+      }
     }
-  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId])
+  }, [selectedMessage, replyText, updateMessage, clearDraftReply, agentId, canSendEmail, usage, addToast, refreshUsage])
 
   const handleAiRefine = async () => {
     if (!aiInput.trim() || !selectedMessage) return

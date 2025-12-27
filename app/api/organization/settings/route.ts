@@ -74,21 +74,31 @@ export async function GET(request: NextRequest) {
           yellowHours: 24,
           redHours: 48,
         },
+        slackIntegration: {
+          enabled: false,
+        },
+        slackWebhookConfigured: false,
       })
     }
 
-    // Sanitize: do not expose API keys in response
+    // Sanitize: do not expose API keys or webhook URLs in response
     const hasKey = Boolean(settings?.aiConfig?.apiKey && String(settings.aiConfig.apiKey).trim() !== '')
+    const hasWebhook = Boolean(settings?.slackIntegration?.webhookUrl && String(settings.slackIntegration.webhookUrl).trim() !== '')
     const sanitized = {
       ...settings,
       aiConfig: {
         ...settings.aiConfig,
         apiKey: ""
       },
+      slackIntegration: settings.slackIntegration ? {
+        enabled: settings.slackIntegration.enabled,
+        webhookUrl: "" // Don't expose webhook URL
+      } : { enabled: false },
       aiConfigHasKey: hasKey,
+      slackWebhookConfigured: hasWebhook,
       hasSavedSettings: true,
     }
-      return NextResponse.json({ ...sanitized, brandName })
+    return NextResponse.json({ ...sanitized, brandName })
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -112,13 +122,22 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validatedData = SettingsDataSchema.parse(settingsData)
 
-    // Preserve existing API key if client posts empty string (since GET hides it)
+    // Preserve existing API key and webhook URL if client posts empty string (since GET hides them)
     try {
       const existing = await OrganizationSettingsModel.findByOrganizationId(orgId)
+
+      // Preserve API key
       const incomingKey = (validatedData?.aiConfig?.apiKey || '').trim()
       const existingKey = (existing?.aiConfig?.apiKey || '').trim()
       if (!incomingKey && existingKey) {
         validatedData.aiConfig.apiKey = existingKey
+      }
+
+      // Preserve Slack webhook URL
+      const incomingWebhook = (validatedData?.slackIntegration?.webhookUrl || '').trim()
+      const existingWebhook = (existing?.slackIntegration?.webhookUrl || '').trim()
+      if (!incomingWebhook && existingWebhook && validatedData.slackIntegration) {
+        validatedData.slackIntegration.webhookUrl = existingWebhook
       }
     } catch {}
 

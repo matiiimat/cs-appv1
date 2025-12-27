@@ -7,25 +7,26 @@ import { SwipeableCard } from "@/components/swipeable-card"
 import { QuickEditModal } from "@/components/quick-edit-modal"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
+import { useUsage } from "@/lib/usage-context"
 import { useAIErrorHandler, parseAPIError } from "@/lib/use-ai-error-handler"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, formatRelativeTime } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
 import { PieChart } from "@/components/ui/pie-chart"
 import { Tooltip } from "@/components/ui/tooltip"
+import { useToast } from "@/components/ui/toast"
+import { UsageWidget } from "@/components/usage-widget"
 import {
   Zap,
   Clock,
   User,
   Loader2,
-  MessageSquare,
   PlayCircle,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react"
-
-type QueueMode = "processing" | "triage"
 
 export function QueueView() {
   const {
@@ -37,15 +38,18 @@ export function QueueView() {
     isProcessingBatch,
     processedCount,
     totalToProcess,
-    showTriageButton,
-    hideTriageButton,
+    isTriageActive,
+    enterTriage,
+    exitTriage,
     processBatch,
     cancelBatchProcessing,
     refreshData,
   } = useMessageManager()
 
   const { settings, aiConfigHasKey } = useSettings()
+  const { usage, canSendEmail, refreshUsage } = useUsage()
   const { handleAIError } = useAIErrorHandler()
+  const { addToast } = useToast()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   const [preflightChecking, setPreflightChecking] = useState(false)
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
@@ -73,9 +77,8 @@ export function QueueView() {
   const currentMessage = pendingMessages[currentMessageIndex]
   const nextMessage = pendingMessages[currentMessageIndex + 1]
 
-  // Determine mode: show triage if there are messages ready for review
-  const mode: QueueMode = readyForReview.length > 0 && showTriageButton === false ? "triage" : "processing"
-  const isInTriageMode = mode === "triage" && currentMessage
+  // Determine mode: triage is active when user explicitly enters it
+  const isInTriageMode = isTriageActive && currentMessage
 
   // AI configuration check
   const provider = settings.aiConfig.provider
@@ -92,10 +95,22 @@ export function QueueView() {
   }
 
   const startTriage = () => {
-    hideTriageButton()
+    enterTriage()
   }
 
   const handleProcessQueue = async () => {
+    // Check if user has any remaining quota before starting
+    if (!canSendEmail) {
+      handleAIError(
+        { code: 'USAGE_LIMIT_REACHED', message: usage?.isFreePlan
+          ? 'Free trial limit reached. Upgrade to Pro for more emails.'
+          : 'Monthly email limit reached. Your quota resets soon.'
+        },
+        "AI Processing"
+      )
+      return
+    }
+
     try {
       setPreflightChecking(true)
       const resp = await fetch('/api/ai/status?checkConnectivity=true', { method: 'GET' })
@@ -124,7 +139,34 @@ export function QueueView() {
     } finally {
       setPreflightChecking(false)
     }
-    await processBatch(selectedBatchSize)
+
+    // Cap batch size to BOTH remaining quota AND actual unprocessed messages
+    const remaining = usage?.remaining ?? selectedBatchSize
+    const actualToProcess = Math.min(selectedBatchSize, remaining, unprocessedMessages.length)
+
+    // Only show quota warning if quota is the limiting factor (not message count)
+    if (remaining < selectedBatchSize && remaining < unprocessedMessages.length && remaining > 0) {
+      addToast({
+        type: 'info',
+        title: 'Limited by quota',
+        message: `Processing ${actualToProcess} of ${unprocessedMessages.length} messages (${remaining} remaining in your plan).`,
+        duration: 5000,
+      })
+    }
+
+    const result = await processBatch(actualToProcess)
+
+    // Show error toast if usage limit was hit during processing
+    if (result.usageLimitHit) {
+      handleAIError(
+        { code: 'USAGE_LIMIT_REACHED', message: usage?.isFreePlan
+          ? 'Free trial limit reached. Upgrade to Pro for more emails.'
+          : 'Monthly email limit reached. Your quota resets soon.'
+        },
+        "AI Processing"
+      )
+      await refreshUsage()
+    }
   }
 
   // Triage handlers
@@ -135,15 +177,55 @@ export function QueueView() {
 
   const handleApprove = useCallback(async () => {
     if (!currentMessage || isActing) return
+
+    // Check usage limit before attempting to send
+    if (!canSendEmail) {
+      addToast({
+        type: 'error',
+        title: 'Email limit reached',
+        message: usage?.isFreePlan
+          ? 'Your free trial has ended. Upgrade to Pro to continue sending emails.'
+          : 'You\'ve reached your monthly email limit. Your quota resets soon.',
+        duration: 8000,
+        action: usage?.isFreePlan ? {
+          label: 'Upgrade to Pro',
+          onClick: () => window.dispatchEvent(new CustomEvent('aidly:navigate:billing')),
+        } : undefined,
+      })
+      return
+    }
+
+    // Show warning at 90% usage
+    if (usage?.isNearLimit && !usage?.isAtLimit) {
+      addToast({
+        type: 'info',
+        title: 'Approaching limit',
+        message: `${usage.remaining} emails remaining this month.`,
+        duration: 3000,
+      })
+    }
+
     setIsActing(true)
     try {
       await approveMessage(currentMessage.id, agentId)
+      // Refresh usage after successful send
+      await refreshUsage()
     } catch (error) {
       console.error('Failed to approve message:', error)
+      // Check if it's a usage limit error from API
+      if (error instanceof Error && error.message.includes('429')) {
+        addToast({
+          type: 'error',
+          title: 'Email limit reached',
+          message: 'Your monthly email limit has been reached.',
+          duration: 5000,
+        })
+        await refreshUsage()
+      }
     } finally {
       setIsActing(false)
     }
-  }, [currentMessage, approveMessage, agentId, isActing])
+  }, [currentMessage, approveMessage, agentId, isActing, canSendEmail, usage, addToast, refreshUsage])
 
   const handleSendToReview = useCallback(async () => {
     if (!currentMessage || isActing) return
@@ -179,6 +261,10 @@ export function QueueView() {
       }
 
       switch (event.key.toLowerCase()) {
+        case 'escape':
+          event.preventDefault()
+          exitTriage()
+          break
         case ' ':
         case 'arrowright':
           event.preventDefault()
@@ -198,7 +284,20 @@ export function QueueView() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isInTriageMode, handleKeyboardApprove, handleKeyboardReview])
+  }, [isInTriageMode, handleKeyboardApprove, handleKeyboardReview, exitTriage])
+
+  // Auto-exit triage when queue is empty
+  useEffect(() => {
+    if (isTriageActive && readyForReview.length === 0) {
+      addToast({
+        type: 'success',
+        title: 'All caught up!',
+        message: 'No more messages to triage',
+        duration: 2000,
+      })
+      exitTriage()
+    }
+  }, [isTriageActive, readyForReview.length, addToast, exitTriage])
 
   // Category pie chart data
   const categoryCounts = messages.reduce<Record<string, number>>((acc, m) => {
@@ -251,6 +350,15 @@ export function QueueView() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={exitTriage}
+                className="text-muted-foreground hover:text-foreground -ml-2"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
               <h1 className="text-xl font-semibold">Triage</h1>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <span className="px-2 py-1 bg-muted rounded-md font-medium">
@@ -259,6 +367,10 @@ export function QueueView() {
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <kbd className="kbd-sm">Esc</kbd>
+                <span>Exit</span>
+              </span>
               <span className="flex items-center gap-1">
                 <kbd className="kbd-sm">→</kbd>
                 <span>Send</span>
@@ -566,7 +678,7 @@ export function QueueView() {
       </div>
 
       {/* Start Triage CTA */}
-      {showTriageButton && readyForReview.length > 0 && (
+      {readyForReview.length > 0 && (
         <div className="surface-elevated rounded-xl p-6 mb-6 border-emerald-500/20 bg-emerald-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -582,17 +694,6 @@ export function QueueView() {
               <ArrowRight className="h-4 w-4 mr-2" />
               Start Triage
             </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State for Triage */}
-      {mode === "triage" && !currentMessage && (
-        <div className="surface rounded-xl p-12">
-          <div className="empty-state">
-            <MessageSquare className="empty-state-icon" />
-            <h3 className="empty-state-title">Queue Empty</h3>
-            <p className="empty-state-description">All messages have been reviewed</p>
           </div>
         </div>
       )}
@@ -640,7 +741,7 @@ export function QueueView() {
         </div>
       </div>
 
-      {/* Category Chart */}
+      {/* Category Chart & Usage Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="surface p-6 rounded-lg">
           <h3 className="text-sm font-medium text-muted-foreground mb-4">Cases by Category</h3>
@@ -650,6 +751,7 @@ export function QueueView() {
             <PieChart data={pieData} totalLabel="Total" />
           )}
         </div>
+        <UsageWidget />
       </div>
     </div>
   )

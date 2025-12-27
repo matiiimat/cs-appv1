@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { db } from '@/lib/database';
 import { PIIEncryption, DatabaseEncryption } from '@/lib/encryption';
+import { messageCache } from '@/lib/message-cache';
 
 // Message status enum
 export const MessageStatus = z.enum(['new', 'to_send_queue', 'rejected', 'edited', 'sent', 'to_review_queue']);
@@ -87,8 +88,27 @@ export class MessageModel {
 
   /**
    * Decrypt message data after retrieval
+   * Checks cache first to avoid redundant decryption operations
+   * @param dbRow - Raw database row with encrypted fields
+   * @param organizationKey - Organization's encryption key
+   * @param useCache - Whether to use cache (default: true, false for create operations)
    */
-  private static decryptMessageData(dbRow: Record<string, unknown>, organizationKey: string): Message {
+  private static decryptMessageData(
+    dbRow: Record<string, unknown>,
+    organizationKey: string,
+    useCache = true
+  ): Message {
+    const messageId = dbRow.id as string;
+
+    // Check cache first if enabled
+    if (useCache && messageId) {
+      const cached = messageCache.get(messageId);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    // Cache miss - perform decryption
     const fieldsToDecrypt = {
       customer_name: dbRow.customer_name,
       customer_email: dbRow.customer_email,
@@ -112,10 +132,17 @@ export class MessageModel {
       }
     }
 
-    return {
+    const message = {
       ...dbRow,
       ...decryptedFields,
     } as Message;
+
+    // Store in cache if enabled
+    if (useCache && messageId) {
+      messageCache.set(messageId, message);
+    }
+
+    return message;
   }
 
   /**
@@ -156,7 +183,8 @@ export class MessageModel {
     ]);
 
     const dbRow = result.rows[0];
-    return this.decryptMessageData(dbRow as Record<string, unknown>, organizationKey);
+    // Don't cache newly created messages - they're not yet in the hot path
+    return this.decryptMessageData(dbRow as Record<string, unknown>, organizationKey, false);
   }
 
   /**
@@ -397,6 +425,9 @@ export class MessageModel {
       return null;
     }
 
+    // Invalidate cache before returning updated message
+    messageCache.invalidate(messageId);
+
     return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
   }
 
@@ -418,6 +449,7 @@ export class MessageModel {
        SET status = 'sent',
            agent_id = COALESCE($3, agent_id),
            processed_at = COALESCE($4::timestamptz, processed_at, NOW()),
+           response_time_ms = EXTRACT(EPOCH FROM (COALESCE($4::timestamptz, NOW()) - created_at)) * 1000,
            updated_at = NOW()
        WHERE organization_id = $1 AND id = $2 AND status <> 'sent'
        RETURNING *`,
@@ -428,6 +460,9 @@ export class MessageModel {
       // No transition happened (already sent or not found under org)
       return null;
     }
+
+    // Invalidate cache before returning transitioned message
+    messageCache.invalidate(messageId);
 
     return this.decryptMessageData(result.rows[0] as Record<string, unknown>, organizationKey);
   }
@@ -440,6 +475,11 @@ export class MessageModel {
       'DELETE FROM messages WHERE organization_id = $1 AND id = $2',
       [organizationId, messageId]
     );
+
+    // Invalidate cache if message was deleted
+    if (result.rowCount > 0) {
+      messageCache.invalidate(messageId);
+    }
 
     return result.rowCount > 0;
   }

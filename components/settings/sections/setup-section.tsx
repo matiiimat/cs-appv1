@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
+import Image from "next/image"
 import { useSettings } from "@/lib/settings-context"
 import { useToast } from "@/components/ui/toast"
 import { SectionHeader } from "../section-header"
@@ -24,21 +25,25 @@ import {
 
 type Provider = "openai" | "anthropic" | "local"
 
-const providerInfo: Record<Provider, { name: string; description: string; icon: string }> = {
+const providerInfo: Record<Provider, { name: string; description: string; iconLight: string; iconDark: string; comingSoon?: boolean }> = {
   openai: {
     name: "OpenAI",
     description: "GPT-4o, GPT-4o-mini",
-    icon: "◯",
+    iconLight: "/ai_providers/openai-light.png",
+    iconDark: "/ai_providers/openai-dark.png",
   },
   anthropic: {
     name: "Anthropic",
     description: "Claude 3.5 Sonnet, Haiku",
-    icon: "◈",
+    iconLight: "/ai_providers/claude-icon.png",
+    iconDark: "/ai_providers/claude-icon.png",
   },
   local: {
     name: "Local AI",
-    description: "Self-hosted models",
-    icon: "⬡",
+    description: "Coming Soon",
+    iconLight: "/ai_providers/lm_studio_icon.png",
+    iconDark: "/ai_providers/lm_studio_icon.png",
+    comingSoon: true,
   },
 }
 
@@ -404,27 +409,55 @@ export function SetupSection() {
                 {(Object.keys(providerInfo) as Provider[]).map((provider) => {
                   const info = providerInfo[provider]
                   const isSelected = settings.aiConfig.provider === provider
+                  const isDisabled = info.comingSoon
                   return (
                     <button
                       key={provider}
-                      onClick={() => handleProviderChange(provider)}
+                      onClick={() => !isDisabled && handleProviderChange(provider)}
+                      disabled={isDisabled}
                       className={`
                         relative p-4 rounded-xl border-2 text-left transition-all duration-200
-                        hover:border-primary/50 hover:bg-primary/5
                         ${
-                          isSelected
+                          isDisabled
+                            ? "border-border bg-muted/50 cursor-not-allowed opacity-60"
+                            : "hover:border-primary/50 hover:bg-primary/5"
+                        }
+                        ${
+                          isSelected && !isDisabled
                             ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border bg-card"
+                            : !isDisabled ? "border-border bg-card" : ""
                         }
                       `}
                     >
-                      {isSelected && (
+                      {isSelected && !isDisabled && (
                         <div className="absolute top-2 right-2">
                           <CheckCircle className="h-4 w-4 text-primary" />
                         </div>
                       )}
-                      <div className="text-2xl mb-2">{info.icon}</div>
-                      <div className="font-medium text-foreground">{info.name}</div>
+                      {isDisabled && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            Coming Soon
+                          </span>
+                        </div>
+                      )}
+                      <div className={`w-full flex justify-center mb-2 ${isDisabled ? "opacity-50" : ""}`}>
+                        <Image
+                          src={info.iconLight}
+                          alt={info.name}
+                          width={16}
+                          height={16}
+                          className="object-contain dark:hidden"
+                        />
+                        <Image
+                          src={info.iconDark}
+                          alt={info.name}
+                          width={16}
+                          height={16}
+                          className="object-contain hidden dark:block"
+                        />
+                      </div>
+                      <div className={`font-medium ${isDisabled ? "text-muted-foreground" : "text-foreground"}`}>{info.name}</div>
                       <div className="text-xs text-muted-foreground mt-1">{info.description}</div>
                     </button>
                   )

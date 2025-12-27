@@ -8,6 +8,7 @@ import { KnowledgePage } from "@/components/knowledge-page"
 import { CommandPalette } from "@/components/command-palette"
 import { MessageManagerProvider, useMessageManager } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
+import { UsageProvider } from "@/lib/usage-context"
 import { ToastProvider } from "@/components/ui/toast"
 import { OnboardingWrapper } from "@/components/onboarding/onboarding-wrapper"
 import { useKeyboardNavigation } from "@/lib/use-keyboard-navigation"
@@ -45,22 +46,43 @@ function AppContent() {
     currentView,
   })
 
+  // Handle billing/upgrade - trigger Stripe checkout directly
+  const startCheckout = async () => {
+    try {
+      const resp = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ annual: false }) // Default to monthly
+      })
+      if (!resp.ok) throw new Error('Failed to start checkout')
+      const data = await resp.json()
+      if (data?.url) {
+        window.location.href = data.url
+      }
+    } catch (e) {
+      console.error('Checkout failed:', e)
+    }
+  }
+
   // Listen for cross-component navigation events
   useEffect(() => {
     const settingsHandler = () => setCurrentView("settings")
     const triageHandler = () => setCurrentView("queue")
     const inboxHandler = () => setCurrentView("inbox")
+    const billingHandler = () => startCheckout() // Trigger Stripe checkout
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aidly:navigate:settings', settingsHandler as EventListener)
       window.addEventListener('aidly:navigate:triage', triageHandler as EventListener)
       window.addEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
+      window.addEventListener('aidly:navigate:billing', billingHandler as EventListener)
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aidly:navigate:settings', settingsHandler as EventListener)
         window.removeEventListener('aidly:navigate:triage', triageHandler as EventListener)
         window.removeEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
+        window.removeEventListener('aidly:navigate:billing', billingHandler as EventListener)
       }
     }
   }, [])
@@ -182,9 +204,11 @@ export function MainApp() {
     <SettingsProvider>
       <ToastProvider>
         <MessageManagerProvider>
-          <OnboardingWrapper>
-            <AppContent />
-          </OnboardingWrapper>
+          <UsageProvider>
+            <OnboardingWrapper>
+              <AppContent />
+            </OnboardingWrapper>
+          </UsageProvider>
         </MessageManagerProvider>
       </ToastProvider>
     </SettingsProvider>

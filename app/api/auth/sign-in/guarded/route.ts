@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
-import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { getOrgAndUserByEmail, ensureProvisioned } from '@/lib/tenant'
 import { withRateLimit } from '@/lib/rate-limiter'
 
 // Ensure Node.js runtime (SendGrid + server fetch)
@@ -32,9 +32,16 @@ async function handler(request: NextRequest) {
     } catch {}
     if (!email) return NextResponse.json({ error: 'email_required' }, { status: 400 })
 
+    // Auto-provision free account if user doesn't exist (freemium flow)
     const exists = await getOrgAndUserByEmail(email)
     if (!exists) {
-      return NextResponse.json({ error: 'no_account' }, { status: 404 })
+      try {
+        await ensureProvisioned(email)
+        console.log(`[magic-link] Auto-provisioned free account for new user: ${email}`)
+      } catch (provisionErr) {
+        console.error(`[magic-link] Failed to provision account for ${email}:`, provisionErr)
+        return NextResponse.json({ error: 'account_creation_failed' }, { status: 500 })
+      }
     }
 
     // Prevent duplicate requests within 5 seconds

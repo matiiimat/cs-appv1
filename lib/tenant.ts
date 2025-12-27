@@ -33,10 +33,10 @@ export async function provisionOrgAndUserForEmail(email: string, name?: string):
 
   return await db.transaction(async (client) => {
     const orgRes = await client.query<{ id: string }>(
-      `INSERT INTO organizations (name, plan_type, plan_status, encrypted_data_key)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO organizations (name, plan_type, plan_status, encrypted_data_key, current_period_start)
+       VALUES ($1, $2, $3, $4, NOW())
        RETURNING id`,
-      [orgName, 'pro', 'active', encKey]
+      [orgName, 'free', 'active', encKey]
     )
     const organizationId = orgRes.rows[0].id
 

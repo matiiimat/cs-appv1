@@ -48,6 +48,10 @@ export const SettingsDataSchema = z.object({
     yellowHours: z.number().default(24),
     redHours: z.number().default(48),
   }),
+  slackIntegration: z.object({
+    enabled: z.boolean().default(false),
+    webhookUrl: z.string().optional(),
+  }).optional().default({ enabled: false }),
   lastSaved: z.string().optional(), // ISO string
 });
 

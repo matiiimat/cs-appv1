@@ -4,6 +4,9 @@ import { useState, useEffect, createContext, useContext, useCallback, useRef, ty
 import { useSettings } from "./settings-context"
 import { apiClient, type ApiMessage, type ApiActivity } from "./api-client"
 
+// UUID validation regex for agent IDs
+const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+
 // Convert API message to frontend format
 function convertApiMessage(apiMessage: ApiMessage): CustomerMessage {
   return {
@@ -98,8 +101,9 @@ interface MessageManagerContextType {
   isProcessingBatch: boolean
   processedCount: number
   totalToProcess: number
-  showTriageButton: boolean
-  hideTriageButton: () => void
+  isTriageActive: boolean
+  enterTriage: () => void
+  exitTriage: () => void
   cancelBatchProcessing: () => void
   addMessage: (message: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => Promise<void>
   updateMessage: (id: string, updates: Partial<CustomerMessage>) => Promise<void>
@@ -110,8 +114,8 @@ interface MessageManagerContextType {
   editMessage: (id: string, editedResponse: string, reason: string, agentId: string) => Promise<void>
   moveToNextMessage: () => void
   moveToPreviousMessage: () => void
-  generateAIResponse: (message: CustomerMessage) => Promise<void>
-  processBatch: (batchSize: number) => Promise<void>
+  generateAIResponse: (message: CustomerMessage) => Promise<{ success: boolean; usageLimitHit?: boolean }>
+  processBatch: (batchSize: number) => Promise<{ usageLimitHit?: boolean }>
   getMessagesByStatus: (status: CustomerMessage["status"]) => CustomerMessage[]
   getRecentActivity: () => Array<{
     id: string
@@ -158,7 +162,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   const [isProcessingBatch, setIsProcessingBatch] = useState(false)
   const [processedCount, setProcessedCount] = useState(0)
   const [totalToProcess, setTotalToProcess] = useState(0)
-  const [showTriageButton, setShowTriageButton] = useState(false)
+  const [isTriageActive, setIsTriageActive] = useState(false)
   const [recentActivity, setRecentActivity] = useState<ApiActivity[]>([])
   const cancelRequestedRef = useRef(false)
 
@@ -224,6 +228,11 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const updateMessage = useCallback(async (id: string, updates: Partial<CustomerMessage>) => {
+    // 1. OPTIMISTIC UPDATE - immediate UI feedback
+    setMessages(prev =>
+      prev.map(msg => msg.id === id ? { ...msg, ...updates } : msg)
+    )
+
     try {
       const apiUpdates: Record<string, unknown> = {}
 
@@ -232,22 +241,35 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       if (updates.aiSuggestedResponse !== undefined) apiUpdates.ai_suggested_response = updates.aiSuggestedResponse
       if (updates.status !== undefined) apiUpdates.status = updates.status
       // Only include agent_id if it's a valid UUID
-      if (typeof updates.agentId === 'string') {
-        const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-        if (UUID_RE.test(updates.agentId)) {
-          apiUpdates.agent_id = updates.agentId
-        }
+      if (typeof updates.agentId === 'string' && UUID_REGEX.test(updates.agentId)) {
+        apiUpdates.agent_id = updates.agentId
       }
       if (updates.aiReviewed !== undefined) apiUpdates.ai_reviewed = updates.aiReviewed
       if (updates.isGenerating !== undefined) apiUpdates.is_generating = updates.isGenerating
       if (updates.metadata !== undefined) apiUpdates.metadata = updates.metadata
 
-      await apiClient.updateMessage(id, apiUpdates)
+      // 2. Call API and get server response
+      const response = await apiClient.updateMessage(id, apiUpdates)
 
-      // Just refresh from database - don't double-update state to avoid conflicts
-      await refreshData()
+      // 3. Replace optimistic update with server response (source of truth)
+      const serverMessage = convertApiMessage(response.message)
+      setMessages(prev =>
+        prev.map(msg => msg.id === id ? serverMessage : msg)
+      )
+
+      // 4. Refresh stats only if status changed (affects stats calculation)
+      if (updates.status !== undefined) {
+        const [statsResponse, activityResponse] = await Promise.all([
+          apiClient.getStats(),
+          apiClient.getActivity(10)
+        ])
+        setStats(statsResponse.stats)
+        setRecentActivity(activityResponse.activities)
+      }
     } catch (error) {
       console.error('Failed to update message:', error)
+      // Revert optimistic update on error by refreshing from server
+      await refreshData()
       throw error
     }
   }, [refreshData])
@@ -257,8 +279,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const approveMessage = async (id: string, agentId: string) => {
-    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-    if (!UUID_RE.test(agentId)) {
+    if (!UUID_REGEX.test(agentId)) {
       throw new Error('approveMessage requires a valid agent UUID')
     }
     await updateMessage(id, { status: "sent", agentId })
@@ -266,16 +287,14 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }
 
   const rejectMessage = async (id: string, agentId: string) => {
-    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-    if (!UUID_RE.test(agentId)) {
+    if (!UUID_REGEX.test(agentId)) {
       throw new Error('rejectMessage requires a valid agent UUID')
     }
     await updateMessage(id, { status: "rejected", agentId })
   }
 
   const sendToReview = async (id: string, agentId: string) => {
-    const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-    if (!UUID_RE.test(agentId)) {
+    if (!UUID_REGEX.test(agentId)) {
       throw new Error('sendToReview requires a valid agent UUID')
     }
     await updateMessage(id, { status: "to_review_queue", agentId })
@@ -300,7 +319,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const generateAIResponse = useCallback(async (message: CustomerMessage) => {
+  const generateAIResponse = useCallback(async (message: CustomerMessage): Promise<{ success: boolean; usageLimitHit?: boolean }> => {
     try {
       // Update local state to show generating
       setMessages(prev =>
@@ -332,20 +351,32 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         isGenerating: false,
       })
 
+      return { success: true }
+
     } catch (error) {
       console.error("Error generating AI response:", error)
 
-      // Update with error response
+      // Check if this is a usage limit error
+      const errorWithCode = error as Error & { code?: string }
+      if (errorWithCode.code === 'USAGE_LIMIT_REACHED') {
+        // Reset generating state but don't mark as reviewed
+        await updateMessage(message.id, { isGenerating: false })
+        return { success: false, usageLimitHit: true }
+      }
+
+      // Update with error response for other errors
       await updateMessage(message.id, {
         category: "General Inquiry",
         aiSuggestedResponse: "I apologize, but I'm having trouble generating a response right now. Please try again or contact our support team directly.",
         aiReviewed: true,
         isGenerating: false,
       })
+
+      return { success: false }
     }
   }, [settings, updateMessage])
 
-  const processBatch = useCallback(async (batchSize: number) => {
+  const processBatch = useCallback(async (batchSize: number): Promise<{ usageLimitHit?: boolean }> => {
     const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
     const messagesToProcess = unprocessedMessages.slice(0, batchSize)
 
@@ -355,6 +386,7 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     cancelRequestedRef.current = false
 
     let currentProcessedCount = 0
+    let usageLimitHit = false
 
     try {
       for (let i = 0; i < messagesToProcess.length; i++) {
@@ -364,7 +396,15 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
         }
 
         const message = messagesToProcess[i]
-        await generateAIResponse(message)
+        const result = await generateAIResponse(message)
+
+        // Stop batch processing if usage limit is hit
+        if (result.usageLimitHit) {
+          console.log('Batch processing stopped: usage limit reached')
+          usageLimitHit = true
+          break
+        }
+
         currentProcessedCount = i + 1
         setProcessedCount(currentProcessedCount)
 
@@ -377,29 +417,25 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       console.error('Error processing batch:', error)
     } finally {
       setIsProcessingBatch(false)
-
-      // Show triage button if we processed any messages successfully
-      if (currentProcessedCount > 0 && !cancelRequestedRef.current) {
-        setShowTriageButton(true)
-
-        // Auto-hide button after 30 seconds
-        setTimeout(() => {
-          setShowTriageButton(false)
-        }, 30000)
-      }
-
       setProcessedCount(0)
       setTotalToProcess(0)
       cancelRequestedRef.current = false
     }
+
+    return { usageLimitHit }
   }, [messages, generateAIResponse])
 
   const cancelBatchProcessing = useCallback(() => {
     cancelRequestedRef.current = true
   }, [])
 
-  const hideTriageButton = useCallback(() => {
-    setShowTriageButton(false)
+  const enterTriage = useCallback(() => {
+    setIsTriageActive(true)
+    setCurrentMessageIndex(0)
+  }, [])
+
+  const exitTriage = useCallback(() => {
+    setIsTriageActive(false)
   }, [])
 
   const moveToNextMessage = () => {
@@ -488,8 +524,9 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     isProcessingBatch,
     processedCount,
     totalToProcess,
-    showTriageButton,
-    hideTriageButton,
+    isTriageActive,
+    enterTriage,
+    exitTriage,
     cancelBatchProcessing,
     addMessage,
     updateMessage,

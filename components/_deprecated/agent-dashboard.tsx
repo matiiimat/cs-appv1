@@ -1,3 +1,11 @@
+/**
+ * @deprecated This component is no longer used. The dashboard UI is now part of QueueView.
+ * Kept for reference only. Will be removed in a future cleanup.
+ *
+ * Deprecated on: 2025-12-25
+ * Reason: QueueView now handles all dashboard functionality including UsageWidget
+ */
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -6,13 +14,14 @@ import { useMessageManager } from "@/lib/message-manager"
 import { formatRelativeTime } from "@/lib/utils"
 import { PlayCircle, Loader2, ArrowRight } from "lucide-react"
 import { PieChart } from "@/components/ui/pie-chart"
+import { UsageWidget } from "@/components/usage-widget"
 import { useSettings } from "@/lib/settings-context"
 import { useState, useEffect } from "react"
 import { getMessageUrgency } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 
 export function AgentDashboard() {
-  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, showTriageButton, hideTriageButton, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
+  const { stats, messages, isProcessingBatch, processedCount, totalToProcess, enterTriage, processBatch, cancelBatchProcessing, refreshData } = useMessageManager()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
   
   // Refresh dashboard data on mount/entry
@@ -78,7 +87,7 @@ export function AgentDashboard() {
   }
 
   const goToTriage = () => {
-    hideTriageButton()
+    enterTriage()
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aidly:navigate:triage'))
     }
@@ -257,7 +266,7 @@ export function AgentDashboard() {
       </div>
 
       {/* Triage Button */}
-      {showTriageButton && (
+      {readyForReview.length > 0 && (
         <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg shadow-lg border border-green-200 dark:border-green-800">
           <div className="p-6 text-center">
             <div className="mb-4">
@@ -350,8 +359,12 @@ export function AgentDashboard() {
         </div>
       </div>
 
-      {/* Category Distribution */}
+      {/* Usage & Category Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* Email Usage Widget */}
+        <UsageWidget />
+
+        {/* Category Distribution */}
         <div className="p-6 bg-card rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm font-medium">Cases by Category</div>

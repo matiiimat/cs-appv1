@@ -3,6 +3,7 @@ import { AIService } from "@/lib/ai-providers"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { EmailUsageModel } from '@/lib/models/email-usage'
 
 async function requireOrgId(headers: Headers): Promise<string> {
   const session = await auth.api.getSession({ headers })
@@ -29,6 +30,17 @@ export async function POST(request: NextRequest) {
 
     // Load effective AI configuration from the database (mirrors generate-response)
     const orgId = await requireOrgId(request.headers)
+
+    // Check usage limits before allowing AI generation
+    const usageCheck = await EmailUsageModel.canSendEmail(orgId)
+    if (!usageCheck.allowed) {
+      return NextResponse.json({
+        error: usageCheck.reason,
+        code: 'USAGE_LIMIT_REACHED',
+        usage: usageCheck.usage,
+      }, { status: 429 })
+    }
+
     const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     if (!orgSettings || !orgSettings.aiConfig) {
