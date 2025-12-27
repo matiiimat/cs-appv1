@@ -25,6 +25,11 @@ export interface AIProviderConfig {
   maxTokens: number
 }
 
+export interface SlackIntegration {
+  enabled: boolean
+  webhookUrl?: string
+}
+
 export interface Settings {
   theme: "light" | "dark"
   brandName: string
@@ -40,6 +45,7 @@ export interface Settings {
     yellowHours: number
     redHours: number
   }
+  slackIntegration?: SlackIntegration
 }
 
 interface SettingsContextType {
@@ -54,6 +60,8 @@ interface SettingsContextType {
   lastSaved: Date | null
   aiConfigHasKey: boolean
   setAiConfigHasKey: (hasKey: boolean) => void
+  slackWebhookConfigured: boolean
+  setSlackWebhookConfigured: (configured: boolean) => void
   hasSavedSettings?: boolean
   hasCompletedOnboarding: boolean
   completeOnboarding: () => void
@@ -105,6 +113,9 @@ const defaultSettings: Settings = {
     yellowHours: 24,
     redHours: 48,
   },
+  slackIntegration: {
+    enabled: false,
+  },
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'
@@ -117,6 +128,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [aiConfigHasKey, setAiConfigHasKey] = useState<boolean>(false)
+  const [slackWebhookConfigured, setSlackWebhookConfigured] = useState<boolean>(false)
   const [hasSavedSettings, setHasSavedSettings] = useState<boolean | undefined>(undefined)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(true) // Default true to avoid flash
   const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false)
@@ -148,6 +160,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             setAiConfigHasKey(data.aiConfigHasKey)
           } else {
             setAiConfigHasKey(false)
+          }
+          if (typeof data.slackWebhookConfigured === 'boolean') {
+            setSlackWebhookConfigured(data.slackWebhookConfigured)
+          } else {
+            setSlackWebhookConfigured(false)
           }
           if (typeof data.hasSavedSettings === 'boolean') {
             setHasSavedSettings(data.hasSavedSettings)
@@ -357,6 +374,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         lastSaved,
         aiConfigHasKey,
         setAiConfigHasKey,
+        slackWebhookConfigured,
+        setSlackWebhookConfigured,
         hasSavedSettings,
         hasCompletedOnboarding,
         completeOnboarding,
