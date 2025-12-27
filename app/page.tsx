@@ -159,23 +159,6 @@ export default function LuxuryLanding() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // ROI calculator state
-  const [tickets, setTickets] = useState(500)
-  const [minutes, setMinutes] = useState(6)
-  const [costPerHour, setCostPerHour] = useState(28)
-
-  // ROI calculations
-  const formatUSD = (n: number) =>
-    new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.max(0, Math.round(n)))
-  const hours = (tickets * minutes) / 60
-  const currentCost = hours * costPerHour
-  const autoLow = 0.60 // conservative automation share
-  const assistSpeedup = 0.40 // faster handling on remaining
-  const afterConservative = currentCost * (1 - autoLow) * (1 - assistSpeedup)
-  const grossSavings = currentCost - afterConservative
-  const planMonthly = 167
-  const netSavings = grossSavings - planMonthly
-
   // Checkout function
   async function startCheckout() {
     setError("")
@@ -339,18 +322,12 @@ export default function LuxuryLanding() {
               <span className="text-lg font-semibold tracking-tight">Aidly</span>
             </Link>
 
-            <div className="hidden items-center gap-8 md:flex">
-              <Link href="#features" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Features</Link>
-              <Link href="#testimonials" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Testimonials</Link>
-              <Link href="#pricing" className="text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-white/60 dark:hover:text-white">Pricing</Link>
-            </div>
-
             <div className="flex items-center gap-3">
               <Button variant="ghost" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white" asChild>
                 <Link href="/app/login">Sign in</Link>
               </Button>
               <Button className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white/90" asChild>
-                <Link href="/app/login">Start Free</Link>
+                <Link href="#pricing">Start Free</Link>
               </Button>
             </div>
           </div>
@@ -490,29 +467,16 @@ export default function LuxuryLanding() {
               Reduce costs by 90% while delivering faster, more consistent service.
             </p>
 
-            {/* CTA buttons */}
-            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row animate-[fadeInUp_0.8s_ease-out_0.7s_both]">
+            {/* CTA button */}
+            <div className="mt-12 animate-[fadeInUp_0.8s_ease-out_0.7s_both]">
               <Button
                 size="lg"
                 className="group relative h-14 overflow-hidden px-8 text-base font-medium transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]"
                 asChild
               >
-                <Link href="/app/login">
+                <Link href="#pricing">
                   <span className="relative z-10">Start Free</span>
                   <span className="absolute inset-0 -z-0 bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 px-8 text-base font-medium border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700 dark:border-white/[0.12] dark:bg-transparent dark:text-white dark:hover:border-white/25 dark:hover:bg-white/[0.03] dark:hover:text-white"
-                asChild
-              >
-                <Link href="#pricing">
-                  View Pricing
-                  <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
                 </Link>
               </Button>
             </div>
@@ -543,7 +507,6 @@ export default function LuxuryLanding() {
           {/* Scroll indicator */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-[fadeInUp_0.8s_ease-out_1.1s_both]">
             <div className="flex flex-col items-center gap-2 text-slate-400 dark:text-white/30">
-              <span className="text-xs uppercase tracking-widest">Scroll</span>
               <div className="h-12 w-[1px] bg-gradient-to-b from-slate-400 dark:from-white/30 to-transparent" />
             </div>
           </div>
@@ -691,91 +654,6 @@ export default function LuxuryLanding() {
           </div>
         </section>
 
-        {/* ROI Calculator Section */}
-        <section id="calculator" className="relative py-24">
-          <div className="mx-auto max-w-4xl px-6">
-            <div className="text-center mb-12">
-              <h2 className="font-[var(--font-custom)] text-4xl font-medium tracking-tight text-slate-900 dark:text-white md:text-5xl">
-                Stop Overspending
-                <span className="block text-slate-500 dark:text-white/50">on Support</span>
-              </h2>
-              <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
-                Every minute spent on repetitive support emails drains your budget. See how much you could save.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border p-8 md:p-10 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
-              <h3 className="text-xl font-semibold mb-8 text-center text-slate-900 dark:text-white">
-                Support Cost & Savings Estimator
-              </h3>
-
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <label className="space-y-2">
-                  <span className="text-sm text-slate-500 dark:text-white/50">Tickets per month</span>
-                  <input
-                    type="number"
-                    value={tickets}
-                    min={0}
-                    onChange={(e) => setTickets(Math.max(0, Number(e.target.value)))}
-                    className="w-full rounded-xl border bg-transparent px-4 py-3 text-slate-900 border-slate-200 focus:border-[#3872B9] focus:outline-none focus:ring-1 focus:ring-[#3872B9] dark:border-white/[0.12] dark:text-white dark:focus:border-[#3872B9]"
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-sm text-slate-500 dark:text-white/50">Avg minutes per ticket</span>
-                  <input
-                    type="number"
-                    value={minutes}
-                    min={0}
-                    onChange={(e) => setMinutes(Math.max(0, Number(e.target.value)))}
-                    className="w-full rounded-xl border bg-transparent px-4 py-3 text-slate-900 border-slate-200 focus:border-[#3872B9] focus:outline-none focus:ring-1 focus:ring-[#3872B9] dark:border-white/[0.12] dark:text-white dark:focus:border-[#3872B9]"
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-sm text-slate-500 dark:text-white/50">Support cost per hour ($)</span>
-                  <input
-                    type="number"
-                    value={costPerHour}
-                    min={0}
-                    onChange={(e) => setCostPerHour(Math.max(0, Number(e.target.value)))}
-                    className="w-full rounded-xl border bg-transparent px-4 py-3 text-slate-900 border-slate-200 focus:border-[#3872B9] focus:outline-none focus:ring-1 focus:ring-[#3872B9] dark:border-white/[0.12] dark:text-white dark:focus:border-[#3872B9]"
-                  />
-                </label>
-              </div>
-
-              {/* Results */}
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="rounded-2xl border p-6 text-center border-slate-200 dark:border-white/[0.08]">
-                  <div className="text-sm text-slate-500 dark:text-white/50 mb-2">Current monthly cost</div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatUSD(currentCost)}</div>
-                </div>
-
-                <div className="rounded-2xl border p-6 text-center border-slate-200 bg-gradient-to-br from-emerald-50 to-transparent dark:border-white/[0.08] dark:from-emerald-500/5">
-                  <div className="text-sm text-slate-500 dark:text-white/50 mb-2">Monthly net savings (after $167 plan)</div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                    {formatUSD(Math.max(0, netSavings))}
-                  </div>
-                  {netSavings <= 0 && (
-                    <div className="text-xs text-slate-500 dark:text-white/40 mt-2">
-                      Maybe you don&apos;t need Aidly yet 😉
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Assumptions */}
-              <div className="text-center text-sm text-slate-500 dark:text-white/40 space-y-2">
-                <p>Assumptions, based on typical Aidly customers:</p>
-                <ul className="inline-block text-left space-y-1">
-                  <li>• Automation of repetitive tickets: <span className="font-medium">60–85%</span></li>
-                  <li>• Time reduction on remaining tickets: <span className="font-medium">40%</span></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Testimonials Section */}
         <section id="testimonials" className="relative py-32">
           <div className="mx-auto max-w-4xl px-6">
@@ -810,7 +688,7 @@ export default function LuxuryLanding() {
                 <span className="block bg-gradient-to-r from-[#F38135] to-[#B33275] bg-clip-text text-transparent">when you&apos;re ready</span>
               </h2>
               <p className="mt-6 text-lg text-slate-600 dark:text-white/50">
-                Try Aidly with 5 free emails. No credit card required. Upgrade to Pro when you see the value.
+                Try Aidly with 5 free emails. No credit card required. Bring your own AI API key — you only pay for what you use.
               </p>
             </div>
 
