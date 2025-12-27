@@ -10,7 +10,7 @@ import { Copy, Check, LogOut, Mail, CreditCard, Settings2, MessageSquare, Loader
 import { useSettings } from "@/lib/settings-context"
 
 export function SystemSection() {
-  const { settings, updateSettings, saveSettings, slackWebhookConfigured, setSlackWebhookConfigured } = useSettings()
+  const { settings, updateSettings, slackWebhookConfigured, setSlackWebhookConfigured } = useSettings()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [copied, setCopied] = useState(false)
   const [mailbox, setMailbox] = useState<{ forwardToAddress: string } | null>(null)
