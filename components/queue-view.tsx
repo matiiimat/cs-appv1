@@ -140,20 +140,21 @@ export function QueueView() {
       setPreflightChecking(false)
     }
 
-    // Cap batch size to remaining quota (don't generate AI for emails we can't send)
+    // Cap batch size to BOTH remaining quota AND actual unprocessed messages
     const remaining = usage?.remaining ?? selectedBatchSize
-    const effectiveBatchSize = Math.min(selectedBatchSize, remaining)
+    const actualToProcess = Math.min(selectedBatchSize, remaining, unprocessedMessages.length)
 
-    if (effectiveBatchSize < selectedBatchSize && remaining > 0) {
+    // Only show quota warning if quota is the limiting factor (not message count)
+    if (remaining < selectedBatchSize && remaining < unprocessedMessages.length && remaining > 0) {
       addToast({
         type: 'info',
         title: 'Limited by quota',
-        message: `Processing ${effectiveBatchSize} of ${selectedBatchSize} emails (${remaining} remaining in your plan).`,
+        message: `Processing ${actualToProcess} of ${unprocessedMessages.length} messages (${remaining} remaining in your plan).`,
         duration: 5000,
       })
     }
 
-    const result = await processBatch(effectiveBatchSize)
+    const result = await processBatch(actualToProcess)
 
     // Show error toast if usage limit was hit during processing
     if (result.usageLimitHit) {
