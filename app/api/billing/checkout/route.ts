@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import Stripe from 'stripe'
+import { auth } from '@/lib/auth/server'
 
 function appUrl() {
   // Priority order: APP_URL > VERCEL_URL > localhost
@@ -34,7 +35,7 @@ async function resolveProPrice(stripe: Stripe, annual?: boolean) {
   return price.id
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     // Check required environment variables
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
@@ -44,8 +45,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => ({})) as { email?: string; annual?: boolean; returnUrl?: string }
-    const email = body.email // optional; Stripe Checkout will collect if absent
     const annual = Boolean(body.annual)
+
+    // Try to get email from session (logged-in user), fall back to body.email, or let Stripe collect it
+    let email = body.email
+    if (!email) {
+      try {
+        const headers = new Headers(req.headers)
+        const session = await auth.api.getSession({ headers })
+        if (session?.user?.email) {
+          email = session.user.email
+        }
+      } catch {
+        // Ignore session errors - email will be collected by Stripe
+      }
+    }
 
     console.log(`[billing/checkout] Creating checkout session for annual: ${annual}, email: ${email ? 'provided' : 'not provided'}`)
 
