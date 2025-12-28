@@ -15,17 +15,27 @@ const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder_for_dev'
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder_for_dev'
 const stripeClient = new Stripe(stripeKey)
 
-async function resolveProPlan() {
-  const priceMonthlyEnv = process.env.STRIPE_PRICE_PRO_MONTHLY
-  const priceYearlyEnv = process.env.STRIPE_PRICE_PRO_YEARLY
-  const prodMonthly = process.env.STRIPE_PRODUCT_PRO_MONTHLY
-  const prodYearly = process.env.STRIPE_PRODUCT_PRO_YEARLY
+type PlanConfig = {
+  name: string
+  monthlyPriceId?: string
+  yearlyPriceId?: string
+}
+
+// Cache resolved plan prices to avoid repeated Stripe API calls
+let resolvedPlans: { plus: PlanConfig; pro: PlanConfig } | null = null
+
+async function resolvePlanPrices(planName: 'plus' | 'pro'): Promise<{ monthlyPriceId?: string; yearlyPriceId?: string }> {
+  const planUpper = planName.toUpperCase()
+  const priceMonthlyEnv = process.env[`STRIPE_PRICE_${planUpper}_MONTHLY`]
+  const priceYearlyEnv = process.env[`STRIPE_PRICE_${planUpper}_YEARLY`]
+  const prodMonthly = process.env[`STRIPE_PRODUCT_${planUpper}_MONTHLY`]
+  const prodYearly = process.env[`STRIPE_PRODUCT_${planUpper}_YEARLY`]
 
   let monthlyPriceId = priceMonthlyEnv
   let yearlyPriceId = priceYearlyEnv
 
   if ((!monthlyPriceId || !yearlyPriceId) && (!prodMonthly || !prodYearly)) {
-    console.warn('[Stripe] Missing price or product IDs for Pro plan. Set STRIPE_PRICE_PRO_MONTHLY/STRIPE_PRICE_PRO_YEARLY or STRIPE_PRODUCT_PRO_MONTHLY/STRIPE_PRODUCT_PRO_YEARLY')
+    console.warn(`[Stripe] Missing price or product IDs for ${planName} plan.`)
   }
 
   // Resolve from product IDs if price IDs not provided
@@ -41,6 +51,36 @@ async function resolveProPlan() {
   }
 
   return { monthlyPriceId, yearlyPriceId }
+}
+
+async function resolveAllPlans(): Promise<{ plus: PlanConfig; pro: PlanConfig }> {
+  if (resolvedPlans) return resolvedPlans
+
+  const [plusPrices, proPrices] = await Promise.all([
+    resolvePlanPrices('plus'),
+    resolvePlanPrices('pro'),
+  ])
+
+  resolvedPlans = {
+    plus: { name: 'plus', ...plusPrices },
+    pro: { name: 'pro', ...proPrices },
+  }
+
+  return resolvedPlans
+}
+
+// Detect which plan was purchased based on price ID
+async function detectPlanFromPriceId(priceId: string): Promise<'plus' | 'pro' | null> {
+  const plans = await resolveAllPlans()
+
+  if (priceId === plans.plus.monthlyPriceId || priceId === plans.plus.yearlyPriceId) {
+    return 'plus'
+  }
+  if (priceId === plans.pro.monthlyPriceId || priceId === plans.pro.yearlyPriceId) {
+    return 'pro'
+  }
+
+  return null
 }
 
 export const auth = betterAuth({
@@ -64,12 +104,17 @@ export const auth = betterAuth({
       subscription: {
         enabled: true,
         plans: async () => {
-          const { monthlyPriceId, yearlyPriceId } = await resolveProPlan()
+          const plans = await resolveAllPlans()
           return [
             {
+              name: 'plus',
+              priceId: plans.plus.monthlyPriceId || 'price_missing',
+              annualDiscountPriceId: plans.plus.yearlyPriceId,
+            },
+            {
               name: 'pro',
-              priceId: monthlyPriceId || 'price_missing',
-              annualDiscountPriceId: yearlyPriceId,
+              priceId: plans.pro.monthlyPriceId || 'price_missing',
+              annualDiscountPriceId: plans.pro.yearlyPriceId,
             },
           ]
         },
@@ -100,17 +145,36 @@ export const auth = betterAuth({
               return
             }
 
-            // Upgrade plan to pro and reset billing period (upgrade takes effect immediately)
+            // Detect which plan was purchased and upgrade accordingly
             try {
-              await EmailUsageModel.updatePlan(provisionResult.organizationId, 'pro', true)
-              console.log(`[Stripe onEvent] Upgraded org ${provisionResult.organizationId} to pro plan`)
+              let detectedPlan: 'plus' | 'pro' = 'pro' // Default to pro for safety
+
+              // Get the subscription to find the price ID
+              if (session.subscription) {
+                const subscriptionId = typeof session.subscription === 'string'
+                  ? session.subscription
+                  : session.subscription.id
+                const subscription = await stripeClient.subscriptions.retrieve(subscriptionId)
+                const priceId = subscription.items.data[0]?.price?.id
+
+                if (priceId) {
+                  const detected = await detectPlanFromPriceId(priceId)
+                  if (detected) {
+                    detectedPlan = detected
+                  }
+                  console.log(`[Stripe onEvent] Detected plan from price ${priceId}: ${detectedPlan}`)
+                }
+              }
+
+              await EmailUsageModel.updatePlan(provisionResult.organizationId, detectedPlan, true)
+              console.log(`[Stripe onEvent] Upgraded org ${provisionResult.organizationId} to ${detectedPlan} plan`)
             } catch (e) {
               console.error('[Stripe onEvent] Failed to upgrade plan:', e)
               // Continue anyway - plan can be fixed manually
             }
 
             // Auto magic-link send removed by request; users can sign in via the standard login flow.
-            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}. Upgraded to pro plan.`)
+            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}.`)
           }
 
           // Handle subscription cancellation - downgrade to free at period end

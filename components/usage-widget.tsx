@@ -105,16 +105,20 @@ export function UsageWidget() {
 
       {usage.isAtLimit && (
         <div className="mt-4 pt-3 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2">
+            {usage.isFreePlan
+              ? "Upgrade to Plus for 5,000 emails/month with AI included."
+              : "Need more emails? Upgrade your plan."}
+          </p>
           <Button
             size="sm"
             className="w-full"
             onClick={() => {
-              // Navigate to billing/upgrade
               window.dispatchEvent(new CustomEvent('aidly:navigate:billing'))
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            Upgrade to Pro
+            {usage.isFreePlan ? "Upgrade to Plus" : "Upgrade Plan"}
           </Button>
         </div>
       )}
@@ -122,7 +126,7 @@ export function UsageWidget() {
       {usage.isFreePlan && !usage.isAtLimit && (
         <div className="mt-3 pt-3 border-t border-border">
           <p className="text-xs text-muted-foreground mb-2">
-            Free plan: {usage.remaining} emails left (no monthly reset)
+            Free plan: {usage.remaining} emails left (one-time limit)
           </p>
           <Button
             size="sm"
@@ -133,7 +137,7 @@ export function UsageWidget() {
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            Upgrade
+            Get Plus — 5K emails/mo
           </Button>
         </div>
       )}

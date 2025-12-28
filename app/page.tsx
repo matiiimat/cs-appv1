@@ -160,14 +160,14 @@ export default function LuxuryLanding() {
   const [error, setError] = useState("")
 
   // Checkout function
-  async function startCheckout() {
+  async function startCheckout(plan: 'plus' | 'pro' = 'plus') {
     setError("")
     try {
       setLoading(true)
       const resp = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annual })
+        body: JSON.stringify({ annual, plan })
       })
       if (!resp.ok) throw new Error('Failed to start checkout')
       const data = await resp.json()
@@ -716,37 +716,35 @@ export default function LuxuryLanding() {
               </button>
             </div>
 
-            {/* Pricing cards - Two tiers */}
-            <div className="mt-10 grid gap-8 md:grid-cols-2">
+            {/* Pricing cards - Three tiers */}
+            <div className="mt-10 grid gap-6 lg:grid-cols-3">
               {/* Free Trial */}
               <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
-                <div className="relative h-full rounded-[22px] p-8 bg-white dark:bg-[#0A0A0B]">
+                <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
                   <div className="flex h-full flex-col">
                     {/* Header */}
-                    <div className="mb-6">
-                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Free Trial</h3>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Full product, 5 emails</p>
+                    <div className="mb-5">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Free</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Try it out</p>
                     </div>
 
                     {/* Price */}
-                    <div className="mb-6">
+                    <div className="mb-5">
                       <div className="flex items-baseline gap-2">
-                        <span className="font-[var(--font-custom)] text-5xl font-medium text-slate-900 dark:text-white">$0</span>
-                        <span className="text-slate-500 dark:text-white/50">forever</span>
+                        <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">$0</span>
                       </div>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">5 emails included • No credit card</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-white/40">5 emails • No credit card</p>
                     </div>
 
                     {/* Features */}
-                    <div className="mb-8 space-y-3">
+                    <div className="mb-6 space-y-2.5">
                       {[
-                        "All Pro features included",
-                        "Lightning-fast AI replies",
-                        "Self-learning from your replies",
+                        "AI-powered replies included",
+                        "5 emails (one-time)",
                         "Full approval control",
-                        "5 emails to try it out",
+                        "Self-learning AI",
                       ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm text-slate-700 dark:text-white/70">
+                        <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
                           <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
@@ -760,7 +758,7 @@ export default function LuxuryLanding() {
                       <Button
                         size="lg"
                         variant="outline"
-                        className="w-full h-12 text-base font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
+                        className="w-full h-11 text-sm font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
                         asChild
                       >
                         <Link href="/app/login">Start Free</Link>
@@ -770,54 +768,51 @@ export default function LuxuryLanding() {
                 </div>
               </div>
 
-              {/* Pro Tier */}
+              {/* Plus Tier - Most Popular */}
               <div className="relative overflow-hidden rounded-3xl border p-1 shadow-xl border-slate-200 bg-white dark:border-white/[0.1] dark:bg-white/[0.03] dark:shadow-none">
                 {/* Decorative gradient border */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#3872B9]/20 via-[#B33275]/20 to-[#F38135]/20 opacity-50 dark:from-[#3872B9]/50 dark:via-[#B33275]/50 dark:to-[#F38135]/50 dark:opacity-20" />
 
-                <div className="relative rounded-[22px] p-8 bg-white dark:bg-[#0A0A0B]">
+                <div className="relative rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
                   <div className="flex flex-col">
                     {/* Header */}
-                    <div className="mb-6 flex items-center justify-between">
+                    <div className="mb-5 flex items-center justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Pro</h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-white/50">For growing teams</p>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Plus</h3>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-white/50">All-inclusive AI</p>
                       </div>
-                      {annual && (
-                        <div className="inline-flex items-center rounded-full bg-gradient-to-r from-[#F38135]/20 to-[#B33275]/20 px-3 py-1 text-xs font-medium text-[#B33275] dark:text-[#F38135]">
-                          Save $389
-                        </div>
-                      )}
+                      <div className="inline-flex items-center rounded-full bg-gradient-to-r from-[#3872B9]/20 to-[#B33275]/20 px-2.5 py-1 text-xs font-medium text-[#3872B9] dark:text-[#B33275]">
+                        Most Popular
+                      </div>
                     </div>
 
                     {/* Price */}
-                    <div className="mb-6">
+                    <div className="mb-5">
                       <div className="flex items-baseline gap-2">
-                        <span className="font-[var(--font-custom)] text-5xl font-medium text-slate-900 dark:text-white">
-                          ${annual ? "167" : "199"}
+                        <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
+                          ${annual ? "208" : "249"}
                         </span>
-                        <span className="text-slate-500 dark:text-white/50">/month</span>
+                        <span className="text-slate-500 dark:text-white/50">/mo</span>
                       </div>
                       {annual ? (
-                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually at $1,999</p>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($2,499/yr)</p>
                       ) : (
                         <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed monthly</p>
                       )}
                     </div>
 
                     {/* Features */}
-                    <div className="mb-8 space-y-3">
+                    <div className="mb-6 space-y-2.5">
                       {[
-                        "1,000 emails per month",
-                        "Works with your existing API key",
+                        "AI included — no API key needed",
+                        "5,000 emails per month",
+                        "Powered by Claude AI",
                         "Self-learning from your replies",
                         "Full approval control",
                         "Multilingual support",
-                        "Custom training data",
-                        "Priority email support",
-                        "Data encrypted at rest",
+                        "Priority support",
                       ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm text-slate-700 dark:text-white/70">
+                        <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
                           <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
@@ -829,22 +824,82 @@ export default function LuxuryLanding() {
                     {/* CTA */}
                     <Button
                       size="lg"
-                      className="w-full h-12 text-base font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-                      onClick={startCheckout}
+                      className="w-full h-11 text-sm font-semibold transition-all bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg dark:bg-white dark:text-[#0A0A0B] dark:hover:bg-white dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+                      onClick={() => startCheckout('plus')}
                       disabled={loading}
                     >
-                      {loading ? 'Setting up...' : 'Get Pro'}
+                      {loading ? 'Setting up...' : 'Get Plus'}
                     </Button>
                     {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
                   </div>
                 </div>
               </div>
+
+              {/* Pro Tier - BYOK */}
+              <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
+                <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
+                  <div className="flex h-full flex-col">
+                    {/* Header */}
+                    <div className="mb-5">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pro</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Bring your own key</p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
+                          ${annual ? "83" : "99"}
+                        </span>
+                        <span className="text-slate-500 dark:text-white/50">/mo</span>
+                      </div>
+                      {annual ? (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($999/yr)</p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
+                      )}
+                    </div>
+
+                    {/* Features */}
+                    <div className="mb-6 space-y-2.5">
+                      {[
+                        "Use your own API key",
+                        "1,000 emails per month",
+                        "OpenAI, Anthropic, or local",
+                        "Self-learning from your replies",
+                        "Full approval control",
+                        "Multilingual support",
+                      ].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
+                          <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="mt-auto">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full h-11 text-sm font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
+                        onClick={() => startCheckout('pro')}
+                        disabled={loading}
+                      >
+                        {loading ? 'Setting up...' : 'Get Pro'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* BYOK Note */}
+            {/* Plan comparison note */}
             <div className="mt-8 mx-auto max-w-2xl rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.02]">
               <p className="text-sm text-slate-600 dark:text-white/50 text-center">
-                <span className="font-medium text-slate-700 dark:text-white/70">Bring your own API key</span> — Connect your OpenAI, Anthropic, or other AI provider. You pay them directly for token usage.
+                <span className="font-medium text-slate-700 dark:text-white/70">Plus</span> includes AI — no API key needed. <span className="font-medium text-slate-700 dark:text-white/70">Pro</span> lets you bring your own key for full control over AI costs and models.
               </p>
             </div>
           </div>
