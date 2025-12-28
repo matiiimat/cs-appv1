@@ -83,7 +83,22 @@ async function detectPlanFromPriceId(priceId: string): Promise<'plus' | 'pro' | 
   return null
 }
 
+// Determine the base URL for auth (magic links, callbacks, etc.)
+function getAuthBaseURL(): string {
+  // Explicit APP_URL takes priority
+  if (process.env.APP_URL) {
+    return process.env.APP_URL.replace(/\/+$/, '')
+  }
+  // Vercel deployment URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  // Fallback for local dev
+  return 'http://localhost:3000'
+}
+
 export const auth = betterAuth({
+  baseURL: getAuthBaseURL(),
   database: { db },
   session: {
     // 8 hours in seconds
@@ -100,7 +115,7 @@ export const auth = betterAuth({
     stripePlugin({
       stripeClient,
       stripeWebhookSecret: webhookSecret,
-      createCustomerOnSignUp: true,
+      createCustomerOnSignUp: false,
       subscription: {
         enabled: true,
         plans: async () => {
