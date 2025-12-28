@@ -809,7 +809,7 @@ export default function LuxuryLanding() {
                     <div className="mb-8 space-y-3">
                       {[
                         "1,000 emails per month",
-                        "Lightning-fast AI replies",
+                        "Works with your existing API key",
                         "Self-learning from your replies",
                         "Full approval control",
                         "Multilingual support",

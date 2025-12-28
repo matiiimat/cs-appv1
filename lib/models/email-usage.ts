@@ -2,11 +2,13 @@ import { db } from '@/lib/database'
 
 /**
  * Plan configuration
- * - free: 5 emails total, no reset (one-time allowance)
- * - pro: 1000 emails per month, resets on plan anniversary
+ * - free: 5 emails total, no reset (one-time allowance) - includes managed AI
+ * - plus: 5000 emails per month, resets on plan anniversary - includes managed AI
+ * - pro: 1000 emails per month, resets on plan anniversary - BYOK (bring your own key)
  */
 export const PLAN_LIMITS = {
   free: { limit: 5, resetsMonthly: false },
+  plus: { limit: 5000, resetsMonthly: true },
   pro: { limit: 1000, resetsMonthly: true },
   // Legacy plans map to pro behavior
   basic: { limit: 1000, resetsMonthly: true },

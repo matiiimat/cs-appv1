@@ -48,7 +48,8 @@ const providerInfo: Record<Provider, { name: string; description: string; iconLi
 }
 
 export function SetupSection() {
-  const { settings, updateSettings, saveSettings, aiConfigHasKey, setAiConfigHasKey } = useSettings()
+  const { settings, updateSettings, saveSettings, aiConfigHasKey, setAiConfigHasKey, planInfo } = useSettings()
+  const isManaged = planInfo?.isManaged ?? false
   const { addToast } = useToast()
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [showApiKey, setShowApiKey] = useState(false)
@@ -285,8 +286,11 @@ export function SetupSection() {
   const setupSteps = [
     { label: "Brand name", complete: !!settings.brandName.trim() },
     { label: "Agent name", complete: !!settings.agentName.trim() },
-    { label: "AI provider", complete: !!settings.aiConfig.provider },
-    { label: "AI connected", complete: connectionResult?.success || aiConfigHasKey },
+    // Only show AI steps for non-managed plans (BYOK)
+    ...(!isManaged ? [
+      { label: "AI provider", complete: !!settings.aiConfig.provider },
+      { label: "AI connected", complete: connectionResult?.success || aiConfigHasKey },
+    ] : []),
   ]
   const completedSteps = setupSteps.filter((s) => s.complete).length
   const allComplete = completedSteps === setupSteps.length
@@ -392,7 +396,53 @@ export function SetupSection() {
           </SettingCard>
         </div>
 
-        {/* AI Configuration */}
+        {/* AI Configuration - Show managed banner for managed plans, full config for BYOK */}
+        {isManaged ? (
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              AI Configuration
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </h3>
+            <SettingCard className="bg-primary/5 border-primary/20">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-foreground">Managed AI Included</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your {planInfo?.planType === 'plus' ? 'Plus' : 'Free'} plan includes managed AI powered by Claude. No API key configuration needed.
+                  </p>
+                  {planInfo?.tokenUsage && (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Token Usage</span>
+                        <span className="font-medium">
+                          {(planInfo.tokenUsage.used / 1000).toFixed(0)}K / {((planInfo.tokenUsage.limit || 0) / 1000000).toFixed(1)}M
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            planInfo.tokenUsage.isNearLimit
+                              ? 'bg-amber-500'
+                              : 'bg-primary'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, (planInfo.tokenUsage.used / (planInfo.tokenUsage.limit || 1)) * 100)}%`
+                          }}
+                        />
+                      </div>
+                      {planInfo.tokenUsage.resetsAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Resets {new Date(planInfo.tokenUsage.resetsAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SettingCard>
+          </div>
+        ) : (
         <div>
           <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             AI Configuration
@@ -685,6 +735,7 @@ export function SetupSection() {
             )}
           </SettingCard>
         </div>
+        )}
 
         {/* Save Status Feedback */}
         {saveStatus === "error" && (

@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { AIService } from "@/lib/ai-providers"
-import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { EmailUsageModel } from '@/lib/models/email-usage'
+import { TokenUsageModel } from '@/lib/models/token-usage'
+import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
 
 async function requireOrgId(headers: Headers): Promise<string> {
   const session = await auth.api.getSession({ headers })
@@ -28,10 +29,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'system and prompt are required' }, { status: 400 })
     }
 
-    // Load effective AI configuration from the database (mirrors generate-response)
+    // Load effective AI configuration (handles managed vs BYOK plans)
     const orgId = await requireOrgId(request.headers)
 
-    // Check usage limits before allowing AI generation
+    // Check email usage limits before allowing AI generation
     const usageCheck = await EmailUsageModel.canSendEmail(orgId)
     if (!usageCheck.allowed) {
       return NextResponse.json({
@@ -41,28 +42,26 @@ export async function POST(request: NextRequest) {
       }, { status: 429 })
     }
 
-    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgId)
-
-    if (!orgSettings || !orgSettings.aiConfig) {
-      return NextResponse.json({ error: 'AI configuration is required' }, { status: 400 })
+    // Check AI access and get configuration (handles managed vs BYOK)
+    const aiCheck = await canUseAIWithConfig(orgId)
+    if (!aiCheck.allowed || !aiCheck.config) {
+      return NextResponse.json({
+        error: aiCheck.reason || 'AI configuration is required',
+        code: aiCheck.tokenUsage ? 'TOKEN_LIMIT_REACHED' : 'AI_CONFIG_MISSING',
+        usage: aiCheck.tokenUsage,
+      }, { status: 429 })
     }
 
-    const effectiveAiConfig = {
-      provider: orgSettings.aiConfig.provider,
-      model: orgSettings.aiConfig.model,
-      apiKey: orgSettings.aiConfig.apiKey, // decrypted from DB
-      customEndpoint: orgSettings.aiConfig.customEndpoint,
-      localEndpoint: orgSettings.aiConfig.localEndpoint,
-      temperature: orgSettings.aiConfig.temperature,
-      maxTokens: orgSettings.aiConfig.maxTokens,
-    }
-
-    if (!effectiveAiConfig.apiKey && effectiveAiConfig.provider !== 'local') {
-      return NextResponse.json({ error: 'AI configuration is required' }, { status: 400 })
-    }
+    const { config: effectiveAiConfig, isManaged } = aiCheck
 
     const aiService = new AIService(effectiveAiConfig)
     const content = await aiService.generateText(system, prompt)
+
+    // Track token usage for managed plans
+    if (isManaged) {
+      const estimatedTokens = TokenUsageModel.estimateTokens(system + prompt + content)
+      await TokenUsageModel.incrementUsage(orgId, estimatedTokens)
+    }
 
     return NextResponse.json({ content })
   } catch (error) {

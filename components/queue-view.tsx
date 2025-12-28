@@ -46,7 +46,7 @@ export function QueueView() {
     refreshData,
   } = useMessageManager()
 
-  const { settings, aiConfigHasKey } = useSettings()
+  const { settings, aiConfigHasKey, planInfo } = useSettings()
   const { usage, canSendEmail, refreshUsage } = useUsage()
   const { handleAIError } = useAIErrorHandler()
   const { addToast } = useToast()
@@ -81,11 +81,13 @@ export function QueueView() {
   const isInTriageMode = isTriageActive && currentMessage
 
   // AI configuration check
+  // Managed plans (free/plus) don't need user configuration - AI is included
+  const isManagedPlan = planInfo?.isManaged ?? false
   const provider = settings.aiConfig.provider
   const hasModel = Boolean(settings.aiConfig.model && settings.aiConfig.model.trim() !== '')
   const isLocalConfigured = provider === 'local' && Boolean((settings.aiConfig.localEndpoint || settings.aiConfig.apiKey))
   const isRemoteConfigured = (provider === 'openai' || provider === 'anthropic') && aiConfigHasKey && hasModel
-  const isAIConfigured = isLocalConfigured || isRemoteConfigured
+  const isAIConfigured = isManagedPlan || isLocalConfigured || isRemoteConfigured
 
   // Handlers
   const goToSettings = () => {
@@ -564,8 +566,8 @@ export function QueueView() {
 
       {/* AI Processing Queue Card */}
       <div className="surface-elevated rounded-xl p-6 mb-6">
-        {/* AI config warning */}
-        {!isAIConfigured && (
+        {/* AI config warning - only show after plan info loads */}
+        {planInfo && !isAIConfigured && (
           <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-destructive" />

@@ -30,6 +30,22 @@ export interface SlackIntegration {
   webhookUrl?: string
 }
 
+export interface TokenUsageInfo {
+  used: number
+  limit: number | null
+  remaining: number | null
+  isAtLimit: boolean
+  isNearLimit: boolean
+  resetsAt: string | null
+}
+
+export interface PlanInfo {
+  planType: string
+  planStatus: string
+  isManaged: boolean
+  tokenUsage: TokenUsageInfo | null
+}
+
 export interface Settings {
   theme: "light" | "dark"
   brandName: string
@@ -66,6 +82,8 @@ interface SettingsContextType {
   hasCompletedOnboarding: boolean
   completeOnboarding: () => void
   isSettingsLoaded: boolean
+  planInfo: PlanInfo | null
+  refreshPlanInfo: () => Promise<void>
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -132,6 +150,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [hasSavedSettings, setHasSavedSettings] = useState<boolean | undefined>(undefined)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(true) // Default true to avoid flash
   const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false)
+  const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null)
 
   // Load settings from database on mount
   useEffect(() => {
@@ -199,6 +218,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
         setHasCompletedOnboarding(onboardingCompleted)
         setIsSettingsLoaded(true)
+
+        // Load plan info
+        refreshPlanInfo()
       } catch (error) {
         console.error('Error loading settings:', error)
         // Fallback to localStorage if API fails
@@ -301,6 +323,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch {}
   }
 
+  const refreshPlanInfo = async () => {
+    try {
+      const response = await fetch('/api/organization/plan')
+      if (response.ok) {
+        const data = await response.json()
+        setPlanInfo({
+          planType: data.planType,
+          planStatus: data.planStatus,
+          isManaged: data.isManaged,
+          tokenUsage: data.tokenUsage,
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load plan info:', error)
+    }
+  }
+
   const saveSettings = async () => {
     setIsLoading(true)
     try {
@@ -380,6 +419,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         hasCompletedOnboarding,
         completeOnboarding,
         isSettingsLoaded,
+        planInfo,
+        refreshPlanInfo,
       }}
     >
       {children}
