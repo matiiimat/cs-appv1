@@ -810,7 +810,6 @@ export default function LuxuryLanding() {
                         "Self-learning from your replies",
                         "Full approval control",
                         "Multilingual support",
-                        "Priority support",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
                           <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
