@@ -137,7 +137,7 @@ export function UsageWidget() {
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            Get Plus — 5K emails/mo
+            Upgrade to Plus — $249/mo
           </Button>
         </div>
       )}
