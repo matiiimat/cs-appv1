@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import Stripe from 'stripe'
+import { auth } from '@/lib/auth/server'
 
 function appUrl() {
   // Priority order: APP_URL > VERCEL_URL > localhost
@@ -23,18 +24,28 @@ function appUrl() {
   return 'http://localhost:3000'
 }
 
-async function resolveProPrice(stripe: Stripe, annual?: boolean) {
-  const priceEnv = annual ? process.env.STRIPE_PRICE_PRO_YEARLY : process.env.STRIPE_PRICE_PRO_MONTHLY
+type PlanType = 'plus' | 'pro'
+
+async function resolvePlanPrice(stripe: Stripe, plan: PlanType, annual?: boolean) {
+  // Environment variable naming convention:
+  // STRIPE_PRICE_PLUS_MONTHLY, STRIPE_PRICE_PLUS_YEARLY
+  // STRIPE_PRICE_PRO_MONTHLY, STRIPE_PRICE_PRO_YEARLY
+  const planUpper = plan.toUpperCase()
+  const periodSuffix = annual ? 'YEARLY' : 'MONTHLY'
+
+  const priceEnv = process.env[`STRIPE_PRICE_${planUpper}_${periodSuffix}`]
   if (priceEnv) return priceEnv
-  const productId = annual ? process.env.STRIPE_PRODUCT_PRO_YEARLY : process.env.STRIPE_PRODUCT_PRO_MONTHLY
-  if (!productId) throw new Error('Missing Stripe product/price configuration for Pro plan')
+
+  const productId = process.env[`STRIPE_PRODUCT_${planUpper}_${periodSuffix}`]
+  if (!productId) throw new Error(`Missing Stripe product/price configuration for ${plan} plan`)
+
   const prices = await stripe.prices.list({ product: productId, active: true, type: 'recurring', limit: 100 })
   const price = prices.data.find(p => p.recurring?.interval === (annual ? 'year' : 'month'))
   if (!price) throw new Error('No active recurring price found for product ' + productId)
   return price.id
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     // Check required environment variables
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
@@ -43,18 +54,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
     }
 
-    const body = await req.json().catch(() => ({})) as { email?: string; annual?: boolean; returnUrl?: string }
-    const email = body.email // optional; Stripe Checkout will collect if absent
+    const body = await req.json().catch(() => ({})) as { email?: string; annual?: boolean; plan?: PlanType; returnUrl?: string }
     const annual = Boolean(body.annual)
+    const plan: PlanType = body.plan === 'pro' ? 'pro' : 'plus' // Default to plus
 
-    console.log(`[billing/checkout] Creating checkout session for annual: ${annual}, email: ${email ? 'provided' : 'not provided'}`)
+    // Try to get email from session (logged-in user), fall back to body.email, or let Stripe collect it
+    let email = body.email
+    if (!email) {
+      try {
+        const headers = new Headers(req.headers)
+        const session = await auth.api.getSession({ headers })
+        if (session?.user?.email) {
+          email = session.user.email
+        }
+      } catch {
+        // Ignore session errors - email will be collected by Stripe
+      }
+    }
+
+    console.log(`[billing/checkout] Creating checkout session for plan: ${plan}, annual: ${annual}, email: ${email ? 'provided' : 'not provided'}`)
 
     const stripe = new Stripe(stripeSecretKey)
 
     let priceId: string
     try {
-      priceId = await resolveProPrice(stripe, annual)
-      console.log(`[billing/checkout] Resolved price ID: ${priceId}`)
+      priceId = await resolvePlanPrice(stripe, plan, annual)
+      console.log(`[billing/checkout] Resolved price ID for ${plan}: ${priceId}`)
     } catch (priceError) {
       console.error('[billing/checkout] Failed to resolve price:', priceError)
       return NextResponse.json({

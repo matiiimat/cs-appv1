@@ -54,7 +54,7 @@ const emailForwardingGuides = [
 ]
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const { settings, updateSettings, saveSettings } = useSettings()
+  const { settings, updateSettings, saveSettings, planInfo } = useSettings()
   const [step, setStep] = useState(1)
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
@@ -66,7 +66,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [mailbox, setMailbox] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const totalSteps = 3
+  // Managed plans (free/plus) skip step 2 (AI config) since they use server's API key
+  const isManagedPlan = planInfo?.isManaged ?? false
+  const totalSteps = isManagedPlan ? 2 : 3
+
+  // Map visual step to actual step for managed plans (skip step 2)
+  const actualStep = isManagedPlan && step === 2 ? 3 : step
+  const visualStep = isManagedPlan ? (step === 1 ? 1 : 2) : step
 
   // Load mailbox address
   useEffect(() => {
@@ -219,26 +225,26 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <div className="flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
               <h1 className="text-2xl font-bold font-[family-name:var(--font-custom)]">
-                {step === 3 ? "You're all set!" : "Welcome to Aidly"}
+                {actualStep === 3 ? "You're all set!" : "Welcome to Aidly"}
               </h1>
             </div>
             <span className="text-sm text-muted-foreground">
-              Step {step}/{totalSteps}
+              Step {visualStep}/{totalSteps}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            {step === 1 && "Let's personalize your support experience."}
-            {step === 2 && "Connect your AI provider to power smart responses."}
-            {step === 3 && "Your workspace is ready. Let's start helping customers!"}
+            {actualStep === 1 && "Let's personalize your support experience."}
+            {actualStep === 2 && "Connect your AI provider to power smart responses."}
+            {actualStep === 3 && "Your workspace is ready. Let's start helping customers!"}
           </p>
 
           {/* Progress bar */}
           <div className="flex gap-2 mt-4">
-            {[1, 2, 3].map((s) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
                 className={`flex-1 h-1 rounded-full transition-colors ${
-                  s <= step ? "bg-primary" : "bg-muted"
+                  s <= visualStep ? "bg-primary" : "bg-muted"
                 }`}
               />
             ))}
@@ -248,7 +254,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         {/* Content */}
         <div className="px-8 py-6">
           {/* Step 1: Brand Identity */}
-          {step === 1 && (
+          {actualStep === 1 && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
@@ -289,8 +295,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             </div>
           )}
 
-          {/* Step 2: AI Configuration */}
-          {step === 2 && (
+          {/* Step 2: AI Configuration (Pro plan only) */}
+          {actualStep === 2 && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               {/* Provider Selection */}
               <div className="space-y-3">
@@ -444,7 +450,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           )}
 
           {/* Step 3: Complete */}
-          {step === 3 && (
+          {actualStep === 3 && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
               <div className="text-center mb-6">
                 <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
@@ -516,7 +522,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-                  <span>AI: <strong>{providerInfo[settings.aiConfig.provider as Provider]?.name}</strong></span>
+                  <span>AI: <strong>{isManagedPlan ? "Included with your plan" : providerInfo[settings.aiConfig.provider as Provider]?.name}</strong></span>
                 </div>
               </div>
             </div>
@@ -526,13 +532,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         {/* Footer */}
         <div className="px-8 py-6 bg-muted/30 border-t flex items-center justify-between">
           <div>
-            {step === 1 && (
+            {actualStep === 1 && (
               <Button variant="ghost" size="sm" onClick={handleSkip}>
                 Skip for now
               </Button>
             )}
-            {step > 1 && step < 3 && (
-              <Button variant="ghost" size="sm" onClick={() => setStep(step - 1)}>
+            {actualStep === 2 && (
+              <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Back
               </Button>
@@ -540,21 +546,30 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           </div>
 
           <div className="flex gap-2">
-            {step === 2 && !isStep2Valid && (
+            {actualStep === 2 && !isStep2Valid && (
               <Button variant="outline" onClick={() => setStep(3)}>
                 Set up later
               </Button>
             )}
-            {step < 3 && (
+            {actualStep === 1 && (
               <Button
-                onClick={() => setStep(step + 1)}
-                disabled={step === 1 ? !isStep1Valid : !isStep2Valid}
+                onClick={() => setStep(isManagedPlan ? 3 : 2)}
+                disabled={!isStep1Valid}
               >
                 Continue
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             )}
-            {step === 3 && (
+            {actualStep === 2 && (
+              <Button
+                onClick={() => setStep(3)}
+                disabled={!isStep2Valid}
+              >
+                Continue
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            )}
+            {actualStep === 3 && (
               <Button onClick={handleComplete} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

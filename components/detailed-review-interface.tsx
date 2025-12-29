@@ -18,7 +18,7 @@ import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
 
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
-  const { settings, aiConfigHasKey } = useSettings()
+  const { settings, aiConfigHasKey, planInfo } = useSettings()
   const { usage, canSendEmail, refreshUsage } = useUsage()
   const { addToast } = useToast()
   const { handleAIError } = useAIErrorHandler()
@@ -292,13 +292,15 @@ export function DetailedReviewInterface() {
   const handleAiRefine = async () => {
     if (!aiInput.trim() || !selectedMessage) return
 
-    // Check AI configuration
+    // Check AI configuration - managed plans always have AI configured
+    const isManagedPlan = planInfo?.isManaged ?? false
     const isLocal = settings.aiConfig.provider === 'local'
     const hasClientKey = Boolean(settings.aiConfig.apiKey)
     const hasServerKey = Boolean(aiConfigHasKey)
     const hasLocalEndpoint = isLocal && Boolean(settings.aiConfig.localEndpoint || settings.aiConfig.apiKey)
 
-    if ((!isLocal && !(hasClientKey || hasServerKey)) || (isLocal && !hasLocalEndpoint)) {
+    const isAIConfigured = isManagedPlan || hasClientKey || hasServerKey || hasLocalEndpoint
+    if (!isAIConfigured) {
       handleAIError("AI provider not configured", "AI Refinement")
       return
     }

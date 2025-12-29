@@ -26,8 +26,8 @@ export function validateEnvironment(): EnvValidationResult {
   // Important but not critical - warn if missing
   // Note: Either PRICE or PRODUCT IDs are needed, not both
   const warningVars = [
-    'STRIPE_PRODUCT_PRO_MONTHLY',
-    'STRIPE_PRODUCT_PRO_YEARLY',
+    'STRIPE_PRODUCT_PLUS_MONTHLY',
+    'STRIPE_PRODUCT_PLUS_YEARLY',
   ]
 
   // Check required variables

@@ -95,7 +95,7 @@ export default function GettingStartedPage() {
                     3
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold mb-3">Connect your AI provider</h2>
+                    <h2 className="text-xl font-bold mb-3">Connect your AI provider (Pro plan only)</h2>
                   </div>
                 </div>
                 <p className="text-muted-foreground leading-relaxed mb-4 ml-12">

@@ -323,13 +323,6 @@ export class AIService {
   }
 
   async generateText(system: string, prompt: string): Promise<string> {
-    console.log('AIService generateText called with config:', {
-      provider: this.config.provider,
-      model: this.config.model,
-      hasApiKey: !!this.config.apiKey,
-      apiKeyPrefix: this.config.apiKey?.substring(0, 10) + '...'
-    })
-
     const provider = AI_PROVIDERS[this.config.provider]
     if (!provider) {
       throw new Error(`Unknown AI provider: ${this.config.provider}`)

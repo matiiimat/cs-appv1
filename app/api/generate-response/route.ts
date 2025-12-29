@@ -1,21 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { AIService } from "@/lib/ai-providers"
-import { type AIProviderConfig, type Category } from "@/lib/settings-context"
+import { type Category } from "@/lib/settings-context"
 import { searchCompanyKnowledge } from "@/lib/knowledge-search"
-import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { KnowledgeBaseModel } from '@/lib/models/knowledge-base'
 import { validateEmailData } from '@/lib/email-validation'
 import { withRateLimit } from '@/lib/rate-limiter'
 import { EmailUsageModel } from '@/lib/models/email-usage'
+import { TokenUsageModel } from '@/lib/models/token-usage'
+import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
 
 interface GenerateResponseRequest {
   customerName: string
   customerEmail: string
   subject: string
   message: string
-  aiConfig: AIProviderConfig
   agentName: string
   agentSignature: string
   categories?: Category[]
@@ -105,42 +105,29 @@ async function handler(request: NextRequest) {
       body: message
     })
 
-    // Always load AI configuration from the database to access the stored API key.
     const orgId = await requireOrgId(request.headers)
 
-    // Check usage limits before allowing AI generation
-    // (Block AI generation if user can't send - no point generating drafts they can't use)
-    const usageCheck = await EmailUsageModel.canSendEmail(orgId)
-    if (!usageCheck.allowed) {
+    // Check email usage limits (applies to all plans)
+    const emailUsageCheck = await EmailUsageModel.canSendEmail(orgId)
+    if (!emailUsageCheck.allowed) {
       return NextResponse.json({
-        error: usageCheck.reason,
-        code: 'USAGE_LIMIT_REACHED',
-        usage: usageCheck.usage,
+        error: emailUsageCheck.reason,
+        code: 'EMAIL_LIMIT_REACHED',
+        usage: emailUsageCheck.usage,
       }, { status: 429 })
     }
 
-    // Note: Usage is incremented when actually SENDING, not when generating AI draft
-
-    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgId)
-
-    if (!orgSettings || !orgSettings.aiConfig) {
-      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 })
+    // Check AI access and get configuration (handles managed vs BYOK)
+    const aiCheck = await canUseAIWithConfig(orgId)
+    if (!aiCheck.allowed || !aiCheck.config) {
+      return NextResponse.json({
+        error: aiCheck.reason || 'AI configuration is required',
+        code: aiCheck.tokenUsage ? 'TOKEN_LIMIT_REACHED' : 'AI_CONFIG_MISSING',
+        usage: aiCheck.tokenUsage,
+      }, { status: 429 })
     }
 
-    // Construct the effective AI config from DB, overriding any client-supplied apiKey.
-    const effectiveAiConfig: AIProviderConfig = {
-      provider: orgSettings.aiConfig.provider,
-      model: orgSettings.aiConfig.model,
-      apiKey: orgSettings.aiConfig.apiKey, // decrypted from DB
-      customEndpoint: orgSettings.aiConfig.customEndpoint,
-      localEndpoint: orgSettings.aiConfig.localEndpoint,
-      temperature: orgSettings.aiConfig.temperature,
-      maxTokens: orgSettings.aiConfig.maxTokens,
-    }
-
-    if (!effectiveAiConfig.apiKey && effectiveAiConfig.provider !== 'local') {
-      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 })
-    }
+    const { config: effectiveAiConfig, isManaged } = aiCheck
 
     const aiService = new AIService(effectiveAiConfig)
 
@@ -171,6 +158,14 @@ Please modify the response according to the instruction.`
         quickActionSystem,
         quickActionPrompt
       )
+
+      // Track token usage for managed plans (using chars/4 estimation)
+      if (isManaged) {
+        const estimatedTokens = TokenUsageModel.estimateTokens(
+          quickActionSystem + quickActionPrompt + modifiedResponse
+        )
+        await TokenUsageModel.incrementUsage(orgId, estimatedTokens)
+      }
 
       return NextResponse.json({
         aiSuggestedResponse: modifiedResponse,
@@ -294,6 +289,16 @@ Generate a professional customer support response.`
       aiResponseSystem,
       aiResponsePrompt
     )
+
+    // Track token usage for managed plans (using chars/4 estimation)
+    // Includes both category detection and response generation
+    if (isManaged) {
+      const estimatedTokens = TokenUsageModel.estimateTokens(
+        categorySystem + categoryPrompt + categoryResponse +
+        aiResponseSystem + aiResponsePrompt + aiResponse
+      )
+      await TokenUsageModel.incrementUsage(orgId, estimatedTokens)
+    }
 
     const response: GenerateResponseResponse = {
       aiSuggestedResponse: aiResponse,

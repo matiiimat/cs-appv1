@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from "next/server"
 import { OrganizationSettingsModel } from "@/lib/models/organization-settings"
 import { auth } from '@/lib/auth/server'
 import { getOrgAndUserByEmail } from '@/lib/tenant'
+import { TokenUsageModel } from '@/lib/models/token-usage'
+import { db } from '@/lib/database'
+
+interface OrgPlanRow {
+  plan_type: string
+}
 
 async function requireOrgId(headers: Headers): Promise<string> {
   const session = await auth.api.getSession({ headers })
@@ -11,12 +17,42 @@ async function requireOrgId(headers: Headers): Promise<string> {
   return orgUser.organizationId
 }
 
+async function getOrgPlanType(orgId: string): Promise<string> {
+  const result = await db.query<OrgPlanRow>(
+    'SELECT plan_type FROM organizations WHERE id = $1',
+    [orgId]
+  )
+  return result.rows[0]?.plan_type || 'free'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const checkConnectivity = url.searchParams.get('checkConnectivity') === 'true'
 
     const orgId = await requireOrgId(request.headers)
+
+    // Check if this is a managed plan (free/plus) - they use server's API key
+    const planType = await getOrgPlanType(orgId)
+    const isManaged = TokenUsageModel.isManagedPlan(planType)
+
+    if (isManaged) {
+      // Managed plans are always configured (using server's Anthropic key)
+      // Skip connectivity check for managed plans - server key is trusted
+      return NextResponse.json({
+        configured: true,
+        provider: 'anthropic',
+        model: 'claude-3-5-haiku-20241022',
+        hasKey: true,
+        hasEndpoint: false,
+        hasSavedSettings: true,
+        isManaged: true,
+        reasons: [],
+        ...(checkConnectivity ? { connectivityOk: true } : {}),
+      })
+    }
+
+    // BYOK plans - check user's AI configuration
     const settings = await OrganizationSettingsModel.findByOrganizationId(orgId)
 
     const hasSavedSettings = Boolean(settings)
