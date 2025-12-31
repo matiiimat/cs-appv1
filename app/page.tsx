@@ -433,7 +433,7 @@ export default function LuxuryLanding() {
 
             {/* Main headline */}
             <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-              <span className="block text-slate-900 dark:text-white">Your entire support team.</span>
+              <span className="block text-slate-900 dark:text-white">An entire support team.</span>
               <span className="relative">
                 <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
                   Deployed in minutes.
@@ -574,8 +574,8 @@ export default function LuxuryLanding() {
               <div>
 
                 <h2 className="mt-6 font-[var(--font-custom)] text-4xl font-medium leading-tight tracking-tight text-slate-900 dark:text-white md:text-5xl">
-                  A workspace designed for
-                  <span className="text-slate-500 dark:text-white/50"> speed and clarity</span>
+                  See it in
+                  <span className="text-slate-500 dark:text-white/50"> action</span>
                 </h2>
 
                 <p className="mt-6 text-lg leading-relaxed text-slate-600 dark:text-white/50">
