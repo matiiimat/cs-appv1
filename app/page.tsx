@@ -820,12 +820,12 @@ export default function LuxuryLanding() {
                     <div className="mb-5">
                       <div className="flex items-baseline gap-2">
                         <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
-                          ${annual ? "83" : "99"}
+                          ${annual ? "166" : "199"}
                         </span>
                         <span className="text-slate-500 dark:text-white/50">/mo</span>
                       </div>
                       {annual ? (
-                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($999/yr)</p>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($1,999/yr)</p>
                       ) : (
                         <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
                       )}
