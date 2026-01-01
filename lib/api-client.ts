@@ -136,8 +136,13 @@ class ApiClient {
   }
 
   // Stats operations
-  async getStats(): Promise<{ stats: ApiStats }> {
-    return this.request('/messages/stats');
+  async getStats(options: { dateRange?: '7d' | '30d' | 'all' } = {}): Promise<{ stats: ApiStats }> {
+    const params = new URLSearchParams();
+    if (options.dateRange && options.dateRange !== 'all') {
+      params.append('dateRange', options.dateRange);
+    }
+    const query = params.toString();
+    return this.request(`/messages/stats${query ? `?${query}` : ''}`);
   }
 
   // Activity operations

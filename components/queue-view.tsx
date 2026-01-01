@@ -55,6 +55,7 @@ export function QueueView() {
   const [keyboardFeedback, setKeyboardFeedback] = useState<'approve' | 'review' | null>(null)
   const [isActing, setIsActing] = useState(false)
   const [quickEditOpen, setQuickEditOpen] = useState(false)
+  const [timelineFilter, setTimelineFilter] = useState<'7d' | '30d' | 'all'>('all')
 
   // Get agent ID
   const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
@@ -64,10 +65,10 @@ export function QueueView() {
   }
   const agentId = getAgentId()
 
-  // Refresh on mount
+  // Refresh on mount and when timeline filter changes
   useEffect(() => {
-    refreshData()
-  }, [refreshData])
+    refreshData({ dateRange: timelineFilter })
+  }, [refreshData, timelineFilter])
 
   // Calculate queue states
   const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
@@ -301,8 +302,19 @@ export function QueueView() {
     }
   }, [isTriageActive, readyForReview.length, addToast, exitTriage])
 
-  // Category pie chart data
-  const categoryCounts = messages.reduce<Record<string, number>>((acc, m) => {
+  // Filter messages by timeline for client-side calculations
+  const getTimelineFilteredMessages = () => {
+    if (timelineFilter === 'all') return messages
+    const now = Date.now()
+    const cutoff = timelineFilter === '7d'
+      ? now - 7 * 24 * 60 * 60 * 1000
+      : now - 30 * 24 * 60 * 60 * 1000
+    return messages.filter(m => new Date(m.timestamp).getTime() >= cutoff)
+  }
+  const filteredMessages = getTimelineFilteredMessages()
+
+  // Category pie chart data (uses filtered messages)
+  const categoryCounts = filteredMessages.reduce<Record<string, number>>((acc, m) => {
     const key = (m.category && m.category.trim()) || 'Uncategorized'
     acc[key] = (acc[key] || 0) + 1
     return acc
@@ -320,16 +332,16 @@ export function QueueView() {
     color: categoryColorMap[label] || palette[idx % palette.length],
   }))
 
-  // Find oldest pending ticket
-  const allPending = messages.filter(m => m.status === 'new' || m.status === 'to_review_queue')
+  // Find oldest pending ticket (uses filtered messages)
+  const allPending = filteredMessages.filter(m => m.status === 'new' || m.status === 'to_review_queue')
   const oldestTicket = allPending.length > 0
     ? allPending.reduce((oldest, current) =>
         new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest
       )
     : null
 
-  // SLA calculation
-  const sentEligible = messages.filter(m => m.status === 'sent')
+  // SLA calculation (uses filtered messages)
+  const sentEligible = filteredMessages.filter(m => m.status === 'sent')
   const slaHours = settings.messageAgeThresholds.yellowHours
   const inSLA = sentEligible.filter(m => {
     const created = new Date(m.timestamp).getTime()
@@ -699,6 +711,27 @@ export function QueueView() {
           </div>
         </div>
       )}
+
+      {/* Stats Header with Timeline Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h2 className="text-lg font-semibold">Statistics</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Show:</span>
+          {(['7d', '30d', 'all'] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimelineFilter(range)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                timelineFilter === range
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-muted hover:bg-muted/80 text-foreground'
+              }`}
+            >
+              {range === '7d' ? 'Last 7 days' : range === '30d' ? 'Last 30 days' : 'All time'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

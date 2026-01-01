@@ -486,8 +486,10 @@ export class MessageModel {
 
   /**
    * Get message statistics
+   * @param organizationId - The organization ID
+   * @param dateRange - Optional date range filter: '7d', '30d', or 'all' (default: 'all')
    */
-  static async getStats(organizationId: string): Promise<{
+  static async getStats(organizationId: string, dateRange: '7d' | '30d' | 'all' = 'all'): Promise<{
     totalMessages: number;
     pendingMessages: number;
     approvedMessages: number;
@@ -499,6 +501,14 @@ export class MessageModel {
     approvalRate: number;
     todayProcessed: number;
   }> {
+    // Build date filter clause
+    let dateFilter = '';
+    if (dateRange === '7d') {
+      dateFilter = "AND created_at >= NOW() - INTERVAL '7 days'";
+    } else if (dateRange === '30d') {
+      dateFilter = "AND created_at >= NOW() - INTERVAL '30 days'";
+    }
+
     const result = await db.query<{
       total_messages: string;
       new_messages: string;
@@ -521,7 +531,7 @@ export class MessageModel {
         AVG(response_time_ms) FILTER (WHERE response_time_ms IS NOT NULL) as avg_response_time_ms,
         COUNT(*) FILTER (WHERE processed_at::date = CURRENT_DATE) as today_processed
       FROM messages
-      WHERE organization_id = $1
+      WHERE organization_id = $1 ${dateFilter}
     `, [organizationId]);
 
     const row = result.rows[0];

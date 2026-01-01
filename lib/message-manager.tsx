@@ -124,7 +124,7 @@ interface MessageManagerContextType {
     timestamp: string
     agentId?: string
   }>
-  refreshData: () => Promise<void>
+  refreshData: (options?: { dateRange?: '7d' | '30d' | 'all' }) => Promise<void>
   // Draft persistence (keep in localStorage)
   draftReplies: Record<string, string>
   updateDraftReply: (messageId: string, draft: string) => void
@@ -183,14 +183,14 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Fetch data from database
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (options: { dateRange?: '7d' | '30d' | 'all' } = {}) => {
     try {
       setIsLoading(true)
 
       // Fetch all data in parallel
       const [messagesResponse, statsResponse, activityResponse] = await Promise.all([
         apiClient.getMessages({ limit: 100 }),
-        apiClient.getStats(),
+        apiClient.getStats({ dateRange: options.dateRange }),
         apiClient.getActivity(10)
       ])
 

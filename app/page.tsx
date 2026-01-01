@@ -608,52 +608,18 @@ export default function LuxuryLanding() {
                 </ul>
               </div>
 
-              {/* Product mockup */}
+              {/* Product demo GIF */}
               <div className="relative">
                 <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#3872B9]/10 via-[#B33275]/10 to-[#F38135]/10 blur-3xl dark:from-[#3872B9]/20 dark:via-[#B33275]/20 dark:to-[#F38135]/20" />
                 <div className="relative overflow-hidden rounded-2xl border p-2 shadow-2xl border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none">
-                  <div className="aspect-[4/3] rounded-xl p-6 bg-slate-50 dark:bg-[#111113]">
-                    {/* Mock interface */}
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-3 w-3 rounded-full bg-[#EF4444]" />
-                        <div className="h-3 w-3 rounded-full bg-[#F59E0B]" />
-                        <div className="h-3 w-3 rounded-full bg-[#22C55E]" />
-                      </div>
-                      <div className="h-2 w-24 rounded-full bg-slate-200 dark:bg-white/10" />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 space-y-3">
-                        {[1, 2, 3, 4].map(i => (
-                          <div key={i} className={`rounded-lg p-3 ${i === 2 ? 'border border-[#3872B9]/50 bg-[#3872B9]/10' : 'bg-white border border-slate-200 dark:bg-white/[0.03] dark:border-transparent'}`}>
-                            <div className="mb-2 h-2 w-16 rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="col-span-2 rounded-xl border p-4 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.02]">
-                        <div className="mb-3 h-3 w-32 rounded bg-slate-300 dark:bg-white/20" />
-                        <div className="space-y-2">
-                          <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
-                          <div className="h-2 w-5/6 rounded bg-slate-200 dark:bg-white/10" />
-                          <div className="h-2 w-4/6 rounded bg-slate-200 dark:bg-white/10" />
-                        </div>
-                        <div className="mt-4 rounded-lg bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10 p-3 dark:from-[#3872B9]/20 dark:to-[#B33275]/20">
-                          <div className="mb-2 h-2 w-20 rounded bg-[#3872B9]/40 dark:bg-[#3872B9]/50" />
-                          <div className="space-y-1.5">
-                            <div className="h-2 w-full rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-5/6 rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-3/4 rounded bg-slate-300 dark:bg-white/20" />
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <div className="h-8 w-24 rounded-lg bg-[#22C55E]/20" />
-                          <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-white/10" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <Image
+                    src="/landing-page-overview.gif"
+                    alt="Aidly product demo"
+                    width={800}
+                    height={600}
+                    className="rounded-xl"
+                    unoptimized
+                  />
                 </div>
               </div>
             </div>
