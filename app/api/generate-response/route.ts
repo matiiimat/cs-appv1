@@ -199,8 +199,6 @@ Please modify the response according to the instruction.`
     const { anonymizedText: anonymizedSubject } = piiAnonymizer.anonymize(emailValidation.subject)
     const { anonymizedText: anonymizedBody } = piiAnonymizer.anonymize(emailValidation.body)
 
-    console.log(`[PII] Anonymized data being sent to AI - Name: ${anonymizedName}, Email: ${anonymizedEmail}`)
-
     const availableCategories = getNormalizedCategories(categories)
     const categorySystem = `You are an AI assistant that categorizes customer support messages.
 

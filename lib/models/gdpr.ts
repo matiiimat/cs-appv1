@@ -284,7 +284,7 @@ export class GDPRModel {
 
       // 3. Delete knowledge base entries
       await client.query(
-        'DELETE FROM knowledge_base WHERE organization_id = $1',
+        'DELETE FROM knowledge_base_entries WHERE organization_id = $1',
         [organizationId]
       );
 
