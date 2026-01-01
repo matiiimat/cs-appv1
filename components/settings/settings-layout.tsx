@@ -6,6 +6,7 @@ import { SetupSection } from "./sections/setup-section"
 import { CustomizationSection } from "./sections/customization-section"
 import { KnowledgeSection } from "./sections/knowledge-section"
 import { SystemSection } from "./sections/system-section"
+import { GDPRSection } from "./sections/gdpr-section"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -23,6 +24,8 @@ export function SettingsLayout() {
         return <KnowledgeSection />
       case "system":
         return <SystemSection />
+      case "privacy":
+        return <GDPRSection />
       default:
         return <SetupSection />
     }

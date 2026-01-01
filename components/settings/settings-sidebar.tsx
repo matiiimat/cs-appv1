@@ -9,6 +9,7 @@ import {
   Settings2,
   Sun,
   Moon,
+  Shield,
 } from "lucide-react"
 
 export type SettingsSection =
@@ -16,6 +17,7 @@ export type SettingsSection =
   | "customization"
   | "knowledge"
   | "system"
+  | "privacy"
 
 interface SettingsSidebarProps {
   activeSection: SettingsSection
@@ -27,6 +29,7 @@ const mainNavItems: { id: SettingsSection; label: string; icon: React.ElementTyp
   { id: "customization", label: "Customization", icon: Sliders },
   { id: "knowledge", label: "Knowledge", icon: BookOpen },
   { id: "system", label: "System", icon: Settings2 },
+  { id: "privacy", label: "Privacy & Data", icon: Shield },
 ]
 
 export function SettingsSidebar({ activeSection, onSectionChange }: SettingsSidebarProps) {

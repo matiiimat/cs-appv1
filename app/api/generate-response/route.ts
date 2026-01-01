@@ -10,6 +10,7 @@ import { withRateLimit } from '@/lib/rate-limiter'
 import { EmailUsageModel } from '@/lib/models/email-usage'
 import { TokenUsageModel } from '@/lib/models/token-usage'
 import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
+import { createCustomerAnonymizer } from '@/lib/pii-anonymizer'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -131,12 +132,24 @@ async function handler(request: NextRequest) {
 
     const aiService = new AIService(effectiveAiConfig)
 
+    // Create PII anonymizer for GDPR compliance
+    // This ensures customer PII is never sent to AI providers
+    const piiAnonymizer = createCustomerAnonymizer({
+      name: customerName,
+      email: emailValidation.customerEmail,
+    })
+
     // Handle quick actions - modify existing response
     if (quickActionInstruction && currentResponse) {
+      // Anonymize customer data before sending to AI
+      const anonymizedSubject = piiAnonymizer.anonymize(subject).anonymizedText
+      const anonymizedMessage = piiAnonymizer.anonymize(message).anonymizedText
+      const anonymizedResponse = piiAnonymizer.anonymize(currentResponse).anonymizedText
+
       const quickActionSystem = `You are a professional customer support agent. Modify the existing response according to the instruction.
 
 Current response:
-"${currentResponse}"
+"${anonymizedResponse}"
 
 Instruction: ${quickActionInstruction}
 
@@ -147,17 +160,23 @@ Output requirements:
 - Keep the existing signature if present; otherwise, end with this exact signature once: "${agentSignature}".
 - Ensure there is only one signature in the final output.`
 
+      // Use anonymized placeholders instead of real customer data
+      const { anonymizedText: anonymizedName } = piiAnonymizer.anonymize(customerName)
+
       const quickActionPrompt = `Original customer message context:
-Customer: ${customerName}
-Subject: ${subject}
-Message: ${message}
+Customer: ${anonymizedName}
+Subject: ${anonymizedSubject}
+Message: ${anonymizedMessage}
 
 Please modify the response according to the instruction.`
 
-      const modifiedResponse = await aiService.generateText(
+      const anonymizedAiResponse = await aiService.generateText(
         quickActionSystem,
         quickActionPrompt
       )
+
+      // Re-hydrate the response with original customer data
+      const modifiedResponse = piiAnonymizer.rehydrate(anonymizedAiResponse)
 
       // Track token usage for managed plans (using chars/4 estimation)
       if (isManaged) {
@@ -174,6 +193,14 @@ Please modify the response according to the instruction.`
     }
 
     // Generate category (for new responses only)
+    // Anonymize all customer PII before sending to AI provider
+    const { anonymizedText: anonymizedName } = piiAnonymizer.anonymize(customerName)
+    const { anonymizedText: anonymizedEmail } = piiAnonymizer.anonymize(emailValidation.customerEmail)
+    const { anonymizedText: anonymizedSubject } = piiAnonymizer.anonymize(emailValidation.subject)
+    const { anonymizedText: anonymizedBody } = piiAnonymizer.anonymize(emailValidation.body)
+
+    console.log(`[PII] Anonymized data being sent to AI - Name: ${anonymizedName}, Email: ${anonymizedEmail}`)
+
     const availableCategories = getNormalizedCategories(categories)
     const categorySystem = `You are an AI assistant that categorizes customer support messages.
 
@@ -191,10 +218,11 @@ Category guidelines:
 
 Choose the most appropriate category from the available list. For plans and pricing questions, use "Billing".`
 
-    const categoryPrompt = `Customer: ${customerName}
-Email: ${emailValidation.customerEmail}
-Subject: ${emailValidation.subject}
-Message: ${emailValidation.body}`
+    // Use anonymized data in prompts sent to AI
+    const categoryPrompt = `Customer: ${anonymizedName}
+Email: ${anonymizedEmail}
+Subject: ${anonymizedSubject}
+Message: ${anonymizedBody}`
 
     const categoryResponse = await aiService.generateText(
       categorySystem,
@@ -278,24 +306,28 @@ ${relevantKbEntries}
 
 Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}`
 
-    const aiResponsePrompt = `Customer: ${customerName}
-Email: ${emailValidation.customerEmail}
-Subject: ${emailValidation.subject}
-Message: ${emailValidation.body}
+    // Use anonymized data in the main response prompt
+    const aiResponsePrompt = `Customer: ${anonymizedName}
+Email: ${anonymizedEmail}
+Subject: ${anonymizedSubject}
+Message: ${anonymizedBody}
 
 Generate a professional customer support response.`
 
-    const aiResponse = await aiService.generateText(
+    const anonymizedAiResponse = await aiService.generateText(
       aiResponseSystem,
       aiResponsePrompt
     )
+
+    // Re-hydrate the AI response with original customer data
+    const aiResponse = piiAnonymizer.rehydrate(anonymizedAiResponse)
 
     // Track token usage for managed plans (using chars/4 estimation)
     // Includes both category detection and response generation
     if (isManaged) {
       const estimatedTokens = TokenUsageModel.estimateTokens(
         categorySystem + categoryPrompt + categoryResponse +
-        aiResponseSystem + aiResponsePrompt + aiResponse
+        aiResponseSystem + aiResponsePrompt + anonymizedAiResponse
       )
       await TokenUsageModel.incrementUsage(orgId, estimatedTokens)
     }
