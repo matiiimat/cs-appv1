@@ -21,7 +21,7 @@ export const SettingsDataSchema = z.object({
   brandName: z.string().max(80).default(''),
   agentName: z.string().default('Support Agent'),
   agentSignature: z.string().default('Best regards,\nSupport Team'),
-  aiInstructions: z.string().default('You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.'),
+  aiInstructions: z.string().max(500).default('You are a helpful customer support AI assistant. Be professional, empathetic, and provide clear solutions.'),
   categories: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -42,7 +42,7 @@ export const SettingsDataSchema = z.object({
     temperature: z.number().default(0.7),
     maxTokens: z.number().default(1000),
   }),
-  companyKnowledge: z.string().default(''),
+  companyKnowledge: z.string().max(50000).default(''),
   messageAgeThresholds: z.object({
     greenHours: z.number().default(20),
     yellowHours: z.number().default(24),

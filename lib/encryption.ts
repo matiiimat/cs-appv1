@@ -146,7 +146,7 @@ export class DatabaseEncryption {
     const field: EncryptedField = {
       encrypted: result.encrypted,
       iv: result.iv,
-      algorithm: 'AES-256-GCM',
+      algorithm: 'AES-256-CBC',
       version: 1
     };
     return JSON.stringify(field);
