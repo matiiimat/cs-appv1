@@ -315,7 +315,8 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
       aiSuggestedResponse: editedResponse,
       status: "edited",
       agentId,
-      editHistory: [...(message.editHistory || []), editEntry],
+      // Keep only last 5 edits to prevent unbounded storage growth
+      editHistory: [...(message.editHistory || []), editEntry].slice(-5),
     })
   }
 

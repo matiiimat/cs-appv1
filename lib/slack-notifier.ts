@@ -35,18 +35,8 @@ export class SlackNotifier {
       // 1. Get org settings (with decrypted webhook URL)
       const settings = await this.getSlackSettings(organizationId)
 
-      if (!settings) {
-        console.log('[SlackNotifier] No Slack settings found for org:', organizationId)
-        return
-      }
-
-      if (!settings.enabled) {
-        console.log('[SlackNotifier] Slack notifications disabled for org:', organizationId)
-        return
-      }
-
-      if (!settings.webhookUrl) {
-        console.log('[SlackNotifier] No webhook URL configured for org:', organizationId)
+      // Silently return if Slack is not configured - this is the default state
+      if (!settings?.enabled || !settings?.webhookUrl) {
         return
       }
 
