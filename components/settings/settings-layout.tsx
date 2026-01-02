@@ -1,17 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SettingsSidebar, type SettingsSection } from "./settings-sidebar"
 import { SetupSection } from "./sections/setup-section"
 import { CustomizationSection } from "./sections/customization-section"
 import { KnowledgeSection } from "./sections/knowledge-section"
 import { SystemSection } from "./sections/system-section"
+import { BillingSection } from "./sections/billing-section"
+import { GDPRSection } from "./sections/gdpr-section"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function SettingsLayout() {
   const [activeSection, setActiveSection] = useState<SettingsSection>("setup")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Listen for section navigation events from other components
+  useEffect(() => {
+    const handleSectionChange = (event: CustomEvent<SettingsSection>) => {
+      if (event.detail) {
+        setActiveSection(event.detail)
+      }
+    }
+
+    window.addEventListener('aidly:settings:section', handleSectionChange as EventListener)
+    return () => {
+      window.removeEventListener('aidly:settings:section', handleSectionChange as EventListener)
+    }
+  }, [])
 
   const renderSection = () => {
     switch (activeSection) {
@@ -23,6 +39,10 @@ export function SettingsLayout() {
         return <KnowledgeSection />
       case "system":
         return <SystemSection />
+      case "billing":
+        return <BillingSection />
+      case "privacy":
+        return <GDPRSection />
       default:
         return <SetupSection />
     }

@@ -46,30 +46,19 @@ function AppContent() {
     currentView,
   })
 
-  // Handle billing/upgrade - trigger Stripe checkout directly
-  const startCheckout = async () => {
-    try {
-      const resp = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annual: false }) // Default to monthly
-      })
-      if (!resp.ok) throw new Error('Failed to start checkout')
-      const data = await resp.json()
-      if (data?.url) {
-        window.location.href = data.url
-      }
-    } catch (e) {
-      console.error('Checkout failed:', e)
-    }
-  }
-
   // Listen for cross-component navigation events
   useEffect(() => {
     const settingsHandler = () => setCurrentView("settings")
     const triageHandler = () => setCurrentView("queue")
     const inboxHandler = () => setCurrentView("inbox")
-    const billingHandler = () => startCheckout() // Trigger Stripe checkout
+    // Navigate to billing section in settings
+    const billingHandler = () => {
+      setCurrentView("settings")
+      // Dispatch event to tell settings to switch to billing section
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('aidly:settings:section', { detail: 'billing' }))
+      }, 50)
+    }
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aidly:navigate:settings', settingsHandler as EventListener)

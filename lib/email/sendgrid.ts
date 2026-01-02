@@ -57,3 +57,59 @@ export async function sendMagicLinkEmail(to: string, url: string) {
   }
   await sgMail.send(msg)
 }
+
+export async function sendAccountDeletionEmail(
+  to: string,
+  stats: { messagesDeleted: number; usersDeleted: number }
+) {
+  if (!apiKey) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[sendgrid] Missing SENDGRID_API_KEY. Dev fallback: logging deletion email')
+      console.log(`[deletion-email] To: ${to}, Stats: ${JSON.stringify(stats)}`)
+      return
+    }
+    throw new Error('SENDGRID_API_KEY is required to send emails')
+  }
+
+  const logoUrl = 'https://aidly.me/logo.png'
+  const subject = 'Your Aidly account has been deleted'
+
+  const text = [
+    'Account Deletion Confirmed',
+    'Your Aidly account and all associated data have been permanently deleted.',
+    `Deleted: ${stats.messagesDeleted} messages, ${stats.usersDeleted} users`,
+    'This action cannot be undone.',
+    'If you did not request this deletion, please contact support@aidly.me immediately.',
+  ].join('\n\n')
+
+  const html = `
+  <body style="margin:0;padding:24px;background-color:#f5f5f7;">
+    <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;">
+      <div style="background:#ffffff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;">
+        <img src="${logoUrl}" alt="Aidly" width="128" height="128" style="display:block;margin:0 auto 16px auto;width:128px;height:128px;" />
+        <h1 style="margin:0 0 8px 0;font-size:22px;line-height:28px;color:#0f172a;font-weight:700;">Account Deletion Confirmed</h1>
+        <p style="margin:0 0 16px 0;color:#475569;font-size:14px;">Your Aidly account and all associated data have been permanently deleted.</p>
+        <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:0 0 16px 0;">
+          <p style="margin:0;color:#64748b;font-size:13px;">
+            <strong>${stats.messagesDeleted}</strong> messages deleted<br/>
+            <strong>${stats.usersDeleted}</strong> users removed
+          </p>
+        </div>
+        <p style="margin:0;color:#64748b;font-size:12px;">This action cannot be undone.</p>
+      </div>
+      <p style="text-align:center;color:#64748b;font-size:12px;margin:16px 8px 0 8px;">
+        If you did not request this deletion, please contact <a href="mailto:support@aidly.me" style="color:#3872b9;text-decoration:underline;">Aidly Support</a> immediately.
+      </p>
+    </div>
+  </body>
+  `
+
+  const msg = {
+    to,
+    from: fromEmail,
+    subject,
+    text,
+    html,
+  }
+  await sgMail.send(msg)
+}

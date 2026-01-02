@@ -433,7 +433,7 @@ export default function LuxuryLanding() {
 
             {/* Main headline */}
             <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-              <span className="block text-slate-900 dark:text-white">Your entire support team.</span>
+              <span className="block text-slate-900 dark:text-white">An entire support team.</span>
               <span className="relative">
                 <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
                   Deployed in minutes.
@@ -500,6 +500,12 @@ export default function LuxuryLanding() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Setup in 2 minutes
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-[#3872B9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                GDPR Compliant
               </div>
             </div>
           </div>
@@ -574,8 +580,8 @@ export default function LuxuryLanding() {
               <div>
 
                 <h2 className="mt-6 font-[var(--font-custom)] text-4xl font-medium leading-tight tracking-tight text-slate-900 dark:text-white md:text-5xl">
-                  A workspace designed for
-                  <span className="text-slate-500 dark:text-white/50"> speed and clarity</span>
+                  See it in
+                  <span className="text-slate-500 dark:text-white/50"> action</span>
                 </h2>
 
                 <p className="mt-6 text-lg leading-relaxed text-slate-600 dark:text-white/50">
@@ -602,52 +608,18 @@ export default function LuxuryLanding() {
                 </ul>
               </div>
 
-              {/* Product mockup */}
+              {/* Product demo GIF */}
               <div className="relative">
                 <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#3872B9]/10 via-[#B33275]/10 to-[#F38135]/10 blur-3xl dark:from-[#3872B9]/20 dark:via-[#B33275]/20 dark:to-[#F38135]/20" />
                 <div className="relative overflow-hidden rounded-2xl border p-2 shadow-2xl border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none">
-                  <div className="aspect-[4/3] rounded-xl p-6 bg-slate-50 dark:bg-[#111113]">
-                    {/* Mock interface */}
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-3 w-3 rounded-full bg-[#EF4444]" />
-                        <div className="h-3 w-3 rounded-full bg-[#F59E0B]" />
-                        <div className="h-3 w-3 rounded-full bg-[#22C55E]" />
-                      </div>
-                      <div className="h-2 w-24 rounded-full bg-slate-200 dark:bg-white/10" />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 space-y-3">
-                        {[1, 2, 3, 4].map(i => (
-                          <div key={i} className={`rounded-lg p-3 ${i === 2 ? 'border border-[#3872B9]/50 bg-[#3872B9]/10' : 'bg-white border border-slate-200 dark:bg-white/[0.03] dark:border-transparent'}`}>
-                            <div className="mb-2 h-2 w-16 rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="col-span-2 rounded-xl border p-4 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.02]">
-                        <div className="mb-3 h-3 w-32 rounded bg-slate-300 dark:bg-white/20" />
-                        <div className="space-y-2">
-                          <div className="h-2 w-full rounded bg-slate-200 dark:bg-white/10" />
-                          <div className="h-2 w-5/6 rounded bg-slate-200 dark:bg-white/10" />
-                          <div className="h-2 w-4/6 rounded bg-slate-200 dark:bg-white/10" />
-                        </div>
-                        <div className="mt-4 rounded-lg bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10 p-3 dark:from-[#3872B9]/20 dark:to-[#B33275]/20">
-                          <div className="mb-2 h-2 w-20 rounded bg-[#3872B9]/40 dark:bg-[#3872B9]/50" />
-                          <div className="space-y-1.5">
-                            <div className="h-2 w-full rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-5/6 rounded bg-slate-300 dark:bg-white/20" />
-                            <div className="h-2 w-3/4 rounded bg-slate-300 dark:bg-white/20" />
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <div className="h-8 w-24 rounded-lg bg-[#22C55E]/20" />
-                          <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-white/10" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <Image
+                    src="/landing-page-overview.gif"
+                    alt="Aidly product demo"
+                    width={800}
+                    height={600}
+                    className="rounded-xl"
+                    unoptimized
+                  />
                 </div>
               </div>
             </div>
@@ -848,12 +820,12 @@ export default function LuxuryLanding() {
                     <div className="mb-5">
                       <div className="flex items-baseline gap-2">
                         <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
-                          ${annual ? "83" : "99"}
+                          ${annual ? "166" : "199"}
                         </span>
                         <span className="text-slate-500 dark:text-white/50">/mo</span>
                       </div>
                       {annual ? (
-                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($999/yr)</p>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($1,999/yr)</p>
                       ) : (
                         <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
                       )}
@@ -976,7 +948,7 @@ export default function LuxuryLanding() {
                 },
                 {
                   q: "Is our data secure?",
-                  a: "Your data is encrypted at rest with per-organization keys, protected by TLS in transit, and accessed only with least-privilege principles. We're EU-based and working towards full GDPR compliance. You own your data and can export or delete it anytime."
+                  a: "Absolutely. Your data is encrypted at rest with per-organization keys, protected by TLS in transit, and customer PII is anonymized before being sent to AI providers. We're fully GDPR compliant: you can export all your data or permanently delete your account anytime from Settings. EU-based infrastructure, your data stays yours."
                 }
               ].map((faq, i) => (
                 <div

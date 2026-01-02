@@ -14,7 +14,13 @@ async function requireOrgId(headers: Headers): Promise<string> {
 export async function GET(request: NextRequest) {
   try {
     const orgId = await requireOrgId(request.headers)
-    const stats = await MessageModel.getStats(orgId)
+
+    // Parse dateRange query parameter
+    const { searchParams } = new URL(request.url)
+    const dateRangeParam = searchParams.get('dateRange')
+    const dateRange = (dateRangeParam === '7d' || dateRangeParam === '30d') ? dateRangeParam : 'all'
+
+    const stats = await MessageModel.getStats(orgId, dateRange)
     return NextResponse.json({ stats })
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
