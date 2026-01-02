@@ -57,44 +57,18 @@ export function UsageProvider({ children }: { children: ReactNode }) {
     refreshUsage()
   }, [refreshUsage])
 
-  // Refresh periodically (every 60 seconds) to keep UI in sync
-  // Only poll when tab is visible to reduce unnecessary API calls
+  // Refresh when tab becomes visible (user returns to app)
+  // No polling - usage updates are event-driven (after email sends)
+  // This reduces unnecessary DB queries for single-user/small team orgs
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-
-    const startPolling = () => {
-      if (!interval) {
-        interval = setInterval(refreshUsage, 60000)
-      }
-    }
-
-    const stopPolling = () => {
-      if (interval) {
-        clearInterval(interval)
-        interval = null
-      }
-    }
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        refreshUsage() // Refresh immediately when tab becomes visible
-        startPolling()
-      } else {
-        stopPolling()
+        refreshUsage()
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    // Start polling only if tab is currently visible
-    if (document.visibilityState === 'visible') {
-      startPolling()
-    }
-
-    return () => {
-      stopPolling()
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [refreshUsage])
 
   // Derive canSendEmail from usage state
