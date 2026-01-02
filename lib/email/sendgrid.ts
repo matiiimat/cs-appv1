@@ -79,7 +79,6 @@ export async function sendAccountDeletionEmail(
     'Your Aidly account and all associated data have been permanently deleted.',
     `Deleted: ${stats.messagesDeleted} messages, ${stats.usersDeleted} users`,
     'This action cannot be undone.',
-    'If you did not request this deletion, please contact support@aidly.me immediately.',
   ].join('\n\n')
 
   const html = `
@@ -97,9 +96,6 @@ export async function sendAccountDeletionEmail(
         </div>
         <p style="margin:0;color:#64748b;font-size:12px;">This action cannot be undone.</p>
       </div>
-      <p style="text-align:center;color:#64748b;font-size:12px;margin:16px 8px 0 8px;">
-        If you did not request this deletion, please contact <a href="mailto:support@aidly.me" style="color:#3872b9;text-decoration:underline;">Aidly Support</a> immediately.
-      </p>
     </div>
   </body>
   `
