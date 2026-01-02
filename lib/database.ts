@@ -91,7 +91,6 @@ class DatabaseConnection {
     if (this.handlersAttached) return;
     this.handlersAttached = true;
     this.pool.on('connect', () => {
-      console.log('🔗 New database client connected');
       this.isConnected = true;
     });
 
@@ -101,7 +100,7 @@ class DatabaseConnection {
     });
 
     this.pool.on('remove', () => {
-      console.log('🗑️  Database client removed from pool');
+      // Connection returned to pool
     });
 
     // Handle process termination
@@ -198,17 +197,14 @@ class DatabaseConnection {
    * Gracefully shutdown database connections
    */
   async gracefulShutdown(): Promise<void> {
-    console.log('🔄 Shutting down database connections...');
     try {
       if (this.hasEnded) {
-        console.log('⚠️  Database pool already ended; skipping second shutdown');
         return;
       }
       this.hasEnded = true;
       await this.pool.end();
-      console.log('✅ Database connections closed successfully');
     } catch (error) {
-      console.error('❌ Error during database shutdown:', error);
+      console.error('Database shutdown error:', error);
     }
   }
 
