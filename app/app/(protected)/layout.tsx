@@ -5,12 +5,6 @@ import { ensureProvisioned } from '@/lib/tenant'
 import { getBillingStatusForEmail, isAccessAllowedFromStatus } from '@/lib/billing'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  // Allow bypass in development when explicitly enabled
-  const bypass = process.env.NODE_ENV !== 'production' && process.env.DEV_AUTH_BYPASS === '0' // PUT TO 1 TO DISABLE LOGIN FOR TEST
-  if (bypass) {
-    return <>{children}</>
-  }
-
   const h = await headers()
   const session = await auth.api.getSession({ headers: new Headers(h) })
 
