@@ -160,6 +160,23 @@ export const auth = betterAuth({
               return
             }
 
+            // Store Stripe customer ID on the organization for future webhook lookups
+            const stripeCustomerId = typeof session.customer === 'string'
+              ? session.customer
+              : session.customer?.id
+
+            if (stripeCustomerId) {
+              try {
+                await pgDb.query(
+                  'UPDATE organizations SET stripe_customer_id = $1 WHERE id = $2',
+                  [stripeCustomerId, provisionResult.organizationId]
+                )
+                console.log(`[Stripe onEvent] Stored stripe_customer_id ${stripeCustomerId} for org ${provisionResult.organizationId}`)
+              } catch (e) {
+                console.error('[Stripe onEvent] Failed to store stripe_customer_id:', e)
+              }
+            }
+
             // Detect which plan was purchased and upgrade accordingly
             try {
               let detectedPlan: 'plus' | 'pro' = 'pro' // Default to pro for safety
@@ -195,29 +212,26 @@ export const auth = betterAuth({
           // Handle subscription cancellation - downgrade to free at period end
           if (event.type === 'customer.subscription.deleted') {
             const subscription = event.data.object as Stripe.Subscription
-            const customerId = subscription.customer as string
+            const customerId = typeof subscription.customer === 'string'
+              ? subscription.customer
+              : subscription.customer.id
 
             console.log(`[Stripe onEvent] Subscription deleted for customer: ${customerId}`)
 
             // Find org by Stripe customer ID and downgrade to free
-            // Note: Downgrade doesn't reset period - they keep their current usage
             try {
               const orgResult = await pgDb.query<{ id: string }>(
-                `SELECT o.id FROM organizations o
-                 JOIN users u ON u.organization_id = o.id
-                 JOIN stripe_customers sc ON sc.user_id = u.id
-                 WHERE sc.stripe_customer_id = $1
-                 LIMIT 1`,
+                'SELECT id FROM organizations WHERE stripe_customer_id = $1 LIMIT 1',
                 [customerId]
               )
 
               if (orgResult.rows.length > 0) {
                 const orgId = orgResult.rows[0].id
-                // Downgrade without resetting period (next billing cycle)
+                // Downgrade without resetting period - they keep access until current period ends
                 await EmailUsageModel.updatePlan(orgId, 'free', false)
                 console.log(`[Stripe onEvent] Downgraded org ${orgId} to free plan`)
               } else {
-                console.warn(`[Stripe onEvent] No org found for customer ${customerId}`)
+                console.warn(`[Stripe onEvent] No org found for stripe_customer_id: ${customerId}`)
               }
             } catch (e) {
               console.error('[Stripe onEvent] Failed to downgrade plan:', e)
