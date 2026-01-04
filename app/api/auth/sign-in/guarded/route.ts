@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
 import { withRateLimit } from '@/lib/rate-limiter'
+import { verifyTurnstileToken, getClientIp } from '@/lib/turnstile'
 
 // Ensure Node.js runtime (SendGrid + server fetch)
 export const runtime = 'nodejs'
@@ -10,9 +11,15 @@ const recentRequests = new Map<string, number>()
 
 async function handler(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({})) as { email?: string; callbackURL?: string }
+    const body = await request.json().catch(() => ({})) as {
+      email?: string
+      callbackURL?: string
+      turnstileToken?: string
+    }
     const email = (body.email || '').trim()
     const rawCallback = body.callbackURL || '/app'
+    const turnstileToken = body.turnstileToken || ''
+
     // Build absolute callback URL using request origin to avoid Invalid URL
     let callbackURL = rawCallback
     // Resolve request origin + headers used for downstream calls
@@ -30,6 +37,18 @@ async function handler(request: NextRequest) {
       }
     } catch {}
     if (!email) return NextResponse.json({ error: 'email_required' }, { status: 400 })
+
+    // Verify Turnstile token (if configured)
+    // This runs BEFORE rate limiting to block bots early
+    const clientIp = getClientIp(request.headers)
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp)
+    if (!turnstileResult.success) {
+      console.log(`[magic-link] Turnstile verification failed for ${email}: ${turnstileResult.error}`)
+      return NextResponse.json(
+        { error: 'captcha_failed', message: turnstileResult.error },
+        { status: 400 }
+      )
+    }
 
     // NOTE: User/org provisioning is now deferred to after magic link verification.
     // This happens via databaseHooks.user.create.after in lib/auth/server.ts
