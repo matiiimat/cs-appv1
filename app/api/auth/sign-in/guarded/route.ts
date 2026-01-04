@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
-import { getOrgAndUserByEmail, ensureProvisioned } from '@/lib/tenant'
 import { withRateLimit } from '@/lib/rate-limiter'
 
 // Ensure Node.js runtime (SendGrid + server fetch)
@@ -32,17 +31,9 @@ async function handler(request: NextRequest) {
     } catch {}
     if (!email) return NextResponse.json({ error: 'email_required' }, { status: 400 })
 
-    // Auto-provision free account if user doesn't exist (freemium flow)
-    const exists = await getOrgAndUserByEmail(email)
-    if (!exists) {
-      try {
-        await ensureProvisioned(email)
-        console.log(`[magic-link] Auto-provisioned free account for new user: ${email}`)
-      } catch (provisionErr) {
-        console.error(`[magic-link] Failed to provision account for ${email}:`, provisionErr)
-        return NextResponse.json({ error: 'account_creation_failed' }, { status: 500 })
-      }
-    }
+    // NOTE: User/org provisioning is now deferred to after magic link verification.
+    // This happens via databaseHooks.user.create.after in lib/auth/server.ts
+    // This prevents database pollution from unverified email submissions.
 
     // Prevent duplicate requests within 5 seconds
     const now = Date.now()

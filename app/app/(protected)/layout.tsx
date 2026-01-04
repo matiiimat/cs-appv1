@@ -12,7 +12,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     redirect('/app/login')
   }
 
-  // Ensure user/org exist in our app DB
+  // Safety net: Ensure user/org exist in our app DB
+  // Primary provisioning happens in databaseHooks.user.create.after (lib/auth/server.ts)
+  // This catch handles edge cases like Stripe checkout or manual user creation
   try {
     const email = session.user.email
     const name = session.user.name

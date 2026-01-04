@@ -104,6 +104,27 @@ export const auth = betterAuth({
     // 8 hours in seconds
     expiresIn: 8 * 60 * 60,
   },
+  // Provision app-level user/org after Better Auth creates the user (post magic link verification)
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // This runs AFTER magic link verification when Better Auth creates the user
+          // Now we can safely create our app-level org and user records
+          const email = user.email
+          if (email) {
+            try {
+              const result = await ensureProvisioned(email, user.name || undefined)
+              console.log(`[databaseHooks] Provisioned org ${result.organizationId} for verified user: ${email}`)
+            } catch (e) {
+              // Log but don't fail - protected layout will retry if needed
+              console.error(`[databaseHooks] Failed to provision for ${email}:`, e)
+            }
+          }
+        },
+      },
+    },
+  },
   // base path defaults to /api/auth via route mounting
   plugins: [
     magicLink({
