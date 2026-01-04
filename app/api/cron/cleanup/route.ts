@@ -9,7 +9,6 @@ import { db } from '@/lib/database';
  * - Expired sessions (Better Auth)
  * - Expired verification tokens (Better Auth)
  * - Activity logs older than 90 days
- * - Stale draft replies older than 30 days
  */
 export async function GET(request: NextRequest) {
   // Verify the request is from Vercel Cron
@@ -46,24 +45,17 @@ export async function GET(request: NextRequest) {
         `DELETE FROM activity_log WHERE created_at < NOW() - INTERVAL '90 days'`
       );
 
-      // 4. Delete stale draft replies older than 30 days
-      const draftsResult = await client.query(
-        `DELETE FROM draft_replies WHERE updated_at < NOW() - INTERVAL '30 days'`
-      );
-
       return {
         expiredSessions: sessionsResult.rowCount || 0,
         expiredVerifications: verificationsResult.rowCount || 0,
         oldActivityLogs: activityLogsResult.rowCount || 0,
-        staleDrafts: draftsResult.rowCount || 0,
       };
     });
 
     const totalDeleted =
       results.expiredSessions +
       results.expiredVerifications +
-      results.oldActivityLogs +
-      results.staleDrafts;
+      results.oldActivityLogs;
 
     console.log('[Cron] Cleanup completed:', results);
 
