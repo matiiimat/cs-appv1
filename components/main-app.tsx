@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/command-palette"
 import { MessageManagerProvider, useMessageManager } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
 import { UsageProvider } from "@/lib/usage-context"
+import { UserProvider } from "@/lib/user-context"
 import { ToastProvider } from "@/components/ui/toast"
 import { OnboardingWrapper } from "@/components/onboarding/onboarding-wrapper"
 import { useKeyboardNavigation } from "@/lib/use-keyboard-navigation"
@@ -190,16 +191,18 @@ function AppContent() {
 
 export function MainApp() {
   return (
-    <SettingsProvider>
-      <ToastProvider>
-        <MessageManagerProvider>
-          <UsageProvider>
-            <OnboardingWrapper>
-              <AppContent />
-            </OnboardingWrapper>
-          </UsageProvider>
-        </MessageManagerProvider>
-      </ToastProvider>
-    </SettingsProvider>
+    <UserProvider>
+      <SettingsProvider>
+        <ToastProvider>
+          <MessageManagerProvider>
+            <UsageProvider>
+              <OnboardingWrapper>
+                <AppContent />
+              </OnboardingWrapper>
+            </UsageProvider>
+          </MessageManagerProvider>
+        </ToastProvider>
+      </SettingsProvider>
+    </UserProvider>
   )
 }

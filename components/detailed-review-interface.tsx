@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { useUsage } from "@/lib/usage-context"
+import { useUser } from "@/lib/user-context"
 import { useToast } from "@/components/ui/toast"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, stripQuotedForTooltip } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
@@ -20,16 +21,12 @@ export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
   const { settings, aiConfigHasKey, planInfo } = useSettings()
   const { usage, canSendEmail, refreshUsage } = useUsage()
+  const { user } = useUser()
   const { addToast } = useToast()
   const { handleAIError } = useAIErrorHandler()
 
-  // Get agent ID
-  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
-  const getAgentId = () => {
-    if (DEMO_AGENT_ID) return DEMO_AGENT_ID
-    throw new Error('No agent context available.')
-  }
-  const agentId = getAgentId()
+  // Get agent ID from user context
+  const agentId = user?.id || ""
 
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [aiInput, setAiInput] = useState("")
