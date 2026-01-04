@@ -13,14 +13,20 @@ function buildCSP(): string {
     "https://*.challenges.cloudflare.com",
   ]
 
+  // Google Fonts domains
+  const googleFontsDomains = [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+  ]
+
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
     "object-src": ["'none'"],
     "frame-ancestors": ["'none'"],
-    // Allow Next.js/Tailwind inline styles; consider migrating to nonces for stricter prod
-    "style-src": ["'self'", "'unsafe-inline'"],
+    // Allow Next.js/Tailwind inline styles + Google Fonts stylesheets
+    "style-src": ["'self'", "'unsafe-inline'", ...googleFontsDomains],
     // Next.js dev overlay may need 'unsafe-eval'; restrict to dev
     // Next.js injects small inline bootstrap scripts for hydration.
     // In production we allow 'unsafe-inline' unless you implement nonces.
@@ -30,6 +36,8 @@ function buildCSP(): string {
       : ["'self'", "'unsafe-inline'", ...turnstileDomains],
     // Allow images and data URIs
     "img-src": ["'self'", "data:", "blob:"],
+    // Allow Google Fonts font files
+    "font-src": ["'self'", "https://fonts.gstatic.com"],
     // Restrict media/frame embedding
     "media-src": ["'none'"],
     // Turnstile renders in an iframe from challenges.cloudflare.com

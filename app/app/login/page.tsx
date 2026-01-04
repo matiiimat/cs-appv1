@@ -152,13 +152,6 @@ export default function LoginPage() {
               placeholder="you@example.com"
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             />
-            {/* Turnstile widget container */}
-            {siteKey && (
-              <div
-                ref={turnstileContainerRef}
-                className="flex justify-center"
-              />
-            )}
             <Button
               type="submit"
               className="w-full"
@@ -167,6 +160,13 @@ export default function LoginPage() {
               {status === "sending" ? "Sending…" : "Send magic link"}
             </Button>
           </form>
+          {/* Turnstile widget container - below form */}
+          {siteKey && (
+            <div
+              ref={turnstileContainerRef}
+              className="mt-4 flex justify-center"
+            />
+          )}
           {message && (
             <p className={`mt-3 text-center text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}>{message}</p>
           )}
