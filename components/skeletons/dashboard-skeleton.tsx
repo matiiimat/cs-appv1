@@ -93,7 +93,7 @@ export function DashboardSkeleton() {
           ))}
         </div>
 
-        {/* Category Chart */}
+        {/* Category Chart + Usage Widget */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="surface p-6 rounded-lg">
             <Skeleton className="h-4 w-32 mb-4" />
@@ -109,6 +109,25 @@ export function DashboardSkeleton() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Usage Widget Skeleton */}
+          <div className="surface p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            <Skeleton className="h-2 w-full rounded mb-2" />
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-28" />
             </div>
           </div>
         </div>

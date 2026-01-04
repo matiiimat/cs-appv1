@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { SwipeableCard } from "@/components/swipeable-card"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
+import { useUser } from "@/lib/user-context"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
@@ -21,27 +22,10 @@ export function CustomerSupportDashboard() {
   } = useMessageManager()
   
   const { settings } = useSettings()
+  const { user } = useUser()
 
-  // Get agent ID - use demo agent for demo organization, otherwise require auth
-  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
-
-  // Production-ready: agent ID should come from user session/auth
-  // For now, use demo agent only for demo organization
-  const getAgentId = () => {
-    // TODO: Replace with real user authentication
-    // const { user } = useAuth()
-    // return user?.id
-
-    // For demo organization, use demo agent
-    if (DEMO_AGENT_ID) {
-      console.warn('🚨 DEMO AGENT ID IN USE - This must be replaced with real user authentication for production. Current agent:', DEMO_AGENT_ID)
-      return DEMO_AGENT_ID
-    }
-
-    throw new Error('No agent context available. Implement user authentication.')
-  }
-
-  const agentId = getAgentId()
+  // Get agent ID from user context
+  const agentId = user?.id || ""
   
   // Refresh triage data on mount/entry
   useEffect(() => {

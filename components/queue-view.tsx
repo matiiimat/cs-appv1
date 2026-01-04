@@ -8,6 +8,7 @@ import { QuickEditModal } from "@/components/quick-edit-modal"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
 import { useUsage } from "@/lib/usage-context"
+import { useUser } from "@/lib/user-context"
 import { useAIErrorHandler, parseAPIError } from "@/lib/use-ai-error-handler"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, formatRelativeTime } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
@@ -48,6 +49,7 @@ export function QueueView() {
 
   const { settings, aiConfigHasKey, planInfo } = useSettings()
   const { usage, canSendEmail, refreshUsage } = useUsage()
+  const { user } = useUser()
   const { handleAIError } = useAIErrorHandler()
   const { addToast } = useToast()
   const [selectedBatchSize, setSelectedBatchSize] = useState(100)
@@ -57,13 +59,8 @@ export function QueueView() {
   const [quickEditOpen, setQuickEditOpen] = useState(false)
   const [timelineFilter, setTimelineFilter] = useState<'7d' | '30d' | 'all'>('all')
 
-  // Get agent ID
-  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
-  const getAgentId = () => {
-    if (DEMO_AGENT_ID) return DEMO_AGENT_ID
-    throw new Error('No agent context available.')
-  }
-  const agentId = getAgentId()
+  // Get agent ID from user context
+  const agentId = user?.id || ""
 
   // Refresh on mount and when timeline filter changes
   useEffect(() => {

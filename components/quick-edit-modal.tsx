@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useSettings } from "@/lib/settings-context"
 import { useMessageManager } from "@/lib/message-manager"
+import { useUser } from "@/lib/user-context"
 import { formatEmailText } from "@/lib/utils"
 import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
 import { X, Send, Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react"
@@ -29,6 +30,7 @@ interface QuickEditModalProps {
 export function QuickEditModal({ isOpen, onClose, message }: QuickEditModalProps) {
   const { settings } = useSettings()
   const { updateMessage, approveMessage } = useMessageManager()
+  const { user } = useUser()
   const { handleAIError } = useAIErrorHandler()
   const [draftResponse, setDraftResponse] = useState("")
   const [aiInput, setAiInput] = useState("")
@@ -37,9 +39,8 @@ export function QuickEditModal({ isOpen, onClose, message }: QuickEditModalProps
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const aiInputRef = useRef<HTMLInputElement>(null)
 
-  // Get agent ID
-  const DEMO_AGENT_ID = process.env.NEXT_PUBLIC_DEMO_AGENT_ID
-  const agentId = DEMO_AGENT_ID || ""
+  // Get agent ID from user context
+  const agentId = user?.id || ""
 
   // Initialize draft when modal opens
   useEffect(() => {

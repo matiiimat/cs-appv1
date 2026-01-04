@@ -7,29 +7,45 @@ import './lib/startup-validation'
 function buildCSP(): string {
   const isDev = process.env.NODE_ENV !== 'production'
 
+  // Cloudflare Turnstile domains for captcha
+  const turnstileDomains = [
+    "https://challenges.cloudflare.com",
+    "https://*.challenges.cloudflare.com",
+  ]
+
+  // Google Fonts domains
+  const googleFontsDomains = [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+  ]
+
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
     "object-src": ["'none'"],
     "frame-ancestors": ["'none'"],
-    // Allow Next.js/Tailwind inline styles; consider migrating to nonces for stricter prod
-    "style-src": ["'self'", "'unsafe-inline'"],
+    // Allow Next.js/Tailwind inline styles + Google Fonts stylesheets
+    "style-src": ["'self'", "'unsafe-inline'", ...googleFontsDomains],
     // Next.js dev overlay may need 'unsafe-eval'; restrict to dev
     // Next.js injects small inline bootstrap scripts for hydration.
     // In production we allow 'unsafe-inline' unless you implement nonces.
+    // Turnstile requires loading scripts from challenges.cloudflare.com
     "script-src": isDev
-      ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
-      : ["'self'", "'unsafe-inline'"],
+      ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...turnstileDomains]
+      : ["'self'", "'unsafe-inline'", ...turnstileDomains],
     // Allow images and data URIs
     "img-src": ["'self'", "data:", "blob:"],
+    // Allow Google Fonts font files
+    "font-src": ["'self'", "https://fonts.gstatic.com"],
     // Restrict media/frame embedding
     "media-src": ["'none'"],
-    "frame-src": ["'none'"],
+    // Turnstile renders in an iframe from challenges.cloudflare.com
+    "frame-src": [...turnstileDomains],
     // Network calls from the browser
     "connect-src": isDev
       ? ["'self'", "https:", "ws:", "wss:", "http://localhost:*"]
-      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com"]
+      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com", ...turnstileDomains]
   }
 
   return Object.entries(directives)
