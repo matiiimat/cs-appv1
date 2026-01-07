@@ -44,9 +44,10 @@ function buildCSP(): string {
     // Turnstile renders in an iframe from challenges.cloudflare.com
     "frame-src": [...turnstileDomains],
     // Network calls from the browser
+    // Sentry ingest URL must be included for error reporting to work
     "connect-src": isDev
       ? ["'self'", "https:", "ws:", "wss:", "http://localhost:*"]
-      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com", ...turnstileDomains]
+      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com", "https://*.ingest.de.sentry.io", ...turnstileDomains]
   }
 
   return Object.entries(directives)
