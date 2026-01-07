@@ -26,7 +26,7 @@ export async function sendMagicLinkEmail(to: string, url: string) {
     'Sign in with the secure link below',
     `Sign in to Aidly: ${url}`,
     "If you didn't request this email, you can safely ignore it.",
-    "If you're experiencing issues, please contact Aidly Support: support@aidly.me",
+    "If you're experiencing issues, please contact Aidly Support: support@aidlyhq.com",
   ].join('\n\n')
 
   const html = `
@@ -42,7 +42,7 @@ export async function sendMagicLinkEmail(to: string, url: string) {
       </div>
       <p style="text-align:center;color:#64748b;font-size:12px;margin:16px 8px 0 8px;">
         If you didn't request this email, you can safely ignore it.<br/>
-        If you're experiencing issues, please contact <a href="mailto:support@aidly.me" style="color:#3872b9;text-decoration:underline;">Aidly Support</a>.
+        If you're experiencing issues, please contact <a href="mailto:support@aidlyhq.com" style="color:#3872b9;text-decoration:underline;">Aidly Support</a>.
       </p>
     </div>
   </body>

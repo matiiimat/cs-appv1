@@ -9,7 +9,7 @@ export default function CheckEmailPage() {
         <div className="mt-6 text-sm text-muted-foreground space-y-2">
           <p>If you don’t see it, check your spam folder.</p>
           <p>
-            Having trouble? Contact <a href="mailto:support@aidly.me" className="underline">Aidly Support</a>.
+            Having trouble? Contact <a href="mailto:support@aidlyhq.com" className="underline">Aidly Support</a>.
           </p>
         </div>
       </div>

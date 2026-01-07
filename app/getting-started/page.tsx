@@ -362,10 +362,10 @@ export default function GettingStartedPage() {
                 <p className="text-green-800 dark:text-green-200 leading-relaxed">
                   We&apos;re here to help with setup, migration, and best practices. Email{" "}
                   <a
-                    href="mailto:support@aidly.me"
+                    href="mailto:support@aidlyhq.com"
                     className="text-green-700 dark:text-green-300 hover:underline font-medium"
                   >
-                    support@aidly.me
+                    support@aidlyhq.com
                   </a>.
                 </p>
               </div>

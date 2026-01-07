@@ -177,7 +177,7 @@ export default function TermsPage() {
                 <li>These Terms, order forms, the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link>, and the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/dpa">DPA</Link> constitute the entire agreement.</li>
                 <li>You may not assign these Terms without our consent; we may assign in connection with a merger, acquisition, or sale.</li>
                 <li>If any provision is unenforceable, the remainder remains in effect. Failure to enforce is not a waiver.</li>
-                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidly.me">support@aidly.me</a>.</li>
+                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</li>
               </ul>
             </div>
           </section>

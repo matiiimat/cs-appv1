@@ -53,7 +53,7 @@ export default function CareersPage() {
                 </ul>
               </div>
               <div className="mt-4">
-                <a href="mailto:mathieu@aidly.me?subject=Backend%20Developer%20Application" className="text-[#3872B9] underline hover:text-[#B33275]">Apply via email</a>
+                <a href="mailto:mathieu@aidlyhq.com?subject=Backend%20Developer%20Application" className="text-[#3872B9] underline hover:text-[#B33275]">Apply via email</a>
               </div>
             </div>
 
@@ -77,12 +77,12 @@ export default function CareersPage() {
                 </ul>
               </div>
               <div className="mt-4">
-                <a href="mailto:mathieu@aidly.me?subject=Business%20Developer%20Application" className="text-[#3872B9] underline hover:text-[#B33275]">Apply via email</a>
+                <a href="mailto:mathieu@aidlyhq.com?subject=Business%20Developer%20Application" className="text-[#3872B9] underline hover:text-[#B33275]">Apply via email</a>
               </div>
             </div>
 
             <div className="text-sm text-slate-500 dark:text-white/50">
-              Don&apos;t see a fit? Send us a note at <a href="mailto:mathieu@aidly.me" className="text-[#3872B9] underline hover:text-[#B33275]">mathieu@aidly.me</a>.
+              Don&apos;t see a fit? Send us a note at <a href="mailto:mathieu@aidlyhq.com" className="text-[#3872B9] underline hover:text-[#B33275]">mathieu@aidlyhq.com</a>.
             </div>
           </section>
         </main>
