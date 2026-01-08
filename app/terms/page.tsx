@@ -194,8 +194,8 @@ export default function TermsPage() {
               <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-white/40">
                 <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
                 <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
-                <Link href="/careers" className="transition-colors hover:text-slate-900 dark:hover:text-white">Careers</Link>
                 <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
+                <Link href="/subprocessors" className="transition-colors hover:text-slate-900 dark:hover:text-white">Subprocessors</Link>
               </div>
             </div>
           </div>
