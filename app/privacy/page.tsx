@@ -139,12 +139,29 @@ export default function PrivacyPage() {
             </div>
 
             <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Law Enforcement and Legal Compliance</h2>
+              <p className="mt-2">
+                We may disclose personal data when required or permitted by law, including:
+              </p>
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li><span className="font-medium text-slate-900 dark:text-white">Legal Requests:</span> We respond to valid legal requests from French, EU, and other law enforcement or regulatory authorities, including court orders, subpoenas, search warrants, and national security requests where legally required.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Illegal Activity:</span> We may investigate and disclose information to authorities when we reasonably believe an account is engaged in illegal activity, fraud, money laundering, or violations of sanctions or counter-terrorism financing laws.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Regulatory Compliance:</span> We cooperate with CNIL (French data protection authority), financial regulators, and other government agencies as required by French and EU law.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Data Preservation:</span> We may preserve account data for law enforcement or regulatory investigations as required by law, even after account termination. In some cases, we may be prohibited by law from notifying you of such preservation or disclosure.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Safety and Security:</span> We may disclose information to protect the rights, property, or safety of Aidly, our users, or the public as permitted by applicable law.</li>
+              </ul>
+              <p className="mt-2">
+                When responding to legal requests, we review each request for legal sufficiency and may challenge overbroad or inappropriate requests. We balance our legal obligations with our commitment to protecting user privacy.
+              </p>
+            </div>
+
+            <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Rights</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li><span className="font-medium text-slate-900 dark:text-white">Data Subject Rights:</span> You have the right to access, rectification, erasure, restriction, portability, and objection (subject to legal limits).</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Right to Erasure (Data Deletion):</span> You can delete your account and all associated data at any time through your account settings. Data is immediately deleted from production systems. Backups are automatically purged within 30 days. Billing and audit records may be retained as required by law.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Right to Erasure (Data Deletion):</span> You can delete your account and all associated data at any time through your account settings. Data is immediately deleted from production systems. Backups are automatically purged within 30 days. Billing and audit records may be retained as required by law. In cases of ongoing legal or regulatory investigations, we may be required to retain data beyond normal retention periods.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Consent Withdrawal:</span> For optional marketing communications, you may withdraw consent at any time via unsubscribe links. To withdraw consent for the Service entirely, delete your account via your account settings or by contacting support.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Exercising Your Rights:</span> Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> to exercise any of your rights, or use the self-service options in your account settings.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Exercising Your Rights:</span> Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> to exercise any of your rights, or use the self-service options in your account settings. In some cases, we may be unable to fulfill requests due to legal obligations or ongoing investigations.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Complaints:</span> You have the right to lodge a complaint with your local supervisory authority. In France: <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.cnil.fr/" target="_blank" rel="noopener noreferrer">CNIL</a>.</li>
               </ul>
             </div>
@@ -152,8 +169,13 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Cookies</h2>
               <p className="mt-2">
-                We keep cookies minimal and do not use third‑party analytics cookies at launch. See our
-                <Link className="text-[#3872B9] underline hover:text-[#B33275] ml-1" href="/cookies">Cookies Policy</Link> for details.
+                This website does not use cookies or similar tracking technologies. We do not place any cookies on your device for analytics, advertising, or any other purpose.
+              </p>
+              <p className="mt-2">
+                Your browser may store essential session data required for authentication (magic link sign‑in), but this is strictly limited to functional requirements and does not track your activity across the site or other websites.
+              </p>
+              <p className="mt-2">
+                As we do not use cookies, no cookie consent banner is required or displayed. If we introduce cookies in the future, we will update this policy and implement appropriate consent mechanisms in compliance with GDPR and French law (CNIL requirements).
               </p>
             </div>
 
@@ -175,10 +197,10 @@ export default function PrivacyPage() {
                 <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly</span>
               </div>
               <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-white/40">
+                <Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link>
                 <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
                 <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
                 <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
-                <Link href="/subprocessors" className="transition-colors hover:text-slate-900 dark:hover:text-white">Subprocessors</Link>
               </div>
             </div>
           </div>
