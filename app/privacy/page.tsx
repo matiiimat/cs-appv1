@@ -128,9 +128,8 @@ export default function PrivacyPage() {
                 We retain data according to the following schedule:
               </p>
               <ul className="mt-2 list-disc pl-5 space-y-2">
-                <li><span className="font-medium text-slate-900 dark:text-white">Message content:</span> Retained during your active subscription. Upon account deletion, data is immediately removed from production systems. Backups are automatically purged within 30 days.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Account data:</span> Retained during your active subscription. Upon account deletion, data is immediately removed from production systems, except where longer retention is required by law (e.g., billing records).</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Backups:</span> Message and account data may persist in backups for up to 30 days after deletion from production systems.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Active subscription:</span> Message content and account data are retained during your active subscription.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Account deletion:</span> Upon account deletion, all data is immediately removed from production systems. Backups are automatically purged within 30 days.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Audit logs:</span> Security and activity logs are retained for 1 year for security and compliance purposes. These may be retained after account deletion as required for legal and security obligations.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Billing records:</span> Retained as required by French tax law (typically 10 years), even after account deletion.</li>
               </ul>
