@@ -276,49 +276,43 @@ export class GDPRModel {
         [organizationId]
       );
 
-      // 2. Delete draft replies
-      await client.query(
-        'DELETE FROM draft_replies WHERE organization_id = $1',
-        [organizationId]
-      );
-
-      // 3. Delete knowledge base entries
+      // 2. Delete knowledge base entries
       await client.query(
         'DELETE FROM knowledge_base_entries WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 4. Delete messages
+      // 3. Delete messages
       await client.query(
         'DELETE FROM messages WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 5. Delete organization settings
+      // 4. Delete organization settings
       await client.query(
         'DELETE FROM organization_settings WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 6. Delete email usage tracking
+      // 5. Delete email usage tracking
       await client.query(
         'DELETE FROM email_usage WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 7. Delete token usage tracking
+      // 6. Delete token usage tracking
       await client.query(
         'DELETE FROM token_usage WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 8. Delete users (stripe_customers may cascade)
+      // 7. Delete users (stripe_customers may cascade)
       await client.query(
         'DELETE FROM users WHERE organization_id = $1',
         [organizationId]
       );
 
-      // 9. Finally delete the organization
+      // 8. Finally delete the organization
       await client.query(
         'DELETE FROM organizations WHERE id = $1',
         [organizationId]
