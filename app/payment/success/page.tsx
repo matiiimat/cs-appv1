@@ -25,7 +25,7 @@ export default function PaymentSuccessPage() {
 
         <div className="text-sm text-gray-600 space-y-2 mt-6">
           <p>Having trouble? Contact{' '}
-            <a href="mailto:support@aidly.me" className="text-blue-600 underline">Aidly Support</a>
+            <a href="mailto:support@aidlyhq.com" className="text-blue-600 underline">Aidly Support</a>
           </p>
         </div>
       </div>

@@ -54,7 +54,7 @@ const emailForwardingGuides = [
 ]
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const { settings, updateSettings, saveSettings, planInfo } = useSettings()
+  const { settings, updateSettings, planInfo } = useSettings()
   const [step, setStep] = useState(1)
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
@@ -203,17 +203,24 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const handleComplete = async () => {
     setIsSaving(true)
     try {
-      await saveSettings()
-      onComplete()
+      // onComplete will save settings to database and mark onboarding as complete
+      await onComplete()
     } catch (error) {
-      console.error("Failed to save settings:", error)
+      console.error("Failed to complete onboarding:", error)
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleSkip = () => {
-    onComplete()
+  const handleSkip = async () => {
+    setIsSaving(true)
+    try {
+      await onComplete()
+    } catch (error) {
+      console.error("Failed to complete onboarding:", error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -533,7 +540,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         <div className="px-8 py-6 bg-muted/30 border-t flex items-center justify-between">
           <div>
             {actualStep === 1 && (
-              <Button variant="ghost" size="sm" onClick={handleSkip}>
+              <Button variant="ghost" size="sm" onClick={handleSkip} disabled={isSaving}>
                 Skip for now
               </Button>
             )}

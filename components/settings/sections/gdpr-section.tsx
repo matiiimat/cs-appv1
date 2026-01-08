@@ -336,7 +336,7 @@ export function GDPRSection() {
                 <a href="/dpa" className="hover:text-primary underline">
                   Data Processing Agreement
                 </a>
-                <a href="mailto:support@aidly.me" className="hover:text-primary underline">
+                <a href="mailto:support@aidlyhq.com" className="hover:text-primary underline">
                   Contact Support
                 </a>
               </div>

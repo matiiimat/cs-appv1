@@ -37,7 +37,7 @@ export default function CookiesPage() {
         <div>
           <h2 className="text-lg font-semibold">Contact</h2>
           <p className="mt-2">
-            Questions? Email <a className="underline" href="mailto:support@aidly.me">support@aidly.me</a>.
+            Questions? Email <a className="underline" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.
           </p>
         </div>
       </section>

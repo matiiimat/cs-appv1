@@ -152,7 +152,7 @@ export default function DpaPage() {
 
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">15. Contact</h2>
-              <p className="mt-2">Questions about this DPA? Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:legal@aidly.me">legal@aidly.me</a>.</p>
+              <p className="mt-2">Questions about this DPA? Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</p>
             </div>
           </section>
         </main>

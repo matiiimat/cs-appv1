@@ -42,7 +42,7 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Data Controller and Contact</h2>
               <p className="mt-2">
                 For account, billing, and site usage data, the data controller is: <span className="font-medium">Aidly</span>, Paris, France.
-                You can contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidly.me">support@aidly.me</a>.
+                You can contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.
               </p>
               <p className="mt-2">
                 For customer message content processed on behalf of your organization, we act as a data processor under GDPR. See our
@@ -132,7 +132,7 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Rights</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>Access, rectification, erasure, restriction, portability, and objection (subject to legal limits).</li>
-                <li>To exercise your rights, contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidly.me">support@aidly.me</a>.</li>
+                <li>To exercise your rights, contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</li>
                 <li>You have the right to lodge a complaint with your local authority. In France: <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.cnil.fr/">CNIL</a>.</li>
               </ul>
             </div>
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Contact</h2>
               <p className="mt-2">
-                Questions? Email <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidly.me">support@aidly.me</a>.
+                Questions? Email <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.
               </p>
             </div>
           </section>
