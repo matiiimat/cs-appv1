@@ -116,6 +116,18 @@ export const auth = betterAuth({
             try {
               const result = await ensureProvisioned(email, user.name || undefined)
               console.log(`[databaseHooks] Provisioned org ${result.organizationId} for verified user: ${email}`)
+
+              // Store terms acceptance timestamp
+              try {
+                await db
+                  .updateTable('user')
+                  .set({ terms_accepted_at: new Date() })
+                  .where('id', '=', user.id)
+                  .execute()
+                console.log(`[databaseHooks] Stored terms acceptance timestamp for user: ${email}`)
+              } catch (e) {
+                console.error(`[databaseHooks] Failed to store terms acceptance timestamp for ${email}:`, e)
+              }
             } catch (e) {
               // Log but don't fail - protected layout will retry if needed
               console.error(`[databaseHooks] Failed to provision for ${email}:`, e)

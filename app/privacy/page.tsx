@@ -30,7 +30,7 @@ export default function PrivacyPage() {
 
         <main className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Privacy Policy</h1>
-          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: {new Date().getFullYear()}</p>
+          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: January 2026</p>
 
           <section className="mt-8 space-y-6 text-sm leading-6 text-slate-600 dark:text-white/70">
             <p>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Data Controller and Contact</h2>
               <p className="mt-2">
-                For account, billing, and site usage data, the data controller is: <span className="font-medium">Aidly</span>, Paris, France.
+                For account, billing, and site usage data, the data controller is: <span className="font-medium">Aidly, Paris, France</span>.
                 You can contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.
               </p>
               <p className="mt-2">
@@ -84,12 +84,15 @@ export default function PrivacyPage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">AI Providers and BYO Keys</h2>
-              <p className="mt-2">
-                If you connect your own AI provider or endpoint, selected content may be sent to that provider under your configuration.
-                Such processing is governed by that provider&apos;s terms and privacy policy; you are responsible for ensuring lawful use and
-                appropriate configuration.
-              </p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">AI Providers and Processing</h2>
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li>
+                  <span className="font-medium text-slate-900 dark:text-white">Free and Plus Plans:</span> We use Anthropic Claude to process message content for AI-assisted triage and response generation. Message content is sent to Anthropic&apos;s API under their <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer">Commercial Terms</a> and <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. Anthropic does not train on data submitted via their API.
+                </li>
+                <li>
+                  <span className="font-medium text-slate-900 dark:text-white">Pro Plan (Bring Your Own Key):</span> If you configure your own AI provider or API key, selected content is sent directly to that provider under your account. Such processing is governed by that provider&apos;s terms and privacy policy; you are responsible for ensuring lawful use and appropriate configuration.
+                </li>
+              </ul>
             </div>
 
             <div>
@@ -122,18 +125,28 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Data Retention</h2>
               <p className="mt-2">
-                We retain data for as long as needed to provide the Service and meet legal obligations. We follow industry‑standard
-                retention practices and document details in our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/dpa">DPA</Link>. You may request deletion of your
-                organization&apos;s data by contacting support.
+                We retain data according to the following schedule:
+              </p>
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li><span className="font-medium text-slate-900 dark:text-white">Message content:</span> Retained during your active subscription and for 90 days after subscription termination or account closure.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Account data:</span> Retained during your active subscription and for 90 days after termination, except where longer retention is required by law.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Backups:</span> Message and account data may persist in backups for up to 30 days after deletion from production systems.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Audit logs:</span> Security and activity logs are retained for 1 year for security and compliance purposes.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Billing records:</span> Retained as required by French tax law (typically 10 years).</li>
+              </ul>
+              <p className="mt-2">
+                You may delete your account and request deletion of your organization&apos;s data at any time through your account settings, or by contacting <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>. We will comply with deletion requests subject to legal retention requirements.
               </p>
             </div>
 
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Rights</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
-                <li>Access, rectification, erasure, restriction, portability, and objection (subject to legal limits).</li>
-                <li>To exercise your rights, contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</li>
-                <li>You have the right to lodge a complaint with your local authority. In France: <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.cnil.fr/">CNIL</a>.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Data Subject Rights:</span> You have the right to access, rectification, erasure, restriction, portability, and objection (subject to legal limits).</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Right to Erasure (Data Deletion):</span> You can delete your account and all associated data at any time through your account settings. This will initiate deletion according to our retention schedule (90 days for message content, 30 days for backups). You may also request immediate deletion by contacting support, subject to legal retention requirements.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Consent Withdrawal:</span> For optional marketing communications, you may withdraw consent at any time via unsubscribe links. To withdraw consent for the Service entirely, terminate your account via your account settings or by contacting support.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Exercising Your Rights:</span> Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> to exercise any of your rights, or use the self-service options in your account settings.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Complaints:</span> You have the right to lodge a complaint with your local supervisory authority. In France: <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.cnil.fr/" target="_blank" rel="noopener noreferrer">CNIL</a>.</li>
               </ul>
             </div>
 

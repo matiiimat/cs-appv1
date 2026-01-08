@@ -30,7 +30,7 @@ export default function TermsPage() {
 
         <main className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Terms of Service</h1>
-          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: {new Date().getFullYear()}</p>
+          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: January 2026</p>
 
           <section className="mt-8 space-y-6 text-sm leading-6 text-slate-600 dark:text-white/70">
             <div>
@@ -64,7 +64,7 @@ export default function TermsPage() {
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>You retain ownership of content you and your customers provide (e.g., emails, subjects, attachments, metadata).</li>
                 <li>You grant us a limited, worldwide, non‑exclusive, revocable, royalty‑free license to host, process, and transmit content solely to provide the Service (including receiving, storing, encrypting, analyzing for triage, and sending emails).</li>
-                <li>Bring‑Your‑Own AI Keys: If you connect your own AI provider or endpoint, you authorize sending content to that provider. Such use is under that provider&apos;s terms and privacy practices; you are responsible for configuring and complying with them.</li>
+                <li>AI Processing: On Free and Plus plans, message content is processed by Anthropic Claude for AI‑assisted features. Anthropic does not train on this data. On Pro plans with Bring‑Your‑Own‑Key (BYOK), if you connect your own AI provider or endpoint, you authorize sending content to that provider. Such use is under that provider&apos;s terms and privacy practices; you are responsible for configuring and complying with them.</li>
               </ul>
             </div>
 
@@ -156,14 +156,14 @@ export default function TermsPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">16. Term and Termination</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>These Terms remain in effect while you use the Service.</li>
-                <li>We may suspend or terminate for violations, nonpayment, or risks to the Service. You may terminate by canceling your subscription and ceasing use.</li>
-                <li>Upon termination, access ceases. We may retain data as required by law or for legitimate business needs; you may request export or deletion subject to our data retention practices.</li>
+                <li>We may suspend or terminate for violations, nonpayment, or risks to the Service. You may terminate at any time by deleting your account through your account settings or by canceling your subscription and ceasing use.</li>
+                <li>Upon termination, access ceases. We will delete data according to our retention schedule (see Section 17). You may request export or immediate deletion by contacting support, subject to legal retention requirements.</li>
               </ul>
             </div>
 
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">17. Data Retention</h2>
-              <p className="mt-2">We retain content for the duration of your subscription and for a limited period thereafter to meet legal and operational needs (e.g., backups and logs). We follow industry‑standard retention windows and document them in our DPA/subprocessor disclosures. You may request deletion consistent with our Privacy Policy and DPA.</p>
+              <p className="mt-2">We retain content for the duration of your subscription and for 90 days thereafter. Backups may persist for up to 30 additional days. Audit logs are retained for 1 year, and billing records as required by law (typically 10 years under French tax law). See our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link> for complete retention details. You may request deletion consistent with our Privacy Policy and DPA.</p>
             </div>
 
             <div>
@@ -177,7 +177,7 @@ export default function TermsPage() {
                 <li>These Terms, order forms, the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link>, and the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/dpa">DPA</Link> constitute the entire agreement.</li>
                 <li>You may not assign these Terms without our consent; we may assign in connection with a merger, acquisition, or sale.</li>
                 <li>If any provision is unenforceable, the remainder remains in effect. Failure to enforce is not a waiver.</li>
-                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</li>
+                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> or by mail at Aidly, Paris, France.</li>
               </ul>
             </div>
           </section>

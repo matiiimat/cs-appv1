@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("")
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileReady, setTurnstileReady] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const turnstileWidgetId = useRef<string | null>(null)
   const turnstileContainerRef = useRef<HTMLDivElement>(null)
 
@@ -80,6 +81,13 @@ export default function LoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    // Require terms agreement
+    if (!agreedToTerms) {
+      setStatus("error")
+      setMessage("You must agree to the Terms of Service and Privacy Policy to continue.")
+      return
+    }
 
     // Require Turnstile token if site key is configured
     if (siteKey && !turnstileToken) {
@@ -143,7 +151,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-semibold text-center">Sign in</h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">We&apos;ll email you a magic link to sign in.</p>
-          <form onSubmit={onSubmit} className="mt-6 space-y-3">
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <input
               type="email"
               required
@@ -152,10 +160,36 @@ export default function LoginPage() {
               placeholder="you@example.com"
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             />
+
+            {/* Legal consent checkbox */}
+            <label className="flex items-start gap-2 cursor-pointer text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+              />
+              <span>
+                By continuing, you agree to our{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#3872B9] underline hover:text-[#B33275]">
+                  Terms
+                </a>
+                ,{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#3872B9] underline hover:text-[#B33275]">
+                  Privacy Policy
+                </a>
+                , and{" "}
+                <a href="/dpa" target="_blank" rel="noopener noreferrer" className="text-[#3872B9] underline hover:text-[#B33275]">
+                  Data Processing Agreement
+                </a>
+                .
+              </span>
+            </label>
+
             <Button
               type="submit"
               className="w-full"
-              disabled={status === "sending" || (!!siteKey && !turnstileToken)}
+              disabled={status === "sending" || !agreedToTerms || (!!siteKey && !turnstileToken)}
             >
               {status === "sending" ? "Sending…" : "Send magic link"}
             </Button>
