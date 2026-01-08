@@ -128,14 +128,14 @@ export default function PrivacyPage() {
                 We retain data according to the following schedule:
               </p>
               <ul className="mt-2 list-disc pl-5 space-y-2">
-                <li><span className="font-medium text-slate-900 dark:text-white">Message content:</span> Retained during your active subscription and for 90 days after subscription termination or account closure.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Account data:</span> Retained during your active subscription and for 90 days after termination, except where longer retention is required by law.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Message content:</span> Retained during your active subscription. Upon account deletion, data is immediately removed from production systems. Backups are automatically purged within 30 days.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Account data:</span> Retained during your active subscription. Upon account deletion, data is immediately removed from production systems, except where longer retention is required by law (e.g., billing records).</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Backups:</span> Message and account data may persist in backups for up to 30 days after deletion from production systems.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Audit logs:</span> Security and activity logs are retained for 1 year for security and compliance purposes.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Billing records:</span> Retained as required by French tax law (typically 10 years).</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Audit logs:</span> Security and activity logs are retained for 1 year for security and compliance purposes. These may be retained after account deletion as required for legal and security obligations.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Billing records:</span> Retained as required by French tax law (typically 10 years), even after account deletion.</li>
               </ul>
               <p className="mt-2">
-                You may delete your account and request deletion of your organization&apos;s data at any time through your account settings, or by contacting <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>. We will comply with deletion requests subject to legal retention requirements.
+                You may delete your account and request deletion of your organization&apos;s data at any time through your account settings, or by contacting <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>. Data is immediately deleted from production systems, subject to legal retention requirements for billing and audit records.
               </p>
             </div>
 
@@ -143,8 +143,8 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Rights</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li><span className="font-medium text-slate-900 dark:text-white">Data Subject Rights:</span> You have the right to access, rectification, erasure, restriction, portability, and objection (subject to legal limits).</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Right to Erasure (Data Deletion):</span> You can delete your account and all associated data at any time through your account settings. This will initiate deletion according to our retention schedule (90 days for message content, 30 days for backups). You may also request immediate deletion by contacting support, subject to legal retention requirements.</li>
-                <li><span className="font-medium text-slate-900 dark:text-white">Consent Withdrawal:</span> For optional marketing communications, you may withdraw consent at any time via unsubscribe links. To withdraw consent for the Service entirely, terminate your account via your account settings or by contacting support.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Right to Erasure (Data Deletion):</span> You can delete your account and all associated data at any time through your account settings. Data is immediately deleted from production systems. Backups are automatically purged within 30 days. Billing and audit records may be retained as required by law.</li>
+                <li><span className="font-medium text-slate-900 dark:text-white">Consent Withdrawal:</span> For optional marketing communications, you may withdraw consent at any time via unsubscribe links. To withdraw consent for the Service entirely, delete your account via your account settings or by contacting support.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Exercising Your Rights:</span> Contact <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> to exercise any of your rights, or use the self-service options in your account settings.</li>
                 <li><span className="font-medium text-slate-900 dark:text-white">Complaints:</span> You have the right to lodge a complaint with your local supervisory authority. In France: <a className="text-[#3872B9] underline hover:text-[#B33275]" href="https://www.cnil.fr/" target="_blank" rel="noopener noreferrer">CNIL</a>.</li>
               </ul>

@@ -137,8 +137,7 @@ export default function DpaPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">13. Return or Deletion</h2>
               <p className="mt-2">
-                Upon termination of the Service, at the Controller&apos;s choice and subject to legal obligations, we will delete or return
-                personal data according to our retention schedule (90 days for message content, 30 additional days for backups). The Controller may initiate deletion at any time through account settings or by contacting support.
+                Upon termination of the Service, at the Controller&apos;s choice and subject to legal obligations, we will immediately delete personal data from production systems. Backups are automatically purged within 30 days. The Controller may initiate deletion at any time through account settings or by contacting support. Audit logs and billing records may be retained as required by legal and regulatory obligations.
               </p>
             </div>
 

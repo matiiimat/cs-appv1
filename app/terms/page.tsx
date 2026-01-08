@@ -157,13 +157,13 @@ export default function TermsPage() {
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>These Terms remain in effect while you use the Service.</li>
                 <li>We may suspend or terminate for violations, nonpayment, or risks to the Service. You may terminate at any time by deleting your account through your account settings or by canceling your subscription and ceasing use.</li>
-                <li>Upon termination, access ceases. We will delete data according to our retention schedule (see Section 17). You may request export or immediate deletion by contacting support, subject to legal retention requirements.</li>
+                <li>Upon termination, access ceases. Your data is immediately deleted from production systems (see Section 17 for details). You may request data export before deletion by contacting support.</li>
               </ul>
             </div>
 
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">17. Data Retention</h2>
-              <p className="mt-2">We retain content for the duration of your subscription and for 90 days thereafter. Backups may persist for up to 30 additional days. Audit logs are retained for 1 year, and billing records as required by law (typically 10 years under French tax law). See our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link> for complete retention details. You may request deletion consistent with our Privacy Policy and DPA.</p>
+              <p className="mt-2">We retain content for the duration of your subscription. Upon account deletion, we immediately delete data from production systems. Backups are automatically purged within 30 days. Audit logs may be retained for 1 year for security and legal purposes, and billing records as required by law (typically 10 years under French tax law). See our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link> for complete retention details.</p>
             </div>
 
             <div>
