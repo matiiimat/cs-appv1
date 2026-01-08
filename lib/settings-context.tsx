@@ -138,7 +138,6 @@ const defaultSettings: Settings = {
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'
 const THEME_STORAGE_KEY = 'aidly-theme'
-const ONBOARDING_STORAGE_KEY = 'aidly-onboarding-completed'
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   // Keep SSR output stable: initialize with defaults; sync theme after mount
@@ -156,12 +155,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        // Check onboarding status from localStorage
-        let onboardingCompleted = false
-        try {
-          onboardingCompleted = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true'
-        } catch {}
-
         const response = await fetch('/api/organization/settings')
         if (response.ok) {
           const data = await response.json()
@@ -187,10 +180,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           }
           if (typeof data.hasSavedSettings === 'boolean') {
             setHasSavedSettings(data.hasSavedSettings)
-            // If user has saved settings before, they've completed onboarding
-            if (data.hasSavedSettings) {
-              onboardingCompleted = true
-            }
+            // Use database settings as single source of truth for onboarding status
+            setHasCompletedOnboarding(data.hasSavedSettings)
           }
         } else {
           console.error('Failed to load settings from database')
@@ -216,7 +207,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        setHasCompletedOnboarding(onboardingCompleted)
         setIsSettingsLoaded(true)
 
         // Load plan info
@@ -243,12 +233,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Check onboarding from localStorage even on error
-        let onboardingCompleted = false
-        try {
-          onboardingCompleted = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true'
-        } catch {}
-        setHasCompletedOnboarding(onboardingCompleted)
         setIsSettingsLoaded(true)
       }
     }
@@ -316,11 +300,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }))
   }
 
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
+    // Save settings to database to mark onboarding as complete
+    // This ensures hasSavedSettings becomes true
     setHasCompletedOnboarding(true)
     try {
-      localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true')
-    } catch {}
+      await saveSettings()
+    } catch (error) {
+      console.error('Failed to save settings during onboarding completion:', error)
+    }
   }
 
   const refreshPlanInfo = async () => {
