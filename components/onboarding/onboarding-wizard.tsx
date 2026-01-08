@@ -54,7 +54,7 @@ const emailForwardingGuides = [
 ]
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const { settings, updateSettings, saveSettings, planInfo } = useSettings()
+  const { settings, updateSettings, planInfo } = useSettings()
   const [step, setStep] = useState(1)
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
