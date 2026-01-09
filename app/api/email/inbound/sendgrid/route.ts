@@ -97,6 +97,10 @@ async function handler(request: NextRequest) {
       return NextResponse.json({ error: 'Missing sender email' }, { status: 400 })
     }
 
+    // Extract Message-ID from headers for tracking inbound emails
+    // This is used for spam prevention - only messages with inbound_message_id can be sent as replies
+    const messageId = headers['message-id'] || headers['messageid'] || `inbound-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
     const rawMetadata = {
       channel: 'email' as const,
       provider: 'sendgrid' as const,
@@ -113,6 +117,7 @@ async function handler(request: NextRequest) {
       message: text || '(no body)',
       metadata: safeMetadata,
       category: 'General Inquiry',
+      inbound_message_id: messageId,
     })
 
     await MessageModel.addActivity(orgId, newMessage.id, null, 'received', { source: 'email' })
