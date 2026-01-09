@@ -99,7 +99,9 @@ async function handler(request: NextRequest) {
 
     // Extract Message-ID from headers for tracking inbound emails
     // This is used for spam prevention - only messages with inbound_message_id can be sent as replies
-    const messageId = headers['message-id'] || headers['messageid'] || `inbound-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    // Message-ID is a standard email header (RFC 5322) that is globally unique
+    // If missing, generate a fallback with timestamp + random + org ID for guaranteed uniqueness
+    const messageId = headers['message-id'] || headers['messageid'] || `inbound-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${orgId.slice(0, 8)}`
 
     const rawMetadata = {
       channel: 'email' as const,
