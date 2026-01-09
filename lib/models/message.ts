@@ -26,6 +26,7 @@ export const MessageSchema = z.object({
   is_generating: z.boolean().default(false),
   edit_history: z.array(z.any()).default([]),
   metadata: z.record(z.string(), z.any()).default({}),
+  inbound_message_id: z.string().nullable(),
   created_at: z.date(),
   updated_at: z.date(),
 });
