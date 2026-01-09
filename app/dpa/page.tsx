@@ -30,7 +30,7 @@ export default function DpaPage() {
 
         <main className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Data Processing Agreement (DPA)</h1>
-          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: {new Date().getFullYear()}</p>
+          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: January 2026</p>
 
           <section className="mt-8 space-y-6 text-sm leading-6 text-slate-600 dark:text-white/70">
             <div>
@@ -137,8 +137,7 @@ export default function DpaPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">13. Return or Deletion</h2>
               <p className="mt-2">
-                Upon termination of the Service, at the Controller&apos;s choice and subject to legal obligations, we will delete or return
-                personal data and delete existing copies within a reasonable period from backups and logs.
+                Upon termination of the Service, at the Controller&apos;s choice and subject to legal obligations, we will immediately delete personal data from production systems. Backups are automatically purged within 30 days. The Controller may initiate deletion at any time through account settings or by contacting support. Audit logs and billing records may be retained as required by legal and regulatory obligations.
               </p>
             </div>
 
@@ -166,9 +165,9 @@ export default function DpaPage() {
                 <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly</span>
               </div>
               <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-white/40">
+                <Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link>
                 <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
                 <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
-                <Link href="/careers" className="transition-colors hover:text-slate-900 dark:hover:text-white">Careers</Link>
                 <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
               </div>
             </div>

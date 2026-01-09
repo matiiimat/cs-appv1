@@ -936,7 +936,7 @@ export default function LuxuryLanding() {
                 },
                 {
                   q: "What does AI usage cost?",
-                  a: "Aidly requires you to bring your own API key from your preferred AI provider (OpenAI, Anthropic, etc.). You pay the provider directly for token usage, which varies based on response length and model choice. This gives you full control over costs and provider choice, and is still a fraction of the cost of a support agent."
+                  a: "Plus plan: AI is included — no API key needed, no extra costs. We handle everything. Pro plan: Bring your own API key (OpenAI, Anthropic, etc.) and pay your provider directly for token usage. This gives you full control over costs and provider choice. Either way, it's a fraction of the cost of a support agent."
                 },
                 {
                   q: "What if the AI gives wrong answers?",
@@ -973,9 +973,9 @@ export default function LuxuryLanding() {
               </div>
 
               <div className="flex items-center gap-8 text-sm text-slate-500 dark:text-white/40">
+                <Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link>
                 <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
                 <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
-                {/*<Link href="/careers" className="transition-colors hover:text-slate-900 dark:hover:text-white">Careers</Link>*/}
                 <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
               </div>
 

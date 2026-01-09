@@ -26,6 +26,7 @@ export const MessageSchema = z.object({
   is_generating: z.boolean().default(false),
   edit_history: z.array(z.any()).default([]),
   metadata: z.record(z.string(), z.any()).default({}),
+  inbound_message_id: z.string().nullable(),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -40,6 +41,7 @@ export const CreateMessageSchema = z.object({
   message: z.string().min(1),
   category: z.string().optional(),
   metadata: z.record(z.string(), z.any()).optional(),
+  inbound_message_id: z.string().optional(), // Only set by SendGrid webhook, not via API
 });
 
 export const UpdateMessageSchema = z.object({
@@ -166,8 +168,8 @@ export class MessageModel {
     const result = await db.query(`
       INSERT INTO messages (
         organization_id, ticket_id, customer_name, customer_email,
-        subject, message, category, metadata, status, ai_reviewed
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        subject, message, category, metadata, status, ai_reviewed, inbound_message_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `, [
       organizationId,
@@ -179,7 +181,8 @@ export class MessageModel {
       messageData.category || null,
       JSON.stringify(messageData.metadata || {}),
       'new',
-      false
+      false,
+      messageData.inbound_message_id || null
     ]);
 
     const dbRow = result.rows[0];

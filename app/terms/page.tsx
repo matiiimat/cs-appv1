@@ -30,7 +30,7 @@ export default function TermsPage() {
 
         <main className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Terms of Service</h1>
-          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: {new Date().getFullYear()}</p>
+          <p className="mt-3 text-slate-500 dark:text-white/50">Last updated: January 2026</p>
 
           <section className="mt-8 space-y-6 text-sm leading-6 text-slate-600 dark:text-white/70">
             <div>
@@ -60,11 +60,28 @@ export default function TermsPage() {
             </div>
 
             <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">3a. Prohibited Activities</h2>
+              <p className="mt-2">You must not use the Service for any illegal purpose or in violation of any applicable laws. Prohibited activities include, but are not limited to:</p>
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li>Any activity that violates French, EU, or other applicable international law</li>
+                <li>Money laundering, fraud, financial crime, or other criminal activity</li>
+                <li>Distribution, promotion, or facilitation of illegal content, goods, or services</li>
+                <li>Violation of economic sanctions, export controls, or trade restrictions</li>
+                <li>Tax evasion or other regulatory violations</li>
+                <li>Infringement of intellectual property rights or other legal rights</li>
+                <li>Impersonation, deception, or misrepresentation</li>
+              </ul>
+              <p className="mt-2">
+                We reserve the right to immediately suspend or terminate accounts engaged in, or reasonably suspected of, illegal activity without prior notice. We will cooperate fully with law enforcement authorities and may be required to disclose account information as described in our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link>.
+              </p>
+            </div>
+
+            <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">4. Customer Content and License</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>You retain ownership of content you and your customers provide (e.g., emails, subjects, attachments, metadata).</li>
                 <li>You grant us a limited, worldwide, non‑exclusive, revocable, royalty‑free license to host, process, and transmit content solely to provide the Service (including receiving, storing, encrypting, analyzing for triage, and sending emails).</li>
-                <li>Bring‑Your‑Own AI Keys: If you connect your own AI provider or endpoint, you authorize sending content to that provider. Such use is under that provider&apos;s terms and privacy practices; you are responsible for configuring and complying with them.</li>
+                <li>AI Processing: On Free and Plus plans, message content is processed by Anthropic Claude for AI‑assisted features. Anthropic does not train on this data. On Pro plans with Bring‑Your‑Own‑Key (BYOK), if you connect your own AI provider or endpoint, you authorize sending content to that provider. Such use is under that provider&apos;s terms and privacy practices; you are responsible for configuring and complying with them.</li>
               </ul>
             </div>
 
@@ -96,6 +113,22 @@ export default function TermsPage() {
                 <li>Our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link> explains how we collect and use personal data.</li>
                 <li>We use reasonable safeguards including encryption in transit and encryption at rest for sensitive fields, access controls, and monitoring. No method is 100% secure; you are responsible for your users and environment.</li>
               </ul>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">8a. Monitoring and Compliance</h2>
+              <p className="mt-2">
+                We reserve the right, but are not obligated, to monitor usage of the Service to:
+              </p>
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li>Detect, prevent, and investigate illegal activity, fraud, security threats, or violations of these Terms</li>
+                <li>Comply with legal obligations, including anti-money laundering, counter-terrorism financing, and sanctions laws</li>
+                <li>Respond to valid legal requests from law enforcement or regulatory authorities</li>
+                <li>Protect the rights, property, and safety of Aidly, our users, and the public</li>
+              </ul>
+              <p className="mt-2">
+                Any monitoring will be conducted in accordance with applicable law and our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link>. We implement appropriate safeguards to protect your privacy while fulfilling our legal and security obligations. We do not systematically monitor message content but may review account activity, usage patterns, and metadata for the purposes outlined above.
+              </p>
             </div>
 
             <div>
@@ -156,14 +189,23 @@ export default function TermsPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">16. Term and Termination</h2>
               <ul className="mt-2 list-disc pl-5 space-y-2">
                 <li>These Terms remain in effect while you use the Service.</li>
-                <li>We may suspend or terminate for violations, nonpayment, or risks to the Service. You may terminate by canceling your subscription and ceasing use.</li>
-                <li>Upon termination, access ceases. We may retain data as required by law or for legitimate business needs; you may request export or deletion subject to our data retention practices.</li>
+                <li>We may suspend or terminate for violations, nonpayment, or risks to the Service. You may terminate at any time by deleting your account through your account settings or by canceling your subscription and ceasing use.</li>
+                <li>We may immediately suspend or terminate your account without prior notice if:
+                  <ul className="mt-1 list-circle pl-5 space-y-1">
+                    <li>We reasonably believe you are engaged in illegal activity or prohibited activities as described in Section 3a</li>
+                    <li>We are required to do so by law, court order, law enforcement request, or regulatory authority</li>
+                    <li>Your use creates legal, regulatory, security, or reputational risk to Aidly or other users</li>
+                    <li>We detect activity that violates sanctions, anti-money laundering, or counter-terrorism financing laws</li>
+                  </ul>
+                </li>
+                <li>In cases of suspected illegal activity or when required by law, we may preserve account data for law enforcement or regulatory authorities and may be prohibited from notifying you of such preservation or disclosure.</li>
+                <li>Upon termination, access ceases. Your data is immediately deleted from production systems (see Section 17 for details), except where we are legally required to retain it for law enforcement, regulatory compliance, or ongoing investigations. You may request data export before deletion by contacting support, subject to legal restrictions.</li>
               </ul>
             </div>
 
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">17. Data Retention</h2>
-              <p className="mt-2">We retain content for the duration of your subscription and for a limited period thereafter to meet legal and operational needs (e.g., backups and logs). We follow industry‑standard retention windows and document them in our DPA/subprocessor disclosures. You may request deletion consistent with our Privacy Policy and DPA.</p>
+              <p className="mt-2">We retain content for the duration of your subscription. Upon account deletion, we immediately delete data from production systems. Backups are automatically purged within 30 days. Audit logs may be retained for 1 year for security and legal purposes, and billing records as required by law (typically 10 years under French tax law). See our <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link> for complete retention details.</p>
             </div>
 
             <div>
@@ -177,7 +219,7 @@ export default function TermsPage() {
                 <li>These Terms, order forms, the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/privacy">Privacy Policy</Link>, and the <Link className="text-[#3872B9] underline hover:text-[#B33275]" href="/dpa">DPA</Link> constitute the entire agreement.</li>
                 <li>You may not assign these Terms without our consent; we may assign in connection with a merger, acquisition, or sale.</li>
                 <li>If any provision is unenforceable, the remainder remains in effect. Failure to enforce is not a waiver.</li>
-                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a>.</li>
+                <li>We may provide notices to your account email; you may contact us at <a className="text-[#3872B9] underline hover:text-[#B33275]" href="mailto:support@aidlyhq.com">support@aidlyhq.com</a> or by mail at Aidly, Paris, France.</li>
               </ul>
             </div>
           </section>
@@ -192,9 +234,9 @@ export default function TermsPage() {
                 <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly</span>
               </div>
               <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-white/40">
+                <Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link>
                 <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
                 <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
-                <Link href="/careers" className="transition-colors hover:text-slate-900 dark:hover:text-white">Careers</Link>
                 <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
               </div>
             </div>

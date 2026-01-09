@@ -170,9 +170,30 @@ async function putHandler(request: NextRequest) {
 
     // If transitioning to 'sent', do it atomically and idempotently
     if (validatedUpdates.status === 'sent') {
+      // Fetch the message first to check if it's a reply and perform security checks
+      const message = await MessageModel.findById(orgId, id)
+      if (!message) {
+        return NextResponse.json({ error: "Message not found" }, { status: 404 })
+      }
+
       // Safely read boolean flag from metadata without using `any`
       const meta = (validatedUpdates as { metadata?: unknown }).metadata
       const skipEmail = !!(meta && typeof meta === 'object' && (meta as Record<string, unknown>)['close_without_reply'] === true)
+
+      // SECURITY: Only allow sending replies, not outbound-only messages
+      // This prevents spam by ensuring emails can only be sent in response to inbound messages
+      // The inbound_message_id is ONLY set by the SendGrid webhook, never by the API
+      // This means users cannot create arbitrary messages via POST and send them as spam
+      if (!skipEmail && !message.inbound_message_id) {
+        return NextResponse.json(
+          {
+            error: 'Cannot send outbound email without prior inbound message',
+            code: 'OUTBOUND_ONLY_NOT_ALLOWED',
+            details: 'Emails can only be sent as replies to received messages. This message was not created from an inbound email.'
+          },
+          { status: 403 }
+        )
+      }
 
       // USAGE LIMIT CHECK - Only if actually sending email
       if (!skipEmail) {
