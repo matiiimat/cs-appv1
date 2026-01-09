@@ -119,7 +119,8 @@ export const auth = betterAuth({
 
               // Store terms acceptance timestamp
               try {
-                await db
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (db as any)
                   .updateTable('user')
                   .set({ terms_accepted_at: new Date() })
                   .where('id', '=', user.id)
