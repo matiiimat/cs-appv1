@@ -32,6 +32,7 @@
     "@types/crypto-js": "^4.2.2",
     "@types/ioredis": "^4.28.10",
     "@types/pg": "^8.15.5",
+    "@vercel/analytics": "^1.6.1",
     "ai": "^5.0.108",
     "better-auth": "^1.4.5",
     "class-variance-authority": "^0.7.1",
