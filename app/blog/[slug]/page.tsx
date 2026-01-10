@@ -18,6 +18,20 @@ export async function generateStaticParams() {
   }))
 }
 
+// Category color mapping
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  'Comparison': { bg: 'bg-gradient-to-r from-[#3872B9]/10 to-[#3872B9]/20', text: 'text-[#3872B9]' },
+  'How-To': { bg: 'bg-gradient-to-r from-[#10B981]/10 to-[#10B981]/20', text: 'text-[#10B981]' },
+  'Strategy': { bg: 'bg-gradient-to-r from-[#B33275]/10 to-[#B33275]/20', text: 'text-[#B33275]' },
+  'Best Practices': { bg: 'bg-gradient-to-r from-[#8B5CF6]/10 to-[#8B5CF6]/20', text: 'text-[#8B5CF6]' },
+  'Industry Insights': { bg: 'bg-gradient-to-r from-[#F38135]/10 to-[#F38135]/20', text: 'text-[#F38135]' },
+  'Compliance': { bg: 'bg-gradient-to-r from-[#0EA5E9]/10 to-[#0EA5E9]/20', text: 'text-[#0EA5E9]' },
+  'Business Growth': { bg: 'bg-gradient-to-r from-[#EC4899]/10 to-[#EC4899]/20', text: 'text-[#EC4899]' },
+  'Business Case': { bg: 'bg-gradient-to-r from-[#14B8A6]/10 to-[#14B8A6]/20', text: 'text-[#14B8A6]' },
+  'Use Case': { bg: 'bg-gradient-to-r from-[#F59E0B]/10 to-[#F59E0B]/20', text: 'text-[#F59E0B]' },
+  'Customer Support': { bg: 'bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10', text: 'text-[#3872B9]' }
+}
+
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params
   const post = await getPostBySlug(slug)
@@ -53,6 +67,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   if (!post) {
     notFound()
   }
+
+  const colors = post.category ? categoryColors[post.category] : categoryColors['Customer Support']
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -101,7 +117,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {/* Header */}
           <header className="mb-12">
             {post.category && (
-              <div className="mb-4 inline-flex items-center rounded-full bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10 px-3 py-1 text-xs font-medium text-[#3872B9] dark:text-[#B33275]">
+              <div className={`mb-4 inline-flex items-center rounded-full ${colors.bg} px-3 py-1 text-xs font-medium ${colors.text}`}>
                 {post.category}
               </div>
             )}
