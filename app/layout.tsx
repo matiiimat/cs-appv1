@@ -22,8 +22,76 @@ const customFont = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Aidly",
-  description: "Grow your business, not your support costs, with intelligent automation that delivers faster, smarter support at lower cost.",
+  title: {
+    default: "Aidly - AI-Powered Customer Support Software for B2C Email Ticketing",
+    template: "%s | Aidly"
+  },
+  description: "Transform your B2C customer support with AI-powered email ticketing. Get intelligent draft responses in seconds. Reduce costs by 90% while delivering faster, more consistent service. GDPR compliant.",
+  keywords: [
+    "customer support software",
+    "email ticketing system",
+    "AI customer support",
+    "B2C helpdesk",
+    "customer service software",
+    "support ticket system",
+    "email support software",
+    "AI email assistant",
+    "customer support automation",
+    "ecommerce customer support",
+    "helpdesk software",
+    "customer service platform",
+    "support desk software",
+    "email management system",
+    "AI-powered support"
+  ],
+  authors: [{ name: "Aidly" }],
+  creator: "Aidly",
+  publisher: "Aidly",
+  metadataBase: new URL('https://aidly.me'),
+  alternates: {
+    canonical: '/'
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://aidly.me',
+    title: 'Aidly - AI-Powered Customer Support Software for B2C Email Ticketing',
+    description: 'Transform your B2C customer support with AI-powered email ticketing. Get intelligent draft responses in seconds. Reduce costs by 90%.',
+    siteName: 'Aidly',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Aidly - AI-Powered Customer Support'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aidly - AI-Powered Customer Support Software',
+    description: 'Transform your B2B customer support with AI-powered email ticketing. Reduce costs by 90%.',
+    images: ['/og-image.png'],
+    creator: '@aidly_ai'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here once you register with search engines
+    // Google Search Console: https://search.google.com/search-console
+    // Bing Webmaster Tools: https://www.bing.com/webmasters
+    // google: 'your-google-verification-code',
+    // bing: 'your-bing-verification-code',
+  },
 };
 
 export default function RootLayout({
