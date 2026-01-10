@@ -328,7 +328,7 @@ export default function LuxuryLanding() {
         "@type": "Organization",
         "name": "Aidly",
         "url": "https://aidly.me",
-        "logo": "https://aidly.ai/logo-60x.png",
+        "logo": "https://aidly.me/logo-60x.png",
         "description": "AI-powered customer support automation platform",
         "foundingDate": "2024",
         "address": {
@@ -347,7 +347,7 @@ export default function LuxuryLanding() {
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://aidly.ai/search?q={search_term_string}"
+            "urlTemplate": "https://aidly.me/search?q={search_term_string}"
           },
           "query-input": "required name=search_term_string"
         }
