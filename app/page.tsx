@@ -270,8 +270,128 @@ export default function LuxuryLanding() {
     },
   ]
 
+  // Structured Data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Aidly",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "Customer Support Software",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "USD",
+          "lowPrice": "0",
+          "highPrice": "249",
+          "offerCount": "3",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Free Trial",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            {
+              "@type": "Offer",
+              "name": "Plus Plan",
+              "price": annual ? "208" : "249",
+              "priceCurrency": "USD",
+              "billingIncrement": annual ? "year" : "month"
+            },
+            {
+              "@type": "Offer",
+              "name": "Pro Plan",
+              "price": annual ? "166" : "199",
+              "priceCurrency": "USD",
+              "billingIncrement": annual ? "year" : "month"
+            }
+          ]
+        },
+        "description": "AI-powered customer support software for B2B email ticketing. Get intelligent draft responses in seconds.",
+        "url": "https://aidly.me",
+        "image": "https://aidly.me/logo-60x.png",
+        "softwareVersion": "1.0",
+        "author": {
+          "@type": "Organization",
+          "name": "Aidly"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "5.0",
+          "ratingCount": "1",
+          "bestRating": "5"
+        }
+      },
+      {
+        "@type": "Organization",
+        "name": "Aidly",
+        "url": "https://aidly.me",
+        "logo": "https://aidly.me/logo-60x.png",
+        "description": "AI-powered customer support automation platform",
+        "foundingDate": "2024",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "FR"
+        },
+        "sameAs": [
+          "https://twitter.com/aidly_ai"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "name": "Aidly",
+        "url": "https://aidly.me",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://aidly.me/search?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What if it doesn't work for our specific industry/use case?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Aidly works across all industries - SaaS, e-commerce, healthcare, finance, and more. You provide industry-specific instructions and examples during setup. If you're not seeing results within 14 days, we'll refund your money."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What does AI usage cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Plus plan: AI is included — no API key needed, no extra costs. Pro plan: Bring your own API key and pay your provider directly for token usage."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is our data secure?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Absolutely. Your data is encrypted at rest, protected by TLS in transit, and customer PII is anonymized. We're fully GDPR compliant with EU-based infrastructure."
+            }
+          }
+        ]
+      }
+    ]
+  }
+
   return (
     <div className={`min-h-screen antialiased ${isDark ? 'dark' : ''}`}>
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+
       <div className="min-h-screen bg-[#FAFBFC] text-slate-900 dark:bg-[#0A0A0B] dark:text-white">
         {/* Noise texture overlay */}
         <div
@@ -323,6 +443,12 @@ export default function LuxuryLanding() {
             </Link>
 
             <div className="flex items-center gap-3">
+              <Link
+                href="/blog"
+                className="text-sm text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white transition-colors"
+              >
+                Blog
+              </Link>
               <Button variant="ghost" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white" asChild>
                 <Link href="/app/login">Sign in</Link>
               </Button>
@@ -431,10 +557,13 @@ export default function LuxuryLanding() {
               <span className="text-slate-600 dark:text-white/60">Now with GPT-4o & Claude support</span>
             </div>
 
-            {/* Main headline */}
+            {/* Main headline - SEO optimized with semantic hidden text */}
             <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-              <span className="block text-slate-900 dark:text-white">An entire support team.</span>
-              <span className="relative">
+              {/* Hidden SEO text for search engines */}
+              <span className="sr-only">Aidly - AI-Powered Customer Support Software for B2C Email Ticketing and Helpdesk</span>
+              {/* Visible marketing text */}
+              <span className="block text-slate-900 dark:text-white" aria-hidden="true">An entire support team.</span>
+              <span className="relative" aria-hidden="true">
                 <span className="bg-gradient-to-r from-[#3872B9] via-[#B33275] to-[#F38135] bg-clip-text text-transparent">
                   Deployed in minutes.
                 </span>
@@ -966,19 +1095,52 @@ export default function LuxuryLanding() {
         {/* Footer */}
         <footer className="border-t py-16 border-slate-200 bg-white dark:border-white/[0.06] dark:bg-transparent">
           <div className="mx-auto max-w-7xl px-6">
-            <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-              <div className="flex items-center gap-3">
-                <Image src="/logo-60x.png" alt="Aidly" width={24} height={24} className="rounded-lg" />
-                <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly. All rights reserved.</span>
+            <div className="grid gap-12 md:grid-cols-4 mb-12">
+              {/* Brand */}
+              <div className="md:col-span-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <Image src="/logo-60x.png" alt="Aidly" width={24} height={24} className="rounded-lg" />
+                  <span className="font-semibold text-slate-900 dark:text-white">Aidly</span>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-white/50">
+                  AI-powered customer support for B2B teams.
+                </p>
               </div>
 
-              <div className="flex items-center gap-8 text-sm text-slate-500 dark:text-white/40">
-                <Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link>
-                <Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link>
-                <Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link>
-                <Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link>
+              {/* Product */}
+              <div>
+                <h3 className="font-medium text-slate-900 dark:text-white mb-3">Product</h3>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-white/60">
+                  <li><Link href="/#features" className="transition-colors hover:text-slate-900 dark:hover:text-white">Features</Link></li>
+                  <li><Link href="/#pricing" className="transition-colors hover:text-slate-900 dark:hover:text-white">Pricing</Link></li>
+                  <li><Link href="/#testimonials" className="transition-colors hover:text-slate-900 dark:hover:text-white">Testimonials</Link></li>
+                  <li><Link href="/#faq" className="transition-colors hover:text-slate-900 dark:hover:text-white">FAQ</Link></li>
+                </ul>
               </div>
 
+              {/* Resources */}
+              <div>
+                <h3 className="font-medium text-slate-900 dark:text-white mb-3">Resources</h3>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-white/60">
+                  <li><Link href="/blog" className="transition-colors hover:text-slate-900 dark:hover:text-white">Blog</Link></li>
+                  <li><Link href="/compare/zendesk-alternative" className="transition-colors hover:text-slate-900 dark:hover:text-white">Compare</Link></li>
+                </ul>
+              </div>
+
+              {/* Legal */}
+              <div>
+                <h3 className="font-medium text-slate-900 dark:text-white mb-3">Legal</h3>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-white/60">
+                  <li><Link href="/legal-notice" className="transition-colors hover:text-slate-900 dark:hover:text-white">Legal Notice</Link></li>
+                  <li><Link href="/privacy" className="transition-colors hover:text-slate-900 dark:hover:text-white">Privacy</Link></li>
+                  <li><Link href="/terms" className="transition-colors hover:text-slate-900 dark:hover:text-white">Terms</Link></li>
+                  <li><Link href="/dpa" className="transition-colors hover:text-slate-900 dark:hover:text-white">DPA</Link></li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-between gap-4 border-t pt-8 border-slate-200 dark:border-white/[0.06] md:flex-row">
+              <span className="text-sm text-slate-500 dark:text-white/40">© {new Date().getFullYear()} Aidly. All rights reserved.</span>
               <div className="text-sm text-slate-500 dark:text-white/40">
                 Made with ❤️ in 🇫🇷
               </div>
