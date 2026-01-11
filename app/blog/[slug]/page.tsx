@@ -140,7 +140,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </header>
 
           {/* Content */}
-          <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-[var(--font-custom)] prose-headings:tracking-tight prose-a:text-[#3872B9] dark:prose-a:text-[#B33275] prose-a:no-underline hover:prose-a:underline">
+          <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-[var(--font-custom)] prose-headings:tracking-tight prose-headings:font-medium prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-a:text-[#3872B9] dark:prose-a:text-[#B33275] prose-a:no-underline hover:prose-a:underline">
             <MDXRemote
               source={post.content}
               options={{
