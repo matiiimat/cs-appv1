@@ -309,7 +309,7 @@ export default function LuxuryLanding() {
             }
           ]
         },
-        "description": "AI-powered customer support software for B2B email ticketing. Get intelligent draft responses in seconds.",
+        "description": "AI-powered customer support software for email ticketing. Get intelligent draft responses in seconds.",
         "url": "https://aidly.me",
         "image": "https://aidly.me/logo-60x.png",
         "softwareVersion": "1.0",
@@ -560,7 +560,7 @@ export default function LuxuryLanding() {
             {/* Main headline - SEO optimized with semantic hidden text */}
             <h1 className="font-[var(--font-custom)] text-5xl font-medium leading-[1.1] tracking-tight md:text-7xl lg:text-8xl animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
               {/* Hidden SEO text for search engines */}
-              <span className="sr-only">Aidly - AI-Powered Customer Support Software for B2C Email Ticketing and Helpdesk</span>
+              <span className="sr-only">Aidly - AI-Powered Customer Support Software for Email Ticketing and Helpdesk</span>
               {/* Visible marketing text */}
               <span className="block text-slate-900 dark:text-white" aria-hidden="true">An entire support team.</span>
               <span className="relative" aria-hidden="true">
@@ -1103,7 +1103,7 @@ export default function LuxuryLanding() {
                   <span className="font-semibold text-slate-900 dark:text-white">Aidly</span>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-white/50">
-                  AI-powered customer support for B2B teams.
+                  AI-powered customer support.
                 </p>
               </div>
 
