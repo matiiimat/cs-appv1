@@ -29,7 +29,8 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
   'Business Growth': { bg: 'bg-gradient-to-r from-[#EC4899]/10 to-[#EC4899]/20', text: 'text-[#EC4899]' },
   'Business Case': { bg: 'bg-gradient-to-r from-[#14B8A6]/10 to-[#14B8A6]/20', text: 'text-[#14B8A6]' },
   'Use Case': { bg: 'bg-gradient-to-r from-[#F59E0B]/10 to-[#F59E0B]/20', text: 'text-[#F59E0B]' },
-  'Customer Support': { bg: 'bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10', text: 'text-[#3872B9]' }
+  'Customer Support': { bg: 'bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10', text: 'text-[#3872B9]' },
+  'Prompts': { bg: 'bg-gradient-to-r from-[#6366F1]/10 to-[#6366F1]/20', text: 'text-[#6366F1]' }
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
