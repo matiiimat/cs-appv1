@@ -5,23 +5,23 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: ['/app/', '/api/'],
+        allow: ['/blog/', '/compare/'],
+        disallow: ['/app/login', '/app/billing', '/app/c/', '/api/'],
       },
       {
         userAgent: 'GPTBot',
-        allow: '/',
-        disallow: ['/app/', '/api/'],
+        allow: ['/blog/', '/compare/'],
+        disallow: ['/app/login', '/app/billing', '/app/c/', '/api/'],
       },
       {
         userAgent: 'ChatGPT-User',
-        allow: '/',
-        disallow: ['/app/', '/api/'],
+        allow: ['/blog/', '/compare/'],
+        disallow: ['/app/login', '/app/billing', '/app/c/', '/api/'],
       },
       {
         userAgent: 'Claude-Web',
-        allow: '/',
-        disallow: ['/app/', '/api/'],
+        allow: ['/blog/', '/compare/'],
+        disallow: ['/app/login', '/app/billing', '/app/c/', '/api/'],
       },
     ],
     sitemap: 'https://aidly.me/sitemap.xml',
