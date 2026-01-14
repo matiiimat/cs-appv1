@@ -63,6 +63,11 @@ const categoryColors: Record<string, { bg: string; text: string; hover: string }
     bg: 'bg-gradient-to-r from-[#3872B9]/10 to-[#B33275]/10',
     text: 'text-[#3872B9]',
     hover: 'group-hover:text-[#B33275]'
+  },
+  'Prompts': {
+    bg: 'bg-gradient-to-r from-[#6366F1]/10 to-[#6366F1]/20',
+    text: 'text-[#6366F1]',
+    hover: 'group-hover:text-[#6366F1]'
   }
 }
 
