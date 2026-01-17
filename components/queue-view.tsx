@@ -10,7 +10,7 @@ import { useSettings } from "@/lib/settings-context"
 import { useUsage } from "@/lib/usage-context"
 import { useUser } from "@/lib/user-context"
 import { useAIErrorHandler, parseAPIError } from "@/lib/use-ai-error-handler"
-import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate, formatRelativeTime } from "@/lib/utils"
+import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
 import { Badge } from "@/components/ui/badge"
 import { PieChart } from "@/components/ui/pie-chart"
@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
+  Star,
 } from "lucide-react"
 
 export function QueueView() {
@@ -329,14 +330,6 @@ export function QueueView() {
     color: categoryColorMap[label] || palette[idx % palette.length],
   }))
 
-  // Find oldest pending ticket (uses filtered messages)
-  const allPending = filteredMessages.filter(m => m.status === 'new' || m.status === 'to_review_queue')
-  const oldestTicket = allPending.length > 0
-    ? allPending.reduce((oldest, current) =>
-        new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest
-      )
-    : null
-
   // SLA calculation (uses filtered messages)
   const sentEligible = filteredMessages.filter(m => m.status === 'sent')
   const slaHours = settings.messageAgeThresholds.yellowHours
@@ -350,6 +343,19 @@ export function QueueView() {
   }).length
   const totalSent = sentEligible.length
   const pctIn = totalSent > 0 ? Math.round((inSLA / totalSent) * 100) : 0
+
+  // CSAT calculation (uses filtered messages)
+  const ratedMessages = filteredMessages.filter(m => {
+    const meta = m.metadata as { csat?: { rating?: number } } | undefined
+    return meta?.csat?.rating !== undefined
+  })
+  const totalRatings = ratedMessages.length
+  const avgCSAT = totalRatings > 0
+    ? ratedMessages.reduce((sum, m) => {
+        const meta = m.metadata as { csat?: { rating?: number } } | undefined
+        return sum + (meta?.csat?.rating || 0)
+      }, 0) / totalRatings
+    : 0
 
   // ============================================================================
   // RENDER: TRIAGE MODE
@@ -756,19 +762,17 @@ export function QueueView() {
         </div>
 
         <div className="surface p-4 rounded-lg">
-          <div className="text-sm text-muted-foreground mb-1">Oldest Pending</div>
-          {oldestTicket ? (
-            <>
-              <div className="text-lg font-bold">{oldestTicket.ticketId}</div>
-              <p className={`text-xs mt-1 ${(() => {
-                const urgency = getMessageUrgency(oldestTicket.timestamp, settings.messageAgeThresholds)
-                return urgency === 'red' ? 'text-red-500' : urgency === 'yellow' ? 'text-amber-500' : 'text-emerald-500'
-              })()}`}>
-                {formatRelativeTime(oldestTicket.timestamp)}
-              </p>
-            </>
+          <div className="text-sm text-muted-foreground mb-1">CSAT Score</div>
+          {totalRatings === 0 ? (
+            <p className="text-sm text-muted-foreground">No ratings yet</p>
           ) : (
-            <div className="text-lg font-bold text-muted-foreground">None</div>
+            <>
+              <div className="flex items-baseline gap-1.5">
+                <div className="text-2xl font-bold text-amber-500">{avgCSAT.toFixed(1)}</div>
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{totalRatings} response{totalRatings !== 1 ? 's' : ''}</p>
+            </>
           )}
         </div>
       </div>
