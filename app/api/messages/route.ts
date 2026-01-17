@@ -301,8 +301,8 @@ async function putHandler(request: NextRequest) {
           const existingMetadata = updatedMessage.metadata || {}
           const existingCSAT = existingMetadata.csat as { rating?: number; token?: string } | undefined
 
-          // Only create new token if none exists or previous was already submitted
-          const shouldCreateToken = !existingCSAT?.token || existingCSAT?.rating !== undefined
+          // Only create new token if none exists (one survey per ticket ever)
+          const shouldCreateToken = !existingCSAT?.token
           let ratingUrl: string | undefined
 
           if (shouldCreateToken) {
@@ -452,7 +452,8 @@ async function putHandler(request: NextRequest) {
             const existingMetadata = updatedMessage.metadata || {}
             const existingCSAT = existingMetadata.csat as { rating?: number; token?: string } | undefined
 
-            const shouldCreateToken = !existingCSAT?.token || existingCSAT?.rating !== undefined
+            // Only create new token if none exists (one survey per ticket ever)
+            const shouldCreateToken = !existingCSAT?.token
             let ratingUrl: string | undefined
 
             if (shouldCreateToken) {
