@@ -4,6 +4,7 @@ export interface OutboundEmail {
   to: string
   subject: string
   text: string
+  html?: string
   replyTo?: string
   fromName?: string
 }
@@ -29,13 +30,19 @@ export class EmailService {
 
     if (provider === 'sendgrid') {
       const apiKey = getEnv('SENDGRID_API_KEY') as string
+      const content: Array<{ type: string; value: string }> = [
+        { type: 'text/plain', value: out.text }
+      ]
+      if (out.html) {
+        content.push({ type: 'text/html', value: out.html })
+      }
       const payload = {
         personalizations: [
           { to: [{ email: out.to }] }
         ],
         from: out.fromName ? { email: fromEmail, name: out.fromName } : { email: fromEmail },
         subject: out.subject,
-        content: [ { type: 'text/plain', value: out.text } ],
+        content,
         ...(out.replyTo ? { reply_to: { email: out.replyTo } } : {}),
       }
 
@@ -64,6 +71,7 @@ export class EmailService {
         subject: out.subject,
         textContent: out.text,
       }
+      if (out.html) payload.htmlContent = out.html
       if (out.replyTo) payload.replyTo = { email: out.replyTo }
 
       const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -91,6 +99,7 @@ export class EmailService {
       Subject: out.subject,
       TextBody: out.text,
     }
+    if (out.html) payload.HtmlBody = out.html
     if (out.replyTo) payload.ReplyTo = out.replyTo
 
     const resp = await fetch('https://api.postmarkapp.com/email', {

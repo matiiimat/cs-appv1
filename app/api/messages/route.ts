@@ -7,6 +7,7 @@ import { sanitizeMetadata } from '@/lib/email/sanitize-headers'
 import { validateEmailData } from '@/lib/email-validation'
 import { withRateLimit } from '@/lib/rate-limiter'
 import { EmailUsageModel } from '@/lib/models/email-usage'
+import { generateCSATToken } from '@/lib/csat-tokens'
 
 async function requireOrgId(request: NextRequest): Promise<string> {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -291,21 +292,70 @@ async function putHandler(request: NextRequest) {
             startIdx++
           }
         }
-        const text = lines.slice(startIdx).join('\n')
+        let text = lines.slice(startIdx).join('\n')
+        let html: string | undefined
+
+        // Generate CSAT survey token and append rating link to email
+        // Only generate if no existing token or if previous rating was submitted
+        try {
+          const existingMetadata = updatedMessage.metadata || {}
+          const existingCSAT = existingMetadata.csat as { rating?: number; token?: string } | undefined
+
+          // Skip survey link if customer already rated
+          if (!existingCSAT?.rating) {
+            // Only create new token if none exists (one survey per ticket ever)
+            const shouldCreateToken = !existingCSAT?.token
+            let ratingUrl: string | undefined
+
+            if (shouldCreateToken) {
+              const csatToken = generateCSATToken()
+              const csatMetadata = {
+                token: csatToken.token,
+                expiresAt: csatToken.expiresAt,
+              }
+
+              const updatedMetadataWithCSAT = {
+                ...existingMetadata,
+                csat: csatMetadata,
+              }
+
+              await MessageModel.update(orgId, updatedMessage.id, {
+                metadata: updatedMetadataWithCSAT,
+              })
+
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+              ratingUrl = `${appUrl}/rate/${csatToken.token}`
+            } else if (existingCSAT?.token) {
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+              ratingUrl = `${appUrl}/rate/${existingCSAT.token}`
+            }
+
+            if (ratingUrl) {
+              // Plain text fallback (for email clients that don't support HTML)
+              text = `${text}\n\n---\nHow was your experience? Rate us: ${ratingUrl}`
+              // HTML version with clickable link (no visible URL)
+              const escapedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+              html = `<div style="font-family: sans-serif;">${escapedText.replace(/---<br>How was your experience\? Rate us: [^<]+/, '')}<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;"><p style="color: #64748b;">How was your experience? <a href="${ratingUrl}" style="color: #3b82f6; text-decoration: underline;">Rate us</a></p></div>`
+            }
+          }
+        } catch (csatErr) {
+          console.error('Failed to generate CSAT token:', csatErr)
+          // Continue sending email without CSAT link if token generation fails
+        }
 
         // Build Friendly From display name from organization name
         let fromName: string | undefined
         try {
           const orgName = await getOrganizationNameById(orgId)
           if (orgName && orgName.trim().length > 0) {
-            // Minimal cleanup: remove a trailing “'s Workspace” suffix if present, then append Support
+            // Minimal cleanup: remove a trailing "'s Workspace" suffix if present, then append Support
             const cleaned = orgName.replace(/'s Workspace\s*$/i, '').trim()
             fromName = `${cleaned} Support`
           }
         } catch {}
 
         if (to && text) {
-          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
+          const result = await EmailService.send({ to, subject: finalSubject.trim(), text, html, replyTo, fromName })
 
           // INCREMENT USAGE after email send attempt (count even if SendGrid fails)
           try {
@@ -396,7 +446,54 @@ async function putHandler(request: NextRequest) {
               startIdx++
             }
           }
-          const text = lines.slice(startIdx).join('\n')
+          let text = lines.slice(startIdx).join('\n')
+          let html: string | undefined
+
+          // Generate CSAT survey token and append rating link to email (keep_open path)
+          try {
+            const existingMetadata = updatedMessage.metadata || {}
+            const existingCSAT = existingMetadata.csat as { rating?: number; token?: string } | undefined
+
+            // Skip survey link if customer already rated
+            if (!existingCSAT?.rating) {
+              // Only create new token if none exists (one survey per ticket ever)
+              const shouldCreateToken = !existingCSAT?.token
+              let ratingUrl: string | undefined
+
+              if (shouldCreateToken) {
+                const csatToken = generateCSATToken()
+                const csatMetadata = {
+                  token: csatToken.token,
+                  expiresAt: csatToken.expiresAt,
+                }
+
+                const updatedMetadataWithCSAT = {
+                  ...existingMetadata,
+                  csat: csatMetadata,
+                }
+
+                await MessageModel.update(orgId, updatedMessage.id, {
+                  metadata: updatedMetadataWithCSAT,
+                })
+
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+                ratingUrl = `${appUrl}/rate/${csatToken.token}`
+              } else if (existingCSAT?.token) {
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+                ratingUrl = `${appUrl}/rate/${existingCSAT.token}`
+              }
+
+              if (ratingUrl) {
+                // Plain text fallback (for email clients that don't support HTML)
+                text = `${text}\n\n---\nHow was your experience? Rate us: ${ratingUrl}`
+                // HTML version with clickable link (no visible URL)
+                const escapedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+                html = `<div style="font-family: sans-serif;">${escapedText.replace(/---<br>How was your experience\? Rate us: [^<]+/, '')}<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;"><p style="color: #64748b;">How was your experience? <a href="${ratingUrl}" style="color: #3b82f6; text-decoration: underline;">Rate us</a></p></div>`
+              }
+            }
+          } catch (csatErr) {
+            console.error('Failed to generate CSAT token (keep open):', csatErr)
+          }
 
           let fromName: string | undefined
           try {
@@ -408,7 +505,7 @@ async function putHandler(request: NextRequest) {
           } catch {}
 
           if (to && text) {
-            const result = await EmailService.send({ to, subject: finalSubject.trim(), text, replyTo, fromName })
+            const result = await EmailService.send({ to, subject: finalSubject.trim(), text, html, replyTo, fromName })
 
             // INCREMENT USAGE after email send attempt
             try {

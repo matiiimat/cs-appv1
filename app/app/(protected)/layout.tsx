@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/server'
 import { ensureProvisioned } from '@/lib/tenant'
 import { getBillingStatusForEmail, isAccessAllowedFromStatus } from '@/lib/billing'
+import { ProtectedLayoutClient } from './layout-client'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const h = await headers()
@@ -37,5 +38,5 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     console.error('Provisioning error:', e)
   }
 
-  return <>{children}</>
+  return <ProtectedLayoutClient>{children}</ProtectedLayoutClient>
 }
