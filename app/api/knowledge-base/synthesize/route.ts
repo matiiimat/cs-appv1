@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from '@/lib/auth/server';
 import { getOrgAndUserByEmail } from '@/lib/tenant';
 import { AIService } from '@/lib/ai-providers';
-import { OrganizationSettingsModel } from '@/lib/models/organization-settings';
+import { canUseAIWithConfig } from '@/lib/ai-config-helpers';
+import { TokenUsageModel } from '@/lib/models/token-usage';
 import { z } from 'zod';
 
 const SynthesisRequestSchema = z.object({
@@ -37,18 +38,17 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     const validatedData = SynthesisRequestSchema.parse(requestData);
 
-    // Get AI configuration from organization settings
-    const orgSettings = await OrganizationSettingsModel.findByOrganizationId(orgUser.organizationId);
+    // Get AI configuration (handles managed vs BYOK plans)
+    const aiCheck = await canUseAIWithConfig(orgUser.organizationId);
 
-    if (!orgSettings || !orgSettings.aiConfig) {
-      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 });
+    if (!aiCheck.allowed || !aiCheck.config) {
+      return NextResponse.json({
+        error: aiCheck.reason || "AI configuration is required"
+      }, { status: 400 });
     }
 
-    if (!orgSettings.aiConfig.apiKey && orgSettings.aiConfig.provider !== 'local') {
-      return NextResponse.json({ error: "AI configuration is required" }, { status: 400 });
-    }
-
-    const aiService = new AIService(orgSettings.aiConfig);
+    const { config: aiConfig, isManaged } = aiCheck;
+    const aiService = new AIService(aiConfig);
 
     const systemPrompt = `You are an AI assistant that creates knowledge base entries from customer support cases.
 
@@ -130,6 +130,14 @@ Create a knowledge base entry that captures the essence of this issue and its re
         resolution: fallbackResolution,
         category: validatedData.category,
       };
+    }
+
+    // Track token usage for managed plans
+    if (isManaged) {
+      const estimatedTokens = TokenUsageModel.estimateTokens(
+        systemPrompt + userPrompt + responseText
+      );
+      await TokenUsageModel.incrementUsage(orgUser.organizationId, estimatedTokens);
     }
 
     return NextResponse.json({ synthesis });

@@ -830,7 +830,9 @@ export function QueueView() {
                   key={item.id}
                   onClick={() => {
                     setCsatModalOpen(false)
-                    window.location.href = `/app/c/${item.ticketId}`
+                    // Remove # prefix from ticketId for URL (API adds it back)
+                    const caseId = item.ticketId?.replace(/^#/, '') || item.id
+                    window.location.href = `/app/c/${caseId}`
                   }}
                   className="w-full text-left p-4 rounded-lg bg-muted/50 border border-border hover:bg-muted/80 hover:border-primary/30 transition-colors"
                 >
