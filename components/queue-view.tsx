@@ -18,6 +18,13 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/toast"
 import { UsageWidget } from "@/components/usage-widget"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { StarRating, getRatingLabel } from "@/components/ui/star-rating"
+import {
   Zap,
   Clock,
   User,
@@ -28,6 +35,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Star,
+  MessageSquare,
 } from "lucide-react"
 
 export function QueueView() {
@@ -59,6 +67,7 @@ export function QueueView() {
   const [isActing, setIsActing] = useState(false)
   const [quickEditOpen, setQuickEditOpen] = useState(false)
   const [timelineFilter, setTimelineFilter] = useState<'7d' | '30d' | 'all'>('all')
+  const [csatModalOpen, setCsatModalOpen] = useState(false)
 
   // Get agent ID from user context
   const agentId = user?.id || ""
@@ -345,16 +354,37 @@ export function QueueView() {
   const pctIn = totalSent > 0 ? Math.round((inSLA / totalSent) * 100) : 0
 
   // CSAT calculation (uses filtered messages)
-  const ratedMessages = filteredMessages.filter(m => {
-    const meta = m.metadata as { csat?: { rating?: number } } | undefined
-    return meta?.csat?.rating !== undefined
-  })
+  interface CSATData {
+    rating: number
+    feedback?: string
+    submittedAt?: string
+  }
+  const ratedMessages = filteredMessages
+    .filter(m => {
+      const meta = m.metadata as { csat?: CSATData } | undefined
+      return meta?.csat?.rating !== undefined
+    })
+    .map(m => {
+      const meta = m.metadata as { csat: CSATData }
+      return {
+        id: m.id,
+        ticketId: m.ticketId,
+        subject: m.subject,
+        rating: meta.csat.rating,
+        feedback: meta.csat.feedback,
+        submittedAt: meta.csat.submittedAt,
+      }
+    })
+    .sort((a, b) => {
+      // Sort by submittedAt descending (most recent first)
+      if (!a.submittedAt && !b.submittedAt) return 0
+      if (!a.submittedAt) return 1
+      if (!b.submittedAt) return -1
+      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    })
   const totalRatings = ratedMessages.length
   const avgCSAT = totalRatings > 0
-    ? ratedMessages.reduce((sum, m) => {
-        const meta = m.metadata as { csat?: { rating?: number } } | undefined
-        return sum + (meta?.csat?.rating || 0)
-      }, 0) / totalRatings
+    ? ratedMessages.reduce((sum, m) => sum + m.rating, 0) / totalRatings
     : 0
 
   // ============================================================================
@@ -761,7 +791,11 @@ export function QueueView() {
           )}
         </div>
 
-        <div className="surface p-4 rounded-lg">
+        <button
+          onClick={() => totalRatings > 0 && setCsatModalOpen(true)}
+          className={`surface p-4 rounded-lg text-left transition-colors ${totalRatings > 0 ? 'hover:bg-muted/50 cursor-pointer' : ''}`}
+          disabled={totalRatings === 0}
+        >
           <div className="text-sm text-muted-foreground mb-1">CSAT Score</div>
           {totalRatings === 0 ? (
             <p className="text-sm text-muted-foreground">No ratings yet</p>
@@ -771,11 +805,71 @@ export function QueueView() {
                 <div className="text-2xl font-bold text-amber-500">{avgCSAT.toFixed(1)}</div>
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{totalRatings} response{totalRatings !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-muted-foreground mt-1">{totalRatings} response{totalRatings !== 1 ? 's' : ''} &middot; Click to view</p>
             </>
           )}
-        </div>
+        </button>
       </div>
+
+      {/* CSAT Feedback Modal */}
+      <Dialog open={csatModalOpen} onOpenChange={setCsatModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+              Customer Feedback
+              <span className="text-muted-foreground font-normal text-sm ml-2">
+                {avgCSAT.toFixed(1)} avg from {totalRatings} response{totalRatings !== 1 ? 's' : ''}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 -mx-6 px-6">
+            <div className="space-y-3 pb-4">
+              {ratedMessages.slice(0, 50).map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCsatModalOpen(false)
+                    window.location.href = `/app/c/${item.ticketId}`
+                  }}
+                  className="w-full text-left p-4 rounded-lg bg-muted/50 border border-border hover:bg-muted/80 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">
+                        <span className="text-muted-foreground">#{item.ticketId}</span>
+                        {' '}{item.subject}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <StarRating rating={item.rating} size="sm" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {getRatingLabel(item.rating)}
+                      </span>
+                    </div>
+                  </div>
+                  {item.feedback && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-foreground">{item.feedback}</p>
+                      </div>
+                    </div>
+                  )}
+                  {item.submittedAt && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatFriendlyDate(item.submittedAt)}
+                    </p>
+                  )}
+                </button>
+              ))}
+              {ratedMessages.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No ratings yet</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Category Chart & Usage Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
