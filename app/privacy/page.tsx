@@ -167,16 +167,70 @@ export default function PrivacyPage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Cookies</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Cookies and Tracking Technologies</h2>
+
+              <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">What We Track</h3>
               <p className="mt-2">
-                This website does not use cookies or similar tracking technologies. We do not place any cookies on your device for analytics, advertising, or any other purpose.
+                We use cookies and similar technologies to:
+              </p>
+              <ul className="mt-2 list-disc pl-5 space-y-1">
+                <li>Keep you signed in (essential - always active)</li>
+                <li>Remember your preferences like dark/light mode (essential - always active)</li>
+                <li>Measure website performance (analytics - requires your consent)</li>
+                <li>Track advertising effectiveness (marketing - requires your consent)</li>
+              </ul>
+
+              <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">Third-Party Tracking</h3>
+              <p className="mt-2">
+                <strong>LinkedIn Insight Tag:</strong> We use LinkedIn&apos;s Insight Tag to measure the effectiveness of our LinkedIn advertisements.
+                This places cookies on your device to track which ads you clicked, whether you signed up after seeing an ad, and may access your
+                LinkedIn professional profile information if you are logged in to LinkedIn. LinkedIn processes this data according to their{" "}
+                <a href="https://www.linkedin.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">
+                  Privacy Policy
+                </a>.
               </p>
               <p className="mt-2">
-                Your browser may store essential session data required for authentication (magic link sign‑in), but this is strictly limited to functional requirements and does not track your activity across the site or other websites.
+                <strong>Vercel Analytics:</strong> We use Vercel Analytics to understand how users interact with our website. This service is privacy-focused
+                and does not store personally identifiable information or track you across other websites. Vercel processes this data according to their{" "}
+                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">
+                  Privacy Policy
+                </a>.
+              </p>
+
+              <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">Your Cookie Rights</h3>
+              <p className="mt-2">
+                You have the right to:
+              </p>
+              <ul className="mt-2 list-disc pl-5 space-y-1">
+                <li>Accept or reject non-essential cookies via our cookie banner</li>
+                <li>Change your preferences at any time</li>
+                <li>Delete cookies from your browser settings</li>
+                <li>Opt-out of LinkedIn tracking:{" "}
+                  <a href="https://www.linkedin.com/help/linkedin/answer/62931" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">
+                    LinkedIn Opt-Out
+                  </a>
+                </li>
+              </ul>
+
+              <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">Cookie Consent</h3>
+              <p className="mt-2">
+                When you first visit our website, you will see a cookie banner asking for your consent to use non-essential cookies.
+                Essential cookies for authentication and basic functionality are always active and do not require consent under GDPR.
               </p>
               <p className="mt-2">
-                As we do not use cookies, no cookie consent banner is required or displayed. If we introduce cookies in the future, we will update this policy and implement appropriate consent mechanisms in compliance with GDPR and French law (CNIL requirements).
+                For detailed information about the cookies we use, please see our{" "}
+                <a href="/cookies" className="underline text-blue-600 dark:text-blue-400">
+                  Cookie Policy
+                </a>.
               </p>
+
+              <h3 className="mt-4 font-semibold text-slate-900 dark:text-white">Data Retention</h3>
+              <ul className="mt-2 list-disc pl-5 space-y-1">
+                <li><strong>Essential cookies:</strong> Session-based or up to 8 hours</li>
+                <li><strong>Preference cookies:</strong> Until you delete them (permanent)</li>
+                <li><strong>Analytics cookies:</strong> Session-based</li>
+                <li><strong>Marketing cookies (LinkedIn):</strong> 30-90 days</li>
+              </ul>
             </div>
 
             <div>
