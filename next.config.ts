@@ -14,6 +14,17 @@ function buildCSP(): string {
     "https://*.challenges.cloudflare.com",
   ]
 
+  // LinkedIn Insight Tag domains for conversion tracking
+  const linkedInDomains = [
+    "https://snap.licdn.com",
+    "https://px.ads.linkedin.com",
+  ]
+
+  // Vercel Analytics domains
+  const vercelDomains = [
+    "https://va.vercel-scripts.com",
+  ]
+
   // Google Fonts domains
   const googleFontsDomains = [
     "https://fonts.googleapis.com",
@@ -32,11 +43,12 @@ function buildCSP(): string {
     // Next.js injects small inline bootstrap scripts for hydration.
     // In production we allow 'unsafe-inline' unless you implement nonces.
     // Turnstile requires loading scripts from challenges.cloudflare.com
+    // LinkedIn Insight Tag and Vercel Analytics need their domains
     "script-src": isDev
-      ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...turnstileDomains]
-      : ["'self'", "'unsafe-inline'", ...turnstileDomains],
-    // Allow images and data URIs
-    "img-src": ["'self'", "data:", "blob:"],
+      ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...turnstileDomains, ...linkedInDomains, ...vercelDomains]
+      : ["'self'", "'unsafe-inline'", ...turnstileDomains, ...linkedInDomains, ...vercelDomains],
+    // Allow images and data URIs + LinkedIn tracking pixel
+    "img-src": ["'self'", "data:", "blob:", ...linkedInDomains],
     // Allow Google Fonts font files
     "font-src": ["'self'", "https://fonts.gstatic.com"],
     // Restrict media/frame embedding
@@ -45,9 +57,10 @@ function buildCSP(): string {
     "frame-src": [...turnstileDomains],
     // Network calls from the browser
     // Sentry ingest URL must be included for error reporting to work
+    // LinkedIn and Vercel analytics need to phone home
     "connect-src": isDev
       ? ["'self'", "https:", "ws:", "wss:", "http://localhost:*"]
-      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com", "https://*.ingest.de.sentry.io", ...turnstileDomains]
+      : ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://api.stripe.com", "https://*.ingest.de.sentry.io", ...turnstileDomains, ...linkedInDomains, ...vercelDomains]
   }
 
   return Object.entries(directives)
@@ -66,10 +79,12 @@ const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
   // Security: Prevent MIME type confusion attacks
   { key: 'X-XSS-Protection', value: '1; mode=block' },
-  // Security: Control cross-origin requests (no explicit CORS needed for same-origin app)
-  { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  // Security: Control cross-origin requests
+  // Note: COEP set to 'unsafe-none' to allow LinkedIn/Vercel analytics to load
+  // These are third-party scripts that don't support CORP headers
+  { key: 'Cross-Origin-Embedder-Policy', value: 'unsafe-none' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
 ]
 
 const nextConfig: NextConfig = {

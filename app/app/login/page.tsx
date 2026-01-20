@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
 
@@ -23,6 +24,7 @@ declare global {
 }
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
   const [message, setMessage] = useState("")
@@ -33,6 +35,11 @@ export default function LoginPage() {
   const turnstileContainerRef = useRef<HTMLDivElement>(null)
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
+  // Detect if user is coming from an ad (LinkedIn, Google, etc.)
+  const isFromAd = searchParams?.get('utm_source') === 'linkedin' ||
+                   searchParams?.get('ref') === 'ad' ||
+                   searchParams?.get('utm_medium') === 'cpc'
 
   // Initialize Turnstile widget when script loads
   useEffect(() => {
@@ -149,8 +156,30 @@ export default function LoginPage() {
       )}
       <main className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-semibold text-center">Sign in</h1>
-          <p className="mt-2 text-center text-sm text-muted-foreground">We&apos;ll email you a magic link to sign in.</p>
+          <h1 className="text-2xl font-semibold text-center">
+            {isFromAd ? "Get Your 5 Free Emails" : "Sign in"}
+          </h1>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            {isFromAd
+              ? "Enter your email to start using Aidly - no credit card required."
+              : "We'll email you a magic link to sign in."}
+          </p>
+          {isFromAd && (
+            <div className="mt-4 space-y-2">
+              {[
+                "5 free AI-powered responses",
+                "No credit card needed",
+                "Setup in 2 minutes",
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <input
               type="email"
