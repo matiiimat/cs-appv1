@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Script from "next/script"
@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
@@ -236,5 +236,19 @@ export default function LoginPage() {
         </div>
       </main>
     </>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="animate-pulse">Loading...</div>
+        </div>
+      </main>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
