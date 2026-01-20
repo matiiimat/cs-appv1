@@ -21,7 +21,7 @@ export function ProtectedLayoutClient({ children }: { children: React.ReactNode 
 
       if (isNewSignup) {
         // Fire LinkedIn conversion event
-        window.lintrk('track', { conversion_id: 9242769 })
+        window.lintrk('track', { conversion_id: 25541297 })
 
         // Mark as tracked so we don't fire again
         localStorage.setItem('aidly_signup_tracked', 'true')
