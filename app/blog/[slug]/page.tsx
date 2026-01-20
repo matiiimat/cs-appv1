@@ -6,6 +6,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getAllPosts, getPostBySlug } from '../lib/posts'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import rehypeSlug from 'rehype-slug'
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>
@@ -93,6 +94,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <div className="min-h-screen bg-[#FAFBFC] dark:bg-[#0A0A0B]">
+      {/* Theme Script - Must run before render */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(() => { try { const t = localStorage.getItem('aidly-theme'); if (t === 'dark') { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } } catch(_) {} })();`,
+        }}
+      />
+
       {/* Structured Data */}
       <script
         type="application/ld+json"
@@ -147,7 +155,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               options={{
                 mdxOptions: {
                   remarkPlugins: [remarkGfm],
-                  rehypePlugins: [rehypeHighlight],
+                  rehypePlugins: [rehypeSlug, rehypeHighlight],
                 }
               }}
             />
