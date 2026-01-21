@@ -18,6 +18,10 @@ function buildCSP(): string {
   const linkedInDomains = [
     "https://snap.licdn.com",
     "https://px.ads.linkedin.com",
+    "https://px1.ads.linkedin.com",
+    "https://px2.ads.linkedin.com",
+    "https://px3.ads.linkedin.com",
+    "https://px4.ads.linkedin.com",
   ]
 
   // Vercel Analytics domains
