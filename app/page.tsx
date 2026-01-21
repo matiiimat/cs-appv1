@@ -869,6 +869,66 @@ export default function LuxuryLanding() {
                 </div>
               </div>
 
+              {/* Pro Tier - BYOK */}
+              <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
+                <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
+                  <div className="flex h-full flex-col">
+                    {/* Header */}
+                    <div className="mb-5">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pro</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Bring your own key</p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
+                          ${annual ? "166" : "199"}
+                        </span>
+                        <span className="text-slate-500 dark:text-white/50">/mo</span>
+                      </div>
+                      {annual ? (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($1,999/yr)</p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
+                      )}
+                    </div>
+
+                    {/* Features */}
+                    <div className="mb-6 space-y-2.5">
+                      {[
+                        "Use your own API key",
+                        "1,000 emails per month",
+                        "OpenAI, Anthropic, or local",
+                        "Self-learning from your replies",
+                        "Full approval control",
+                        "Multilingual support",
+                      ].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
+                          <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="mt-auto">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full h-11 text-sm font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
+                        onClick={() => startCheckout('pro')}
+                        disabled={loading}
+                      >
+                        {loading ? 'Setting up...' : 'Get Pro'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Plus Tier - Most Popular */}
               <div className="relative overflow-hidden rounded-3xl border p-1 shadow-xl border-slate-200 bg-white dark:border-white/[0.1] dark:bg-white/[0.03] dark:shadow-none">
                 {/* Decorative gradient border */}
@@ -931,66 +991,6 @@ export default function LuxuryLanding() {
                       {loading ? 'Setting up...' : 'Get Plus'}
                     </Button>
                     {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Pro Tier - BYOK */}
-              <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
-                <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
-                  <div className="flex h-full flex-col">
-                    {/* Header */}
-                    <div className="mb-5">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pro</h3>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Bring your own key</p>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mb-5">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
-                          ${annual ? "166" : "199"}
-                        </span>
-                        <span className="text-slate-500 dark:text-white/50">/mo</span>
-                      </div>
-                      {annual ? (
-                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">Billed annually ($1,999/yr)</p>
-                      ) : (
-                        <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
-                      )}
-                    </div>
-
-                    {/* Features */}
-                    <div className="mb-6 space-y-2.5">
-                      {[
-                        "Use your own API key",
-                        "1,000 emails per month",
-                        "OpenAI, Anthropic, or local",
-                        "Self-learning from your replies",
-                        "Full approval control",
-                        "Multilingual support",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
-                          <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CTA */}
-                    <div className="mt-auto">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="w-full h-11 text-sm font-medium border-slate-300 hover:border-slate-400 dark:border-white/[0.12] dark:hover:border-white/25"
-                        onClick={() => startCheckout('pro')}
-                        disabled={loading}
-                      >
-                        {loading ? 'Setting up...' : 'Get Pro'}
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </div>
