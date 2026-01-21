@@ -7,13 +7,21 @@ import { Analytics } from "@vercel/analytics/next"
 import { getCookieConsent, type CookieConsent } from "./cookie-banner"
 
 export function ConditionalTracking() {
-  const [consent, setConsent] = useState<ReturnType<typeof getCookieConsent>>(null)
+  // Initialize consent from localStorage immediately (client-side only)
+  const [consent, setConsent] = useState<ReturnType<typeof getCookieConsent>>(() => {
+    if (typeof window === 'undefined') return null
+    return getCookieConsent()
+  })
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    // Get initial consent
-    setConsent(getCookieConsent())
+
+    // Double-check consent in case initial state wasn't set
+    const currentConsent = getCookieConsent()
+    if (JSON.stringify(currentConsent) !== JSON.stringify(consent)) {
+      setConsent(currentConsent)
+    }
 
     // Listen for consent changes
     const handleConsentChange = (event: Event) => {
@@ -26,7 +34,7 @@ export function ConditionalTracking() {
     return () => {
       window.removeEventListener("cookieConsentChanged", handleConsentChange)
     }
-  }, [])
+  }, [consent])
 
   // Don't render anything on server
   if (!mounted) return null
