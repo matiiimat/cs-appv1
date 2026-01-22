@@ -47,6 +47,20 @@ function AppContent() {
     currentView,
   })
 
+  // Handle URL query params for navigation (e.g., ?view=settings from OAuth callback)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const view = params.get('view') as ViewMode | null
+      if (view && ['queue', 'inbox', 'knowledge', 'settings'].includes(view)) {
+        setCurrentView(view)
+        // Clean up URL without reload
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
+    }
+  }, [])
+
   // Listen for cross-component navigation events
   useEffect(() => {
     const settingsHandler = () => setCurrentView("settings")
