@@ -16,10 +16,11 @@ import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Clock, User, Send, Sparkles, MessageSquare, Loader2, MoreHorizontal, X } from "lucide-react"
 import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
+import { ShopifyPanel } from "@/components/shopify-panel"
 
 export function DetailedReviewInterface() {
   const { messages, updateMessage, updateMessageCategory, getDraftReply, updateDraftReply, clearDraftReply } = useMessageManager()
-  const { settings, aiConfigHasKey, planInfo } = useSettings()
+  const { settings, aiConfigHasKey, planInfo, shopifyConfigured } = useSettings()
   const { usage, canSendEmail, refreshUsage } = useUsage()
   const { user } = useUser()
   const { addToast } = useToast()
@@ -581,6 +582,11 @@ End with the signature: "${settings.agentSignature}"`
               </div>
             </div>
           </div>
+        )}
+
+        {/* Shopify Panel - Right Sidebar */}
+        {selectedMessage && shopifyConfigured && settings.shopifyIntegration?.enabled && (
+          <ShopifyPanel customerEmail={selectedMessage.customerEmail} />
         )}
       </div>
     </div>

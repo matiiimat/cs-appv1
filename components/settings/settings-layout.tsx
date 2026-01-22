@@ -5,6 +5,7 @@ import { SettingsSidebar, type SettingsSection } from "./settings-sidebar"
 import { SetupSection } from "./sections/setup-section"
 import { CustomizationSection } from "./sections/customization-section"
 import { KnowledgeSection } from "./sections/knowledge-section"
+import { IntegrationsSection } from "./sections/integrations-section"
 import { SystemSection } from "./sections/system-section"
 import { BillingSection } from "./sections/billing-section"
 import { GDPRSection } from "./sections/gdpr-section"
@@ -37,6 +38,8 @@ export function SettingsLayout() {
         return <CustomizationSection />
       case "knowledge":
         return <KnowledgeSection />
+      case "integrations":
+        return <IntegrationsSection />
       case "system":
         return <SystemSection />
       case "billing":

@@ -52,6 +52,13 @@ export const SettingsDataSchema = z.object({
     enabled: z.boolean().default(false),
     webhookUrl: z.string().optional(),
   }).optional().default({ enabled: false }),
+  shopifyIntegration: z.object({
+    enabled: z.boolean().default(false),
+    shopDomain: z.string().optional(), // e.g., "example.myshopify.com"
+    accessToken: z.string().optional(), // Encrypted OAuth token
+    scope: z.string().optional(), // OAuth scopes granted
+    installedAt: z.string().optional(), // ISO timestamp
+  }).optional().default({ enabled: false }),
   lastSaved: z.string().optional(), // ISO string
 });
 

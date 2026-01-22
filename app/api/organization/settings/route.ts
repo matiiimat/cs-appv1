@@ -78,12 +78,17 @@ export async function GET(request: NextRequest) {
           enabled: false,
         },
         slackWebhookConfigured: false,
+        shopifyIntegration: {
+          enabled: false,
+        },
+        shopifyConfigured: false,
       })
     }
 
     // Sanitize: do not expose API keys or webhook URLs in response
     const hasKey = Boolean(settings?.aiConfig?.apiKey && String(settings.aiConfig.apiKey).trim() !== '')
     const hasWebhook = Boolean(settings?.slackIntegration?.webhookUrl && String(settings.slackIntegration.webhookUrl).trim() !== '')
+    const hasShopify = Boolean(settings?.shopifyIntegration?.accessToken && String(settings.shopifyIntegration.accessToken).trim() !== '')
     const sanitized = {
       ...settings,
       aiConfig: {
@@ -94,8 +99,15 @@ export async function GET(request: NextRequest) {
         enabled: settings.slackIntegration.enabled,
         webhookUrl: "" // Don't expose webhook URL
       } : { enabled: false },
+      shopifyIntegration: settings.shopifyIntegration ? {
+        enabled: settings.shopifyIntegration.enabled,
+        shopDomain: settings.shopifyIntegration.shopDomain, // Safe to expose
+        installedAt: settings.shopifyIntegration.installedAt,
+        // Don't expose accessToken or scope
+      } : { enabled: false },
       aiConfigHasKey: hasKey,
       slackWebhookConfigured: hasWebhook,
+      shopifyConfigured: hasShopify,
       hasSavedSettings: true,
     }
     return NextResponse.json({ ...sanitized, brandName })
@@ -138,6 +150,14 @@ export async function POST(request: NextRequest) {
       const existingWebhook = (existing?.slackIntegration?.webhookUrl || '').trim()
       if (!incomingWebhook && existingWebhook && validatedData.slackIntegration) {
         validatedData.slackIntegration.webhookUrl = existingWebhook
+      }
+
+      // Preserve Shopify credentials (managed via dedicated routes)
+      if (existing?.shopifyIntegration?.accessToken && validatedData.shopifyIntegration) {
+        validatedData.shopifyIntegration.accessToken = existing.shopifyIntegration.accessToken
+        validatedData.shopifyIntegration.shopDomain = existing.shopifyIntegration.shopDomain
+        validatedData.shopifyIntegration.scope = existing.shopifyIntegration.scope
+        validatedData.shopifyIntegration.installedAt = existing.shopifyIntegration.installedAt
       }
     } catch {}
 

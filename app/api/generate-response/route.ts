@@ -11,6 +11,7 @@ import { EmailUsageModel } from '@/lib/models/email-usage'
 import { TokenUsageModel } from '@/lib/models/token-usage'
 import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
 import { createCustomerAnonymizer } from '@/lib/pii-anonymizer'
+import { ShopifyClient, formatShopifyContextForAI } from '@/lib/shopify-client'
 
 interface GenerateResponseRequest {
   customerName: string
@@ -269,6 +270,22 @@ Message: ${anonymizedBody}`
       console.warn('Knowledge base entry processing failed:', error)
     }
 
+    // Fetch Shopify customer context if integration is enabled
+    let shopifyContext = ''
+    try {
+      const shopifyClient = await ShopifyClient.fromOrganizationId(orgId)
+      if (shopifyClient) {
+        const customerContext = await shopifyClient.getCustomerContext(emailValidation.customerEmail)
+        if (customerContext) {
+          shopifyContext = formatShopifyContextForAI(customerContext)
+          console.log(`Fetched Shopify context for ${emailValidation.customerEmail}: ${customerContext.totalOrders} orders`)
+        }
+      }
+    } catch (error) {
+      // Graceful degradation - continue without Shopify context
+      console.warn('Shopify context fetch failed, continuing without:', error)
+    }
+
     // Generate AI response
     const aiResponseSystem = `You are a professional customer support agent named "${agentName}". Generate helpful, empathetic, and solution-oriented responses to customer inquiries.
 
@@ -302,7 +319,17 @@ IMPORTANT: Learn from the following similar cases that were successfully resolve
 
 ${relevantKbEntries}
 
-Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}`
+Use these previous resolutions as guidance for handling similar issues. If the current customer inquiry is similar to any of these cases, adapt the successful resolution approach while personalizing it for the current customer's specific situation.` : ''}${shopifyContext ? `
+
+IMPORTANT: The following is the customer's order history from our Shopify store. Use this information to provide accurate, personalized responses about their orders, shipping status, and purchase history:
+
+${shopifyContext}
+
+When responding:
+- Reference specific order numbers (e.g., #1001) when discussing their orders
+- Provide accurate shipping/fulfillment status if they're asking about delivery
+- Acknowledge their purchase history to provide personalized service
+- If they're asking about a specific order, locate it in the history and address their concern directly` : ''}`
 
     // Use anonymized data in the main response prompt
     const aiResponsePrompt = `Customer: ${anonymizedName}

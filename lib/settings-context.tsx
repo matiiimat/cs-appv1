@@ -30,6 +30,14 @@ export interface SlackIntegration {
   webhookUrl?: string
 }
 
+export interface ShopifyIntegration {
+  enabled: boolean
+  shopDomain?: string
+  accessToken?: string
+  scope?: string
+  installedAt?: string
+}
+
 export interface TokenUsageInfo {
   used: number
   limit: number | null
@@ -62,6 +70,7 @@ export interface Settings {
     redHours: number
   }
   slackIntegration?: SlackIntegration
+  shopifyIntegration?: ShopifyIntegration
 }
 
 interface SettingsContextType {
@@ -78,6 +87,8 @@ interface SettingsContextType {
   setAiConfigHasKey: (hasKey: boolean) => void
   slackWebhookConfigured: boolean
   setSlackWebhookConfigured: (configured: boolean) => void
+  shopifyConfigured: boolean
+  setShopifyConfigured: (configured: boolean) => void
   hasSavedSettings?: boolean
   hasCompletedOnboarding: boolean
   completeOnboarding: () => void
@@ -134,6 +145,9 @@ const defaultSettings: Settings = {
   slackIntegration: {
     enabled: false,
   },
+  shopifyIntegration: {
+    enabled: false,
+  },
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'
@@ -146,6 +160,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [aiConfigHasKey, setAiConfigHasKey] = useState<boolean>(false)
   const [slackWebhookConfigured, setSlackWebhookConfigured] = useState<boolean>(false)
+  const [shopifyConfigured, setShopifyConfigured] = useState<boolean>(false)
   const [hasSavedSettings, setHasSavedSettings] = useState<boolean | undefined>(undefined)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(true) // Default true to avoid flash
   const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false)
@@ -403,6 +418,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setAiConfigHasKey,
         slackWebhookConfigured,
         setSlackWebhookConfigured,
+        shopifyConfigured,
+        setShopifyConfigured,
         hasSavedSettings,
         hasCompletedOnboarding,
         completeOnboarding,
