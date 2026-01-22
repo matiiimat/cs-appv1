@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
     // Verify required params
     if (!shop || !code || !state) {
       console.error('Missing OAuth parameters:', { shop: !!shop, code: !!code, state: !!state })
-      return NextResponse.redirect(`${appUrl}/settings?error=missing_params`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=missing_params`)
     }
 
     // Verify state matches cookie (CSRF protection)
     const savedState = request.cookies.get('shopify_oauth_state')?.value
     if (!savedState || savedState !== state) {
       console.error('State mismatch - possible CSRF attack')
-      return NextResponse.redirect(`${appUrl}/settings?error=invalid_state`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=invalid_state`)
     }
 
     // Decode and verify state data
@@ -35,25 +35,25 @@ export async function GET(request: NextRequest) {
       stateData = JSON.parse(Buffer.from(state, 'base64url').toString())
     } catch {
       console.error('Failed to decode state')
-      return NextResponse.redirect(`${appUrl}/settings?error=invalid_state`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=invalid_state`)
     }
 
     // Verify state is not expired (10 minute max)
     if (Date.now() - stateData.timestamp > 600000) {
       console.error('State expired')
-      return NextResponse.redirect(`${appUrl}/settings?error=state_expired`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=state_expired`)
     }
 
     // Verify user is still authenticated and belongs to the same org
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user?.email) {
-      return NextResponse.redirect(`${appUrl}/login?redirect=/settings`)
+      return NextResponse.redirect(`${appUrl}/login?redirect=/app?view=settings`)
     }
 
     const orgUser = await getOrgAndUserByEmail(session.user.email)
     if (!orgUser || orgUser.organizationId !== stateData.orgId) {
       console.error('Organization mismatch')
-      return NextResponse.redirect(`${appUrl}/settings?error=org_mismatch`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=org_mismatch`)
     }
 
     // Exchange code for access token
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     if (!valid) {
       console.error('Failed to verify Shopify connection')
-      return NextResponse.redirect(`${appUrl}/settings?error=verification_failed`)
+      return NextResponse.redirect(`${appUrl}/app?view=settings&error=verification_failed`)
     }
 
     // Get existing settings and update with Shopify integration
@@ -113,12 +113,13 @@ export async function GET(request: NextRequest) {
     console.log(`Shopify connected successfully for org ${stateData.orgId}: ${shopName}`)
 
     // Clear the state cookie and redirect to settings with success
-    const response = NextResponse.redirect(`${appUrl}/settings?tab=integrations&shopify=connected`)
+    // Note: App settings page is at /app/settings for aidly.me
+    const response = NextResponse.redirect(`${appUrl}/app?view=settings&shopify=connected`)
     response.cookies.delete('shopify_oauth_state')
 
     return response
   } catch (error) {
     console.error('Shopify callback error:', error)
-    return NextResponse.redirect(`${appUrl}/settings?error=callback_failed`)
+    return NextResponse.redirect(`${appUrl}/app?view=settings&error=callback_failed`)
   }
 }

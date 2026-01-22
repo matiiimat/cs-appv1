@@ -193,6 +193,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           } else {
             setSlackWebhookConfigured(false)
           }
+          if (typeof data.shopifyConfigured === 'boolean') {
+            setShopifyConfigured(data.shopifyConfigured)
+          } else {
+            setShopifyConfigured(false)
+          }
           if (typeof data.hasSavedSettings === 'boolean') {
             setHasSavedSettings(data.hasSavedSettings)
             // Use database settings as single source of truth for onboarding status
