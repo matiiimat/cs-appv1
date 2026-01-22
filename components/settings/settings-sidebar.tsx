@@ -11,12 +11,14 @@ import {
   Moon,
   Shield,
   CreditCard,
+  Plug,
 } from "lucide-react"
 
 export type SettingsSection =
   | "setup"
   | "customization"
   | "knowledge"
+  | "integrations"
   | "system"
   | "billing"
   | "privacy"
@@ -30,6 +32,7 @@ const mainNavItems: { id: SettingsSection; label: string; icon: React.ElementTyp
   { id: "setup", label: "Setup", icon: Rocket },
   { id: "customization", label: "Customization", icon: Sliders },
   { id: "knowledge", label: "Knowledge", icon: BookOpen },
+  { id: "integrations", label: "Integrations", icon: Plug },
   { id: "system", label: "System", icon: Settings2 },
   { id: "billing", label: "Billing", icon: CreditCard },
   { id: "privacy", label: "Privacy & Data", icon: Shield },
