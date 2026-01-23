@@ -21,6 +21,7 @@ export interface ShopifyOrder {
   lineItems: Array<{
     title: string;
     quantity: number;
+    unitPrice?: string;
     variant?: {
       title: string;
     };
@@ -229,11 +230,12 @@ export class ShopifyClient {
   // Fetch orders by customer email - returns context for AI
   async getCustomerContext(email: string): Promise<ShopifyCustomerContext | null> {
     const query = `
-      query getCustomerOrders($email: String!) {
-        customers(first: 1, query: $email) {
+      query getCustomerOrders($searchQuery: String!) {
+        customers(first: 1, query: $searchQuery) {
           edges {
             node {
               id
+              email
               createdAt
               ordersCount
               totalSpentV2 {
@@ -259,8 +261,15 @@ export class ShopifyClient {
                         node {
                           title
                           quantity
+                          originalUnitPriceSet {
+                            shopMoney {
+                              amount
+                              currencyCode
+                            }
+                          }
                           variant {
                             title
+                            price
                           }
                         }
                       }
@@ -286,11 +295,15 @@ export class ShopifyClient {
     `;
 
     try {
+      // Search by email - Shopify requires `email:` prefix for exact match
+      const searchQuery = `email:${email}`;
+      console.log(`[Shopify] Searching for customer with query: ${searchQuery}`);
       const data = await this.graphql<{
         customers: {
           edges: Array<{
             node: {
               id: string;
+              email: string;
               createdAt: string;
               ordersCount: number;
               totalSpentV2: {
@@ -316,8 +329,15 @@ export class ShopifyClient {
                         node: {
                           title: string;
                           quantity: number;
+                          originalUnitPriceSet?: {
+                            shopMoney: {
+                              amount: string;
+                              currencyCode: string;
+                            };
+                          };
                           variant?: {
                             title: string;
+                            price: string;
                           };
                         };
                       }>;
@@ -339,13 +359,16 @@ export class ShopifyClient {
             };
           }>;
         };
-      }>(query, { email: `email:${email}` });
+      }>(query, { searchQuery });
 
       const customer = data.customers.edges[0]?.node;
 
       if (!customer) {
+        console.log(`[Shopify] No customer found for email: ${email}`);
         return null;
       }
+
+      console.log(`[Shopify] Found customer: ${customer.email} with ${customer.ordersCount} orders`);
 
       // Transform orders to our format (anonymizing PII)
       const recentOrders: ShopifyOrder[] = customer.orders.edges.map(({ node }) => ({
@@ -359,7 +382,8 @@ export class ShopifyClient {
         lineItems: node.lineItems.edges.map(({ node: item }) => ({
           title: item.title,
           quantity: item.quantity,
-          variant: item.variant,
+          unitPrice: item.originalUnitPriceSet?.shopMoney?.amount || item.variant?.price || '0',
+          variant: item.variant ? { title: item.variant.title } : undefined,
         })),
         // Only include city/country, not full address
         shippingAddress: node.shippingAddress ? {
@@ -378,6 +402,158 @@ export class ShopifyClient {
       };
     } catch (error) {
       console.error('Failed to fetch customer context from Shopify:', error);
+      return null;
+    }
+  }
+
+  // Search for an order by order number (e.g., #1002 or 1002)
+  async getOrderByNumber(orderNumber: string): Promise<ShopifyOrder | null> {
+    // Clean up order number - remove # if present
+    const cleanNumber = orderNumber.replace(/^#/, '').trim();
+
+    const query = `
+      query getOrderByName($query: String!) {
+        orders(first: 1, query: $query) {
+          edges {
+            node {
+              id
+              name
+              createdAt
+              displayFulfillmentStatus
+              displayFinancialStatus
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+              customer {
+                email
+                firstName
+                lastName
+              }
+              lineItems(first: 10) {
+                edges {
+                  node {
+                    title
+                    quantity
+                    originalUnitPriceSet {
+                      shopMoney {
+                        amount
+                        currencyCode
+                      }
+                    }
+                    variant {
+                      title
+                      price
+                    }
+                  }
+                }
+              }
+              shippingAddress {
+                city
+                country
+              }
+              fulfillments {
+                trackingInfo {
+                  company
+                  number
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      console.log(`[Shopify] Searching for order: ${cleanNumber}`);
+      const data = await this.graphql<{
+        orders: {
+          edges: Array<{
+            node: {
+              id: string;
+              name: string;
+              createdAt: string;
+              displayFulfillmentStatus: string | null;
+              displayFinancialStatus: string;
+              totalPriceSet: {
+                shopMoney: {
+                  amount: string;
+                  currencyCode: string;
+                };
+              };
+              customer?: {
+                email: string;
+                firstName: string;
+                lastName: string;
+              };
+              lineItems: {
+                edges: Array<{
+                  node: {
+                    title: string;
+                    quantity: number;
+                    originalUnitPriceSet?: {
+                      shopMoney: {
+                        amount: string;
+                        currencyCode: string;
+                      };
+                    };
+                    variant?: {
+                      title: string;
+                      price: string;
+                    };
+                  };
+                }>;
+              };
+              shippingAddress?: {
+                city: string;
+                country: string;
+              };
+              fulfillments: Array<{
+                trackingInfo: Array<{
+                  company: string;
+                  number: string;
+                  url: string | null;
+                }>;
+              }>;
+            };
+          }>;
+        };
+      }>(query, { query: `name:#${cleanNumber}` });
+
+      const order = data.orders.edges[0]?.node;
+
+      if (!order) {
+        console.log(`[Shopify] No order found with number: ${cleanNumber}`);
+        return null;
+      }
+
+      console.log(`[Shopify] Found order: ${order.name}`);
+
+      return {
+        id: order.id,
+        name: order.name,
+        createdAt: order.createdAt,
+        fulfillmentStatus: order.displayFulfillmentStatus,
+        financialStatus: order.displayFinancialStatus,
+        totalPrice: order.totalPriceSet.shopMoney.amount,
+        currency: order.totalPriceSet.shopMoney.currencyCode,
+        lineItems: order.lineItems.edges.map(({ node: item }) => ({
+          title: item.title,
+          quantity: item.quantity,
+          unitPrice: item.originalUnitPriceSet?.shopMoney?.amount || item.variant?.price || '0',
+          variant: item.variant ? { title: item.variant.title } : undefined,
+        })),
+        shippingAddress: order.shippingAddress ? {
+          city: order.shippingAddress.city,
+          country: order.shippingAddress.country,
+        } : undefined,
+        trackingInfo: order.fulfillments.flatMap(f => f.trackingInfo),
+      };
+    } catch (error) {
+      console.error('Failed to fetch order from Shopify:', error);
       return null;
     }
   }
@@ -433,7 +609,8 @@ export function formatShopifyContextForAI(context: ShopifyCustomerContext): stri
           const variant = item.variant?.title && item.variant.title !== 'Default Title'
             ? ` (${item.variant.title})`
             : '';
-          lines.push(`  - ${item.quantity}x ${item.title}${variant}`);
+          const price = item.unitPrice ? ` - ${order.currency} ${item.unitPrice} each` : '';
+          lines.push(`  - ${item.quantity}x ${item.title}${variant}${price}`);
         }
       }
 

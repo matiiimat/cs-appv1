@@ -11,7 +11,60 @@ import { EmailUsageModel } from '@/lib/models/email-usage'
 import { TokenUsageModel } from '@/lib/models/token-usage'
 import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
 import { createCustomerAnonymizer } from '@/lib/pii-anonymizer'
-import { ShopifyClient, formatShopifyContextForAI } from '@/lib/shopify-client'
+import { ShopifyClient, formatShopifyContextForAI, type ShopifyOrder } from '@/lib/shopify-client'
+
+// Extract order numbers from text (e.g., #1002, order 1002, order #1002)
+function extractOrderNumbers(text: string): string[] {
+  const patterns = [
+    /#(\d{3,})/g,                           // #1002
+    /order\s*#?\s*(\d{3,})/gi,              // order 1002, order #1002
+    /commande\s*#?\s*(\d{3,})/gi,           // French: commande 1002
+    /numéro\s+de\s+commande\s*:?\s*#?(\d{3,})/gi, // French: numéro de commande
+  ]
+
+  const orderNumbers: Set<string> = new Set()
+  for (const pattern of patterns) {
+    let match
+    while ((match = pattern.exec(text)) !== null) {
+      orderNumbers.add(match[1])
+    }
+  }
+
+  return Array.from(orderNumbers)
+}
+
+// Format a single order for AI context
+function formatSingleOrderForAI(order: ShopifyOrder): string {
+  const lines: string[] = [
+    '## Order Information (from Shopify)',
+    '',
+    `**Order ${order.name}** (${new Date(order.createdAt).toLocaleDateString()})`,
+    `- Status: ${order.financialStatus}${order.fulfillmentStatus ? ` / ${order.fulfillmentStatus}` : ''}`,
+    `- Total: ${order.currency} ${order.totalPrice}`,
+  ]
+
+  if (order.lineItems.length > 0) {
+    lines.push('- Items:')
+    for (const item of order.lineItems) {
+      const variant = item.variant?.title && item.variant.title !== 'Default Title'
+        ? ` (${item.variant.title})`
+        : ''
+      const price = item.unitPrice ? ` - ${order.currency} ${item.unitPrice} each` : ''
+      lines.push(`  - ${item.quantity}x ${item.title}${variant}${price}`)
+    }
+  }
+
+  if (order.trackingInfo && order.trackingInfo.length > 0) {
+    const tracking = order.trackingInfo[0]
+    lines.push(`- Tracking: ${tracking.company} - ${tracking.number}`)
+  }
+
+  if (order.shippingAddress) {
+    lines.push(`- Ships to: ${order.shippingAddress.city}, ${order.shippingAddress.country}`)
+  }
+
+  return lines.join('\n')
+}
 
 interface GenerateResponseRequest {
   customerName: string
@@ -272,13 +325,36 @@ Message: ${anonymizedBody}`
 
     // Fetch Shopify customer context if integration is enabled
     let shopifyContext = ''
+    let shopifyConnected = false
     try {
       const shopifyClient = await ShopifyClient.fromOrganizationId(orgId)
       if (shopifyClient) {
+        shopifyConnected = true
+
+        // First, try to find customer by email
         const customerContext = await shopifyClient.getCustomerContext(emailValidation.customerEmail)
         if (customerContext) {
           shopifyContext = formatShopifyContextForAI(customerContext)
-          console.log(`Fetched Shopify context for ${emailValidation.customerEmail}: ${customerContext.totalOrders} orders`)
+          console.log(`[Shopify] Found customer context for ${emailValidation.customerEmail}: ${customerContext.totalOrders} orders`)
+        } else {
+          // Fallback: try to find order by number if mentioned in the message
+          const orderNumbers = extractOrderNumbers(`${emailValidation.subject} ${emailValidation.body}`)
+          if (orderNumbers.length > 0) {
+            console.log(`[Shopify] Customer not found, trying order numbers: ${orderNumbers.join(', ')}`)
+            for (const orderNum of orderNumbers) {
+              const order = await shopifyClient.getOrderByNumber(orderNum)
+              if (order) {
+                shopifyContext = formatSingleOrderForAI(order)
+                console.log(`[Shopify] Found order ${order.name} by number search`)
+                break // Use first found order
+              }
+            }
+          }
+
+          // If still no data found, log for debugging
+          if (!shopifyContext) {
+            console.log(`[Shopify] No customer or order data found for email: ${emailValidation.customerEmail}`)
+          }
         }
       }
     } catch (error) {
@@ -329,7 +405,19 @@ When responding:
 - Reference specific order numbers (e.g., #1001) when discussing their orders
 - Provide accurate shipping/fulfillment status if they're asking about delivery
 - Acknowledge their purchase history to provide personalized service
-- If they're asking about a specific order, locate it in the history and address their concern directly` : ''}`
+- If they're asking about a specific order, locate it in the history and address their concern directly` : shopifyConnected ? `
+
+IMPORTANT: Our Shopify store is connected, but NO order history was found for this customer's email address. This means either:
+- They used a different email for their purchase
+- They haven't made a purchase yet
+- The order was placed under a different account
+
+DO NOT make up or invent any order information. If they mention an order or purchase, politely ask them to:
+1. Confirm the email address they used for the order
+2. Provide the order number if they have it
+3. Check if they received an order confirmation email
+
+Never fabricate order details, product names, prices, or tracking information.` : ''}`
 
     // Use anonymized data in the main response prompt
     const aiResponsePrompt = `Customer: ${anonymizedName}

@@ -328,12 +328,6 @@ export function IntegrationsSection() {
           </div>
         </SettingCard>
 
-        {/* Placeholder for future integrations */}
-        <div className="border border-dashed border-muted-foreground/20 rounded-lg p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            More integrations coming soon (WooCommerce, Stripe, etc.)
-          </p>
-        </div>
       </div>
     </div>
   )
