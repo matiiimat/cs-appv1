@@ -7,18 +7,19 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
-  ShoppingBag,
   Check,
   Loader2,
   ExternalLink,
   AlertCircle,
-  Unplug
+  Unplug,
+  HelpCircle
 } from "lucide-react"
 import { useSettings } from "@/lib/settings-context"
 import { useSearchParams } from "next/navigation"
+import Image from "next/image"
 
 export function IntegrationsSection() {
-  const { settings, updateSettings, shopifyConfigured, setShopifyConfigured } = useSettings()
+  const { settings, updateSettings, shopifyConfigured, setShopifyConfigured, slackWebhookConfigured, setSlackWebhookConfigured } = useSettings()
   const searchParams = useSearchParams()
 
   // Shopify state
@@ -28,6 +29,20 @@ export function IntegrationsSection() {
   const [isToggling, setIsToggling] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  // Slack state
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState("")
+  const [isTestingSlack, setIsTestingSlack] = useState(false)
+  const [slackTestResult, setSlackTestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [isSavingSlack, setIsSavingSlack] = useState(false)
+  const [showSlackHelp, setShowSlackHelp] = useState(false)
+
+  // Initialize Slack webhook URL from settings
+  useEffect(() => {
+    if (settings.slackIntegration?.webhookUrl) {
+      setSlackWebhookUrl(settings.slackIntegration.webhookUrl)
+    }
+  }, [settings.slackIntegration?.webhookUrl])
 
   // Check for success/error from OAuth callback
   useEffect(() => {
@@ -146,6 +161,113 @@ export function IntegrationsSection() {
     }
   }
 
+  // Slack handlers
+  const handleSlackToggle = async (enabled: boolean) => {
+    const newSlackIntegration = {
+      ...settings.slackIntegration,
+      enabled,
+      webhookUrl: settings.slackIntegration?.webhookUrl,
+    }
+
+    updateSettings({ slackIntegration: newSlackIntegration })
+
+    setIsSavingSlack(true)
+    try {
+      const currentSettings = {
+        ...settings,
+        slackIntegration: newSlackIntegration,
+        lastSaved: new Date().toISOString(),
+      }
+      const { theme: _ignored, ...payloadNoTheme } = currentSettings
+      void _ignored
+
+      const response = await fetch('/api/organization/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadNoTheme),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save')
+      }
+    } catch (err) {
+      console.error('Failed to save Slack toggle:', err)
+    } finally {
+      setIsSavingSlack(false)
+    }
+  }
+
+  const handleSaveSlackWebhook = async () => {
+    if (!slackWebhookUrl.trim()) return
+
+    setIsSavingSlack(true)
+    setSlackTestResult(null)
+
+    try {
+      const newSlackIntegration = {
+        enabled: settings.slackIntegration?.enabled ?? false,
+        webhookUrl: slackWebhookUrl.trim(),
+      }
+
+      updateSettings({ slackIntegration: newSlackIntegration })
+
+      const currentSettings = {
+        ...settings,
+        slackIntegration: newSlackIntegration,
+        lastSaved: new Date().toISOString(),
+      }
+      const { theme: _ignored, ...payloadNoTheme } = currentSettings
+      void _ignored
+
+      const response = await fetch('/api/organization/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadNoTheme),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save')
+      }
+
+      setSlackWebhookConfigured(true)
+      setSlackWebhookUrl("")
+      setSlackTestResult({ success: true, message: "Webhook URL saved" })
+    } catch {
+      setSlackTestResult({ success: false, message: "Failed to save webhook URL" })
+    } finally {
+      setIsSavingSlack(false)
+    }
+  }
+
+  const handleTestSlack = async () => {
+    setIsTestingSlack(true)
+    setSlackTestResult(null)
+
+    try {
+      const body = slackWebhookUrl.trim() && slackWebhookUrl !== "change"
+        ? { webhookUrl: slackWebhookUrl.trim() }
+        : {}
+
+      const resp = await fetch("/api/slack/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      const data = await resp.json()
+
+      if (data.success) {
+        setSlackTestResult({ success: true, message: "Test notification sent! Check your Slack channel." })
+      } else {
+        setSlackTestResult({ success: false, message: data.error || "Test failed" })
+      }
+    } catch {
+      setSlackTestResult({ success: false, message: "Failed to send test notification" })
+    } finally {
+      setIsTestingSlack(false)
+    }
+  }
+
   return (
     <div className="animate-in fade-in duration-200">
       <SectionHeader
@@ -172,8 +294,14 @@ export function IntegrationsSection() {
         {/* Shopify Integration */}
         <SettingCard>
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#96BF48]/10 flex items-center justify-center shrink-0">
-              <ShoppingBag className="h-5 w-5 text-[#96BF48]" />
+            <div className="w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
+              <Image
+                src="/integrations/shopify_icon.png"
+                alt="Shopify"
+                width={64}
+                height={64}
+                className="rounded-lg"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
@@ -328,12 +456,153 @@ export function IntegrationsSection() {
           </div>
         </SettingCard>
 
-        {/* Placeholder for future integrations */}
-        <div className="border border-dashed border-muted-foreground/20 rounded-lg p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            More integrations coming soon (WooCommerce, Stripe, etc.)
-          </p>
-        </div>
+        {/* Slack Integration */}
+        <SettingCard>
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
+              <Image
+                src="/integrations/slack_icon.png"
+                alt="Slack"
+                width={64}
+                height={64}
+                className="rounded-lg"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">Slack</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary ml-2">
+                    Notifications
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isSavingSlack && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  <Switch
+                    checked={settings.slackIntegration?.enabled ?? false}
+                    onCheckedChange={handleSlackToggle}
+                    disabled={isSavingSlack}
+                  />
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mt-2">
+                Get notified in Slack when new support emails arrive.
+              </p>
+
+              {/* How to create webhook - collapsible help */}
+              <button
+                onClick={() => setShowSlackHelp(!showSlackHelp)}
+                className="flex items-center gap-1.5 text-sm text-primary hover:underline mt-2"
+              >
+                <HelpCircle className="h-4 w-4" />
+                How to create a Slack webhook
+              </button>
+
+              {showSlackHelp && (
+                <div className="mt-3 p-4 bg-muted/50 rounded-lg text-sm space-y-2">
+                  <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
+                    <li>Go to <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">api.slack.com/apps</a> and click <strong className="text-foreground">Create New App</strong></li>
+                    <li>Choose <strong className="text-foreground">From scratch</strong></li>
+                    <li>Name your app (e.g., &quot;Aidly Notifications&quot;) and select your workspace</li>
+                    <li>In the left sidebar, click <strong className="text-foreground">Incoming Webhooks</strong></li>
+                    <li>Toggle <strong className="text-foreground">Activate Incoming Webhooks</strong> to ON</li>
+                    <li>Click <strong className="text-foreground">Add New Webhook to Workspace</strong></li>
+                    <li>Select a channel (e.g., #support) and click <strong className="text-foreground">Allow</strong></li>
+                    <li>Copy the Webhook URL and paste it below</li>
+                  </ol>
+                </div>
+              )}
+
+              {settings.slackIntegration?.enabled && (
+                <div className="mt-4 space-y-4">
+                  {slackWebhookConfigured && !slackWebhookUrl ? (
+                    // Webhook is configured - show status and option to change
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-600 font-medium">Webhook configured</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleTestSlack}
+                          disabled={isTestingSlack}
+                        >
+                          {isTestingSlack ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Testing...
+                            </>
+                          ) : (
+                            "Send Test Notification"
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSlackWebhookUrl("change")}
+                        >
+                          Change webhook
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Show input to add or change webhook
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">
+                        {slackWebhookConfigured ? "New Webhook URL" : "Webhook URL"}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="url"
+                          placeholder="https://hooks.slack.com/services/..."
+                          value={slackWebhookUrl === "change" ? "" : slackWebhookUrl}
+                          onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                          className="font-mono text-sm flex-1"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSaveSlackWebhook}
+                          disabled={isSavingSlack || !slackWebhookUrl.trim() || slackWebhookUrl === "change"}
+                          className="shrink-0"
+                        >
+                          {isSavingSlack ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Save"
+                          )}
+                        </Button>
+                        {slackWebhookConfigured && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSlackWebhookUrl("")}
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {slackTestResult && (
+                    <div
+                      className={`text-sm ${
+                        slackTestResult.success ? "text-green-600" : "text-destructive"
+                      }`}
+                    >
+                      {slackTestResult.message}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </SettingCard>
+
       </div>
     </div>
   )
