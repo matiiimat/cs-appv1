@@ -431,7 +431,7 @@ End with the signature: "${settings.agentSignature}"`
                           {isPending ? (
                             <span className="text-purple-400">Pending</span>
                           ) : (
-                            <span className={urgency === 'red' ? 'text-red-400' : urgency === 'yellow' ? 'text-amber-400' : 'text-muted-foreground/60'}>
+                            <span className={`px-1.5 py-0.5 rounded ${getUrgencyBgClass(urgency)}`}>
                               {formatFriendlyDate(message.timestamp)}
                             </span>
                           )}
