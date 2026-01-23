@@ -264,9 +264,14 @@ export function BillingSection() {
         />
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-card rounded-xl border border-border/50 p-6 animate-pulse">
-              <div className="h-6 w-1/3 bg-muted rounded mb-4" />
-              <div className="h-4 w-2/3 bg-muted rounded" />
+            <div key={i} className="py-5 border-b border-border/30 animate-pulse">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 bg-muted rounded-lg" />
+                <div className="flex-1">
+                  <div className="h-5 w-1/3 bg-muted rounded mb-2" />
+                  <div className="h-3 w-1/2 bg-muted rounded" />
+                </div>
+              </div>
             </div>
           ))}
         </div>

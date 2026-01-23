@@ -65,9 +65,9 @@ function getStatusBadge(status: string) {
 export function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center justify-between p-4 border border-border/50 rounded-lg animate-pulse">
+          <div key={i} className="flex items-center justify-between py-3 border-b border-border/30 last:border-b-0 animate-pulse">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-muted rounded" />
               <div>
@@ -93,11 +93,11 @@ export function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {invoices.map((invoice) => (
         <div
           key={invoice.id}
-          className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/30 transition-colors"
+          className="flex items-center justify-between py-3 border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors -mx-2 px-2 rounded"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-muted/50 rounded flex items-center justify-center">
