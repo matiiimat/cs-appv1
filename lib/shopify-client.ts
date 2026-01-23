@@ -239,7 +239,7 @@ export class ShopifyClient {
               email
               createdAt
               numberOfOrders
-              totalSpentV2 {
+              amountSpent {
                 amount
                 currencyCode
               }
@@ -310,7 +310,7 @@ export class ShopifyClient {
               email: string;
               createdAt: string;
               numberOfOrders: number;
-              totalSpentV2: {
+              amountSpent: {
                 amount: string;
                 currencyCode: string;
               };
@@ -402,8 +402,8 @@ export class ShopifyClient {
 
       return {
         totalOrders: customer.numberOfOrders,
-        totalSpent: customer.totalSpentV2.amount,
-        currency: customer.totalSpentV2.currencyCode,
+        totalSpent: customer.amountSpent.amount,
+        currency: customer.amountSpent.currencyCode,
         recentOrders,
         customerSince: customer.createdAt,
       };
