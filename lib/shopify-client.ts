@@ -39,6 +39,7 @@ export interface ShopifyOrder {
 }
 
 export interface ShopifyCustomerContext {
+  customerId: string; // Shopify GID like gid://shopify/Customer/12345
   totalOrders: number;
   totalSpent: string;
   currency: string;
@@ -401,6 +402,7 @@ export class ShopifyClient {
       }));
 
       return {
+        customerId: customer.id,
         totalOrders: customer.numberOfOrders,
         totalSpent: customer.amountSpent.amount,
         currency: customer.amountSpent.currencyCode,

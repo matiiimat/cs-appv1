@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  ShoppingBag,
   Package,
   Truck,
   CheckCircle,
@@ -52,11 +52,18 @@ interface ShopifyCustomerData {
   found?: boolean
   message?: string
   searchType?: 'email' | 'order'
+  customerId?: string // Shopify GID like gid://shopify/Customer/12345
   totalOrders?: number
   totalSpent?: string
   currency?: string
   recentOrders?: ShopifyOrder[]
   customerSince?: string
+}
+
+// Extract numeric ID from Shopify GID (e.g., gid://shopify/Order/12345 -> 12345)
+function extractShopifyId(gid: string): string | null {
+  const match = gid.match(/\/(\d+)$/)
+  return match ? match[1] : null
 }
 
 interface ShopifyPanelProps {
@@ -77,6 +84,15 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
 
   // Don't show if Shopify not configured or not enabled
   const isEnabled = shopifyConfigured && settings.shopifyIntegration?.enabled
+  const shopDomain = settings.shopifyIntegration?.shopDomain
+
+  // Build Shopify admin URL
+  const getShopifyAdminUrl = (type: 'customer' | 'order', gid: string) => {
+    if (!shopDomain) return null
+    const numericId = extractShopifyId(gid)
+    if (!numericId) return null
+    return `https://${shopDomain}/admin/${type === 'customer' ? 'customers' : 'orders'}/${numericId}`
+  }
 
   const fetchCustomerData = async (email?: string, orderNum?: string) => {
     setIsLoading(true)
@@ -176,7 +192,13 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
       <div className="p-3 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4 text-[#96BF48]" />
+            <Image
+              src="/integrations/shopify_icon.png"
+              alt="Shopify"
+              width={16}
+              height={16}
+              className="shrink-0"
+            />
             <span className="text-sm font-semibold">Shopify</span>
           </div>
           {onClose && (
@@ -278,6 +300,19 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
                     </div>
                   )}
 
+                  {/* View Customer in Shopify */}
+                  {data.customerId && getShopifyAdminUrl('customer', data.customerId) && (
+                    <a
+                      href={getShopifyAdminUrl('customer', data.customerId)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      View customer in Shopify
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+
                   {/* Orders */}
                   {data.recentOrders && data.recentOrders.length > 0 && (
                     <div className="space-y-2">
@@ -293,17 +328,34 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
                             className="border border-border rounded-lg overflow-hidden"
                           >
                             {/* Order Header */}
-                            <button
-                              onClick={() => toggleOrderExpanded(order.id)}
-                              className="w-full p-2 text-left hover:bg-muted/50 transition-colors"
-                            >
+                            <div className="p-2">
                               <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">{order.name}</span>
-                                {isExpanded ? (
-                                  <ChevronUp className="h-3 w-3 text-muted-foreground" />
-                                ) : (
-                                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                                )}
+                                <div className="flex items-center gap-2">
+                                  {getShopifyAdminUrl('order', order.id) ? (
+                                    <a
+                                      href={getShopifyAdminUrl('order', order.id)!}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                                    >
+                                      {order.name}
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  ) : (
+                                    <span className="text-sm font-medium">{order.name}</span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => toggleOrderExpanded(order.id)}
+                                  className="p-1 hover:bg-muted rounded"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                </button>
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 {getFulfillmentIcon(order.fulfillmentStatus)}
@@ -311,7 +363,7 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
                                   {getFulfillmentLabel(order.fulfillmentStatus)}
                                 </span>
                               </div>
-                            </button>
+                            </div>
 
                             {/* Expanded Details */}
                             {isExpanded && (

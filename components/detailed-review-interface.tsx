@@ -307,6 +307,8 @@ export function DetailedReviewInterface() {
     try {
       const systemPrompt = `You are an expert customer support AI assistant. Refine the draft response based on the user's instruction.
 
+If Shopify customer data is provided above, use it to personalize the response with accurate order details. Never invent order numbers or tracking information - only reference what's in the data.
+
 Customer message: ${selectedMessage.message}
 Current draft: ${replyText || selectedMessage.aiSuggestedResponse || ""}
 User instruction: ${aiInput}
@@ -321,6 +323,7 @@ End with the signature: "${settings.agentSignature}"`
           aiConfig: settings.aiConfig,
           system: systemPrompt,
           prompt: aiInput,
+          customerEmail: selectedMessage.customerEmail,
         })
       })
 
