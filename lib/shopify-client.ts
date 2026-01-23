@@ -296,8 +296,11 @@ export class ShopifyClient {
 
     try {
       // Search by email - Shopify requires `email:` prefix for exact match
-      const searchQuery = `email:${email}`;
+      // Note: Email must be lowercase for Shopify search
+      const normalizedEmail = email.toLowerCase().trim();
+      const searchQuery = `email:${normalizedEmail}`;
       console.log(`[Shopify] Searching for customer with query: ${searchQuery}`);
+      console.log(`[Shopify] Store domain: ${this.shopDomain}`);
       const data = await this.graphql<{
         customers: {
           edges: Array<{
@@ -361,10 +364,13 @@ export class ShopifyClient {
         };
       }>(query, { searchQuery });
 
+      console.log(`[Shopify] Query returned ${data.customers.edges.length} customers`);
+
       const customer = data.customers.edges[0]?.node;
 
       if (!customer) {
-        console.log(`[Shopify] No customer found for email: ${email}`);
+        console.log(`[Shopify] No customer found for email: ${normalizedEmail}`);
+        console.log(`[Shopify] Raw response edges:`, JSON.stringify(data.customers.edges));
         return null;
       }
 

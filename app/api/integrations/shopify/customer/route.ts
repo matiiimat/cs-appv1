@@ -16,12 +16,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    // Get customer email from query params
+    // Get search parameters
     const { searchParams } = new URL(request.url)
     const customerEmail = searchParams.get('email')
+    const orderNumber = searchParams.get('order')
 
-    if (!customerEmail) {
-      return NextResponse.json({ error: 'Missing email parameter' }, { status: 400 })
+    if (!customerEmail && !orderNumber) {
+      return NextResponse.json({ error: 'Missing email or order parameter' }, { status: 400 })
     }
 
     // Get Shopify client for this organization
@@ -34,21 +35,43 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Fetch customer context from Shopify
-    const customerContext = await shopifyClient.getCustomerContext(customerEmail)
+    // Search by email first
+    if (customerEmail) {
+      const customerContext = await shopifyClient.getCustomerContext(customerEmail)
 
-    if (!customerContext) {
-      return NextResponse.json({
-        enabled: true,
-        found: false,
-        message: 'Customer not found in Shopify',
-      })
+      if (customerContext) {
+        return NextResponse.json({
+          enabled: true,
+          found: true,
+          searchType: 'email',
+          ...customerContext,
+        })
+      }
+    }
+
+    // If no customer found by email and we have an order number, search by order
+    if (orderNumber) {
+      const order = await shopifyClient.getOrderByNumber(orderNumber)
+
+      if (order) {
+        return NextResponse.json({
+          enabled: true,
+          found: true,
+          searchType: 'order',
+          totalOrders: 1,
+          totalSpent: order.totalPrice,
+          currency: order.currency,
+          recentOrders: [order],
+        })
+      }
     }
 
     return NextResponse.json({
       enabled: true,
-      found: true,
-      ...customerContext,
+      found: false,
+      message: customerEmail
+        ? 'Customer not found in Shopify. Try searching by order number.'
+        : 'Order not found in Shopify.',
     })
   } catch (error) {
     console.error('Shopify customer fetch error:', error)
