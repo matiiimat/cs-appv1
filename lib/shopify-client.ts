@@ -7,6 +7,7 @@ const SHOPIFY_SCOPES = [
   'read_orders',
   'read_customers',
   'read_fulfillments',
+  'read_products',
 ].join(',');
 
 // Types for Shopify data
@@ -237,7 +238,7 @@ export class ShopifyClient {
               id
               email
               createdAt
-              ordersCount
+              numberOfOrders
               totalSpentV2 {
                 amount
                 currencyCode
@@ -308,7 +309,7 @@ export class ShopifyClient {
               id: string;
               email: string;
               createdAt: string;
-              ordersCount: number;
+              numberOfOrders: number;
               totalSpentV2: {
                 amount: string;
                 currencyCode: string;
@@ -374,7 +375,7 @@ export class ShopifyClient {
         return null;
       }
 
-      console.log(`[Shopify] Found customer: ${customer.email} with ${customer.ordersCount} orders`);
+      console.log(`[Shopify] Found customer: ${customer.email} with ${customer.numberOfOrders} orders`);
 
       // Transform orders to our format (anonymizing PII)
       const recentOrders: ShopifyOrder[] = customer.orders.edges.map(({ node }) => ({
@@ -400,7 +401,7 @@ export class ShopifyClient {
       }));
 
       return {
-        totalOrders: customer.ordersCount,
+        totalOrders: customer.numberOfOrders,
         totalSpent: customer.totalSpentV2.amount,
         currency: customer.totalSpentV2.currencyCode,
         recentOrders,
