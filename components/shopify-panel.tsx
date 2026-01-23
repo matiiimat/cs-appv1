@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   ShoppingBag,
@@ -17,6 +18,7 @@ import {
   AlertCircle,
   Loader2,
   X,
+  Search,
 } from "lucide-react"
 
 interface ShopifyOrder {
@@ -49,6 +51,7 @@ interface ShopifyCustomerData {
   enabled: boolean
   found?: boolean
   message?: string
+  searchType?: 'email' | 'order'
   totalOrders?: number
   totalSpent?: string
   currency?: string
@@ -68,39 +71,70 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
   const [error, setError] = useState<string | null>(null)
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
 
+  // Manual search state
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isManualSearch, setIsManualSearch] = useState(false)
+
   // Don't show if Shopify not configured or not enabled
   const isEnabled = shopifyConfigured && settings.shopifyIntegration?.enabled
 
+  const fetchCustomerData = async (email?: string, orderNum?: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const params = new URLSearchParams()
+      if (email) params.set('email', email)
+      if (orderNum) params.set('order', orderNum)
+
+      const response = await fetch(`/api/integrations/shopify/customer?${params.toString()}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch')
+      }
+
+      const result = await response.json()
+      setData(result)
+    } catch (err) {
+      console.error('Shopify panel error:', err)
+      setError('Failed to load Shopify data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Auto-fetch on customer email change
   useEffect(() => {
-    if (!isEnabled || !customerEmail) {
+    if (!isEnabled || !customerEmail || isManualSearch) {
       return
     }
+    fetchCustomerData(customerEmail)
+  }, [customerEmail, isEnabled, isManualSearch])
 
-    const fetchCustomerData = async () => {
-      setIsLoading(true)
-      setError(null)
+  const handleManualSearch = () => {
+    if (!searchQuery.trim()) return
 
-      try {
-        const response = await fetch(
-          `/api/integrations/shopify/customer?email=${encodeURIComponent(customerEmail)}`
-        )
+    setIsManualSearch(true)
+    const query = searchQuery.trim()
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch')
-        }
+    // Check if it looks like an order number (starts with # or is just digits)
+    const isOrderNumber = /^#?\d+$/.test(query)
 
-        const result = await response.json()
-        setData(result)
-      } catch (err) {
-        console.error('Shopify panel error:', err)
-        setError('Failed to load Shopify data')
-      } finally {
-        setIsLoading(false)
-      }
+    if (isOrderNumber) {
+      fetchCustomerData(undefined, query.replace('#', ''))
+    } else {
+      // Assume it's an email
+      fetchCustomerData(query)
     }
+  }
 
-    fetchCustomerData()
-  }, [customerEmail, isEnabled])
+  const handleResetSearch = () => {
+    setIsManualSearch(false)
+    setSearchQuery("")
+    if (customerEmail) {
+      fetchCustomerData(customerEmail)
+    }
+  }
 
   // Don't render if Shopify not configured
   if (!isEnabled) {
@@ -137,17 +171,54 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
   }
 
   return (
-    <div className="w-64 flex-shrink-0 surface rounded-lg flex flex-col h-full">
+    <div className="w-72 flex-shrink-0 surface rounded-lg flex flex-col h-full">
       {/* Header */}
-      <div className="p-3 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShoppingBag className="h-4 w-4 text-[#96BF48]" />
-          <span className="text-sm font-semibold">Shopify</span>
+      <div className="p-3 border-b border-border">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-[#96BF48]" />
+            <span className="text-sm font-semibold">Shopify</span>
+          </div>
+          {onClose && (
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
-        {onClose && (
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
-            <X className="h-3 w-3" />
+
+        {/* Search Field */}
+        <div className="flex items-center gap-1">
+          <Input
+            type="text"
+            placeholder="Email or order #"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
+            className="h-7 text-xs"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={handleManualSearch}
+            disabled={isLoading || !searchQuery.trim()}
+          >
+            {isLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Search className="h-3 w-3" />
+            )}
           </Button>
+        </div>
+
+        {/* Manual search indicator */}
+        {isManualSearch && (
+          <button
+            onClick={handleResetSearch}
+            className="mt-1 text-xs text-primary hover:underline"
+          >
+            Back to customer email
+          </button>
         )}
       </div>
 
@@ -170,11 +241,23 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
           {data && !isLoading && (
             <>
               {!data.found ? (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Customer not found in Shopify
+                <div className="text-center py-4 space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    {data.message || 'Customer not found in Shopify'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Try searching by order number above
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Search type indicator */}
+                  {data.searchType === 'order' && (
+                    <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-2 py-1 rounded text-center">
+                      Found by order number (no full customer profile)
+                    </div>
+                  )}
+
                   {/* Customer Summary */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 bg-muted/50 rounded text-center">
