@@ -5,32 +5,92 @@ import { getOrgAndUserByEmail } from '@/lib/tenant'
 import { EmailUsageModel } from '@/lib/models/email-usage'
 import { TokenUsageModel } from '@/lib/models/token-usage'
 import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
+import { ShopifyClient } from '@/lib/shopify-client'
 
-async function requireOrgId(headers: Headers): Promise<string> {
+async function requireOrg(headers: Headers): Promise<{ organizationId: string }> {
   const session = await auth.api.getSession({ headers })
   if (!session?.user?.email) throw new Error('UNAUTHORIZED')
   const orgUser = await getOrgAndUserByEmail(session.user.email)
   if (!orgUser) throw new Error('ORG_NOT_FOUND')
-  return orgUser.organizationId
+  return { organizationId: orgUser.organizationId }
+}
+
+// Build Shopify context string for AI prompt
+function buildShopifyContext(customerData: {
+  totalOrders?: number
+  totalSpent?: string
+  currency?: string
+  customerSince?: string
+  recentOrders?: Array<{
+    name: string
+    createdAt: string
+    fulfillmentStatus: string | null
+    financialStatus: string
+    totalPrice: string
+    currency: string
+    lineItems: Array<{ title: string; quantity: number }>
+  }>
+}): string {
+  const lines: string[] = ['## Shopify Customer Data']
+
+  if (customerData.totalOrders !== undefined) {
+    lines.push(`- Total orders: ${customerData.totalOrders}`)
+  }
+  if (customerData.totalSpent && customerData.currency) {
+    lines.push(`- Total spent: ${customerData.currency} ${customerData.totalSpent}`)
+  }
+  if (customerData.customerSince) {
+    lines.push(`- Customer since: ${new Date(customerData.customerSince).toLocaleDateString()}`)
+  }
+
+  if (customerData.recentOrders && customerData.recentOrders.length > 0) {
+    lines.push('\n### Recent Orders:')
+    for (const order of customerData.recentOrders.slice(0, 3)) {
+      const status = order.fulfillmentStatus || 'Unfulfilled'
+      const items = order.lineItems.map(i => `${i.quantity}x ${i.title}`).join(', ')
+      lines.push(`- Order ${order.name} (${new Date(order.createdAt).toLocaleDateString()}): ${status}, ${order.financialStatus}, ${order.currency} ${order.totalPrice}`)
+      lines.push(`  Items: ${items}`)
+    }
+  }
+
+  return lines.join('\n')
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Accept legacy shape with aiConfig but ignore any client-sent apiKey; use DB-config instead
-    type ChatRequestBody = { system?: string; prompt?: string }
+    type ChatRequestBody = { system?: string; prompt?: string; customerEmail?: string }
     const bodyUnknown = await request.json().catch(() => ({})) as unknown
     const body: ChatRequestBody = (typeof bodyUnknown === 'object' && bodyUnknown !== null)
       ? bodyUnknown as ChatRequestBody
       : {}
-    const system = body.system
+    let system = body.system
     const prompt = body.prompt
+    const customerEmail = body.customerEmail
 
     if (!system || !prompt) {
       return NextResponse.json({ error: 'system and prompt are required' }, { status: 400 })
     }
 
     // Load effective AI configuration (handles managed vs BYOK plans)
-    const orgId = await requireOrgId(request.headers)
+    const { organizationId: orgId } = await requireOrg(request.headers)
+
+    // Fetch Shopify data if customer email provided
+    if (customerEmail) {
+      try {
+        const shopifyClient = await ShopifyClient.fromOrganizationId(orgId)
+        if (shopifyClient) {
+          const customerContext = await shopifyClient.getCustomerContext(customerEmail)
+          if (customerContext) {
+            const shopifyContext = buildShopifyContext(customerContext)
+            system = `${shopifyContext}\n\n${system}`
+          }
+        }
+      } catch (err) {
+        // Log but don't fail the request if Shopify fetch fails
+        console.error('Failed to fetch Shopify context:', err)
+      }
+    }
 
     // Check email usage limits before allowing AI generation
     const usageCheck = await EmailUsageModel.canSendEmail(orgId)

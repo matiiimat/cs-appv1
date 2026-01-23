@@ -592,8 +592,7 @@ export default function LuxuryLanding() {
 
             {/* Subheadline */}
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-white/50 md:text-xl animate-[fadeInUp_0.8s_ease-out_0.5s_both]">
-              Aidly transforms customer support with intelligent AI that drafts perfect responses instantly.
-              Reduce costs by 90% while delivering faster, more consistent service.
+              AI-powered email support that drafts perfect responses instantly—you have the final word. Save hours on repetitive emails while maintaining your brand voice. Native Shopify integration included.
             </p>
 
             {/* CTA button */}
