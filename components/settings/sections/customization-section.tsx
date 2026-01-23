@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { SectionHeader } from "../section-header"
-import { SettingCard } from "../setting-card"
 import { CategoryEditor } from "../editors/category-editor"
 import { SLAVisualizer } from "../editors/sla-visualizer"
 import { QuickActionEditor } from "../editors/quick-action-card"
@@ -78,24 +77,24 @@ export function CustomizationSection() {
         }
       />
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {/* Categories */}
-        <SettingCard>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Message Categories</h3>
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Message Categories</h3>
           <CategoryEditor />
-        </SettingCard>
+        </div>
 
         {/* SLA Thresholds */}
-        <SettingCard>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Response Time SLA</h3>
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Response Time SLA</h3>
           <SLAVisualizer />
-        </SettingCard>
+        </div>
 
         {/* Quick Actions */}
-        <SettingCard>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Quick Actions</h3>
           <QuickActionEditor />
-        </SettingCard>
+        </div>
 
         {/* Save Status Feedback */}
         {saveStatus === "error" && (

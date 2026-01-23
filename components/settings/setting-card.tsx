@@ -5,14 +5,16 @@ import { ReactNode } from "react"
 interface SettingCardProps {
   children: ReactNode
   className?: string
+  /** Use bordered style for highlighted sections (e.g., managed AI banner) */
+  bordered?: boolean
 }
 
-export function SettingCard({ children, className = "" }: SettingCardProps) {
+export function SettingCard({ children, className = "", bordered = false }: SettingCardProps) {
   return (
     <div
       className={`
-        bg-card rounded-xl border border-border/50 p-6
-        shadow-sm hover:shadow-md transition-shadow duration-200
+        py-5 transition-colors duration-200
+        ${bordered ? "px-5 rounded-lg border border-border/50 bg-muted/30" : "border-b border-border/30 last:border-b-0"}
         ${className}
       `}
     >

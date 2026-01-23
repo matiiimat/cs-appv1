@@ -144,7 +144,7 @@ export function GDPRSection() {
 
       <div className="space-y-6">
         {/* Data Export Card */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Download className="h-5 w-5 text-primary" />
@@ -204,7 +204,7 @@ export function GDPRSection() {
         </SettingCard>
 
         {/* Account Deletion Card */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
               <Trash2 className="h-5 w-5 text-destructive" />
@@ -317,7 +317,7 @@ export function GDPRSection() {
         </SettingCard>
 
         {/* GDPR Info Card */}
-        <SettingCard className="bg-muted/30">
+        <SettingCard bordered className="bg-muted/20">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Shield className="h-5 w-5 text-primary" />

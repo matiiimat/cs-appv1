@@ -149,7 +149,7 @@ export function SystemSection() {
 
       <div className="space-y-6">
         {/* Email Forwarding */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Mail className="h-5 w-5 text-primary" />
@@ -192,7 +192,7 @@ export function SystemSection() {
 
         {/* Subscription */}
         {billingLoaded && (
-          <SettingCard>
+          <SettingCard bordered>
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <CreditCard className="h-5 w-5 text-primary" />
@@ -266,7 +266,7 @@ export function SystemSection() {
         )}
 
         {/* Sign Out */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
               <Settings2 className="h-5 w-5 text-muted-foreground" />
