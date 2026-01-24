@@ -92,6 +92,50 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     }
   }
 
+  // FAQ Schema for posts with FAQ content
+  const faqSchemas: Record<string, object> = {
+    'apology-email-to-customer': {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do you write a professional apology email to a customer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A professional apology email should include: 1) A clear acknowledgment of the issue in the first sentence, 2) A sincere apology without excuses, 3) A brief explanation of what went wrong, 4) The specific steps you're taking to fix it, and 5) Compensation or next steps if appropriate. Keep it concise, personal, and focused on the customer's experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should you never say in an apology email to a customer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Avoid phrases like 'I'm sorry you feel that way' (shifts blame), 'It's not our fault' (defensive), 'Per our policy' (cold and corporate), 'This never happens' (dismissive), or 'Mistakes happen' (minimizes the issue). These phrases make customers feel unheard and can escalate the situation instead of resolving it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How quickly should you send an apology email to a customer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ideally within 1-4 hours of discovering the issue. Research shows that businesses responding within one hour are 7x more likely to retain the customer. A quick, genuine apology is always better than a perfect one sent days later. If you need more time to investigate, send a brief acknowledgment immediately."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Should you offer compensation in a customer apology email?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It depends on the severity of the issue. For minor inconveniences, a sincere apology may suffice. For significant problems like wrong orders, service outages, or billing errors, offering a discount, refund, or account credit shows you value the customer relationship. Match the compensation to the level of inconvenience caused."
+          }
+        }
+      ]
+    }
+  }
+
+  const faqSchema = faqSchemas[slug]
+
   return (
     <div className="min-h-screen bg-[#FAFBFC] dark:bg-[#0A0A0B]">
       {/* Theme Script - Must run before render */}
@@ -106,6 +150,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+
+      {/* FAQ Schema for applicable posts */}
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* Navigation */}
       <nav className="fixed left-0 right-0 top-0 z-40 border-b backdrop-blur-xl border-slate-200/80 bg-white/80 dark:border-white/[0.06] dark:bg-[#0A0A0B]/80">
