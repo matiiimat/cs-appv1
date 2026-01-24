@@ -292,7 +292,7 @@ export function IntegrationsSection() {
         )}
 
         {/* Shopify Integration */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
               <Image
@@ -457,7 +457,7 @@ export function IntegrationsSection() {
         </SettingCard>
 
         {/* Slack Integration */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-lg flex items-center justify-center shrink-0">
               <Image

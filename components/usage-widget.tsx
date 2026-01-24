@@ -2,7 +2,7 @@
 
 import { useUsage } from "@/lib/usage-context"
 import { Progress } from "@/components/ui/progress"
-import { Mail, Zap, Calendar } from "lucide-react"
+import { Zap, Calendar, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 function formatResetDate(dateString: string | null): string {
@@ -23,10 +23,9 @@ export function UsageWidget() {
 
   if (isLoading) {
     return (
-      <div className="surface p-4 rounded-lg animate-pulse">
-        <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-        <div className="h-8 bg-muted rounded w-1/3 mb-2" />
-        <div className="h-2 bg-muted rounded" />
+      <div className="animate-pulse">
+        <div className="h-4 bg-muted rounded w-1/3 mb-2" />
+        <div className="h-6 bg-muted rounded w-1/4" />
       </div>
     )
   }
@@ -35,112 +34,166 @@ export function UsageWidget() {
     return null
   }
 
-  // Unlimited plan (enterprise)
+  // Unlimited plan (enterprise) - minimal display
   if (usage.limit === null) {
     return (
-      <div className="surface p-4 rounded-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Email Usage</span>
-          </div>
-          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
-            Unlimited
-          </span>
+      <div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          Email Usage
         </div>
-        <div className="text-2xl font-bold mb-2">{usage.used}</div>
-        <p className="text-xs text-muted-foreground">emails sent this period</p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-xs text-primary">Unlimited</span>
+        </div>
       </div>
     )
   }
 
   const percentage = Math.min(100, (usage.used / usage.limit) * 100)
+  const isLowUsage = percentage < 50
+  const isMediumUsage = percentage >= 50 && !usage.isNearLimit && !usage.isAtLimit
 
-  return (
-    <div className="surface p-4 rounded-lg">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Email Usage</span>
+  // Low usage - minimal display
+  if (isLowUsage && !usage.isFreePlan) {
+    return (
+      <div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          Email Usage
         </div>
-        {usage.isAtLimit && (
-          <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full font-medium">
-            Limit Reached
+        <div className="flex items-baseline gap-1 mb-2">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
+        </div>
+        <Progress value={percentage} className="h-1 mb-2" />
+        <div className="text-xs text-muted-foreground">
+          {usage.resetsAt && `Resets ${formatResetDate(usage.resetsAt)}`}
+        </div>
+      </div>
+    )
+  }
+
+  // Medium usage - slightly more visible
+  if (isMediumUsage && !usage.isFreePlan) {
+    return (
+      <div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          Email Usage
+        </div>
+        <div className="flex items-baseline gap-1 mb-2">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
+        </div>
+        <Progress value={percentage} className="h-1.5 mb-2" />
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{usage.remaining} remaining</span>
+          {usage.resetsAt && (
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Resets {formatResetDate(usage.resetsAt)}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Near limit - amber accent, more prominent
+  if (usage.isNearLimit && !usage.isAtLimit) {
+    return (
+      <div className="pl-4 border-l-2 border-amber-500">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium text-amber-500 uppercase tracking-wider">
+            Email Usage
           </span>
-        )}
-        {!usage.isAtLimit && usage.isNearLimit && (
-          <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full font-medium">
+          <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/10 text-amber-500 rounded font-medium">
             Almost Full
           </span>
-        )}
+        </div>
+        <div className="flex items-baseline gap-1 mb-2">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
+        </div>
+        <Progress value={percentage} className="h-2 mb-2 [&>div]:bg-amber-500" />
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-amber-500 font-medium">{usage.remaining} remaining</span>
+          {usage.resetsAt && (
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Resets {formatResetDate(usage.resetsAt)}
+            </span>
+          )}
+        </div>
       </div>
+    )
+  }
 
-      <div className="flex items-baseline gap-1 mb-1">
-        <span className="text-2xl font-bold">{usage.used}</span>
-        <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
-      </div>
-
-      <Progress
-        value={percentage}
-        className={`h-2 mb-2 ${
-          usage.isAtLimit
-            ? '[&>div]:bg-red-500'
-            : usage.isNearLimit
-            ? '[&>div]:bg-yellow-500'
-            : ''
-        }`}
-      />
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{usage.remaining} remaining</span>
-        {usage.resetsAt ? (
-          <span className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            Resets {formatResetDate(usage.resetsAt)}
+  // At limit - red accent, upgrade CTA prominent
+  if (usage.isAtLimit) {
+    return (
+      <div className="pl-4 border-l-2 border-red-500 bg-red-500/5 -ml-4 pl-8 -mr-4 pr-4 py-4 rounded-r-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <span className="text-sm font-medium text-red-500">
+            Email limit reached
           </span>
-        ) : (
-          <span className="text-yellow-600 dark:text-yellow-400">No reset (Free plan)</span>
-        )}
-      </div>
+        </div>
+        <div className="flex items-baseline gap-1 mb-3">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
+        </div>
+        <Progress value={100} className="h-2 mb-3 [&>div]:bg-red-500" />
 
-      {usage.isAtLimit && (
-        <div className="mt-4 pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-2">
-            {usage.isFreePlan
-              ? "Upgrade to Plus for 5,000 emails/month with AI included."
+        <p className="text-xs text-muted-foreground mb-3">
+          {usage.isFreePlan
+            ? "Upgrade to Plus for 5,000 emails/month with AI included."
+            : usage.resetsAt
+              ? `Your quota resets ${formatResetDate(usage.resetsAt)}. Need more now?`
               : "Need more emails? Upgrade your plan."}
-          </p>
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('aidly:navigate:billing'))
-            }}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            {usage.isFreePlan ? "Upgrade to Plus" : "Upgrade Plan"}
-          </Button>
-        </div>
-      )}
+        </p>
+        <Button
+          size="sm"
+          className="w-full bg-red-600 hover:bg-red-500"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('aidly:navigate:billing'))
+          }}
+        >
+          <Zap className="w-4 h-4 mr-2" />
+          {usage.isFreePlan ? "Upgrade to Plus" : "Upgrade Plan"}
+        </Button>
+      </div>
+    )
+  }
 
-      {usage.isFreePlan && !usage.isAtLimit && (
-        <div className="mt-3 pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-2">
-            Free plan: {usage.remaining} emails left (one-time limit)
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('aidly:navigate:billing'))
-            }}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Upgrade to Plus — $249/mo
-          </Button>
+  // Free plan (not at limit) - show upgrade prompt subtly
+  if (usage.isFreePlan) {
+    return (
+      <div className="pl-4 border-l-2 border-primary/30">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          Free Plan Usage
         </div>
-      )}
-    </div>
-  )
+        <div className="flex items-baseline gap-1 mb-2">
+          <span className="text-2xl font-semibold tabular-nums">{usage.used}</span>
+          <span className="text-sm text-muted-foreground">/ {usage.limit}</span>
+        </div>
+        <Progress value={percentage} className="h-1.5 mb-2" />
+        <p className="text-xs text-muted-foreground mb-3">
+          {usage.remaining} emails left (one-time limit, no reset)
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full text-xs"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('aidly:navigate:billing'))
+          }}
+        >
+          <Zap className="w-3.5 h-3.5 mr-1.5" />
+          Upgrade to Plus — $249/mo
+        </Button>
+      </div>
+    )
+  }
+
+  // Fallback (shouldn't reach here)
+  return null
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Calendar, User, Mail, MessageSquare, Clock, BookOpen, X } from "lucide-react"
+import { Search, User, Mail, MessageSquare, Clock, BookOpen, X } from "lucide-react"
 import { format } from "date-fns"
 import { AddToKnowledgeBaseModal } from "@/components/add-to-knowledge-base-modal"
 
@@ -162,34 +162,23 @@ export function KnowledgePage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Knowledge</h1>
-        <p className="text-muted-foreground">
-          Search message history and manage your knowledge base
-        </p>
-      </div>
-
-      {/* Search Form */}
-      <div className="surface-elevated rounded-xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Search className="h-5 w-5 text-muted-foreground" />
-          <h2 className="font-semibold">Search</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-5">
-            <Input
-              placeholder="Search cases..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="w-full"
-            />
-          </div>
-          <div className="md:col-span-3">
+    <div className="h-[calc(100vh-140px)] flex flex-col">
+      {/* Search Bar - Fixed at top */}
+      <div className="flex-shrink-0 border-b border-border/50">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search cases..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pl-9 h-10 bg-muted/30 border-border/50"
+              />
+            </div>
             <Select value={searchField} onValueChange={setSearchField}>
-              <SelectTrigger>
+              <SelectTrigger className="w-[140px] h-10 bg-transparent border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -200,11 +189,9 @@ export function KnowledgePage() {
                 <SelectItem value="customer_email">Customer Email</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="md:col-span-2">
             <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Any Status" />
+              <SelectTrigger className="w-[120px] h-10 bg-transparent border-border/50">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any Status</SelectItem>
@@ -214,120 +201,134 @@ export function KnowledgePage() {
                 <SelectItem value="to_review_queue">Review</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="md:col-span-2">
-            <Button onClick={handleSearch} disabled={loading} className="w-full">
+            <Button onClick={handleSearch} disabled={loading} size="sm" className="h-10 px-5">
               {loading ? "Searching..." : "Search"}
             </Button>
           </div>
-        </div>
 
-        {error && (
-          <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <p className="text-destructive text-sm">{error}</p>
-          </div>
-        )}
+          {error && (
+            <div className="mt-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Search Results */}
-      {results && (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Found {results.pagination.total} {results.pagination.total === 1 ? 'result' : 'results'}
-              {` for "${results.query.text}"`}
-              {results.query.field !== 'all' && ` in ${results.query.field.replace('_', ' ')}`}
-            </p>
-          </div>
-
-          {results.messages.length === 0 ? (
-            <div className="surface rounded-xl p-12">
-              <div className="empty-state">
-                <Search className="empty-state-icon" />
-                <h3 className="empty-state-title">No results found</h3>
-                <p className="empty-state-description">Try adjusting your search criteria</p>
-              </div>
+      {/* Results Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* Empty state when no search yet */}
+          {!results && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Search className="h-10 w-10 text-muted-foreground/20 mb-4" />
+              <h3 className="text-lg font-medium mb-1">Search your message history</h3>
+              <p className="text-sm text-muted-foreground">
+                Find cases by ID, subject, message content, or customer email
+              </p>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {results.messages.map((message) => (
-                <div
-                  key={message.id}
-                  className="surface hover:bg-muted/50 transition-colors rounded-lg p-4 cursor-pointer"
-                  onClick={() => openCaseModal(message.ticket_id)}
-                  role="button"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="font-mono text-sm font-medium">{message.ticket_id}</span>
-                        <span className={`status-badge ${STATUS_COLORS[message.status]}`}>
-                          {STATUS_LABELS[message.status] || message.status}
-                        </span>
-                        {message.category && (
-                          <Badge variant="outline" className="text-xs">{message.category}</Badge>
-                        )}
+          )}
+
+          {/* Search Results */}
+          {results && (
+            <>
+              {/* Results header */}
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {results.pagination.total} {results.pagination.total === 1 ? 'result' : 'results'}
+                  {` for "${results.query.text}"`}
+                  {results.query.field !== 'all' && ` in ${results.query.field.replace('_', ' ')}`}
+                </p>
+              </div>
+
+              {results.messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Search className="h-10 w-10 text-muted-foreground/20 mb-4" />
+                  <h3 className="text-lg font-medium mb-1">No results found</h3>
+                  <p className="text-sm text-muted-foreground">Try adjusting your search criteria</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {results.messages.map((message, index) => (
+                    <div key={message.id}>
+                      <div
+                        className="group py-3 px-3 -mx-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        onClick={() => openCaseModal(message.ticket_id)}
+                        role="button"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Avatar */}
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5">
+                            {(message.customer_name || "?").charAt(0).toUpperCase()}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            {/* Top row: name, status, date */}
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="font-medium text-sm">{message.customer_name || "Unknown"}</span>
+                              <span className="text-xs text-muted-foreground font-mono">{message.ticket_id}</span>
+                              <span className={`status-badge text-[10px] ${STATUS_COLORS[message.status]}`}>
+                                {STATUS_LABELS[message.status] || message.status}
+                              </span>
+                              {message.category && (
+                                <span className="text-[10px] text-muted-foreground">{message.category}</span>
+                              )}
+                              <span className="text-xs text-muted-foreground ml-auto">
+                                {formatDate(message.created_at)}
+                              </span>
+                            </div>
+
+                            {/* Subject */}
+                            {message.subject && (
+                              <p className="text-sm mb-0.5">
+                                {highlightSearchTerm(message.subject, results.query.text)}
+                              </p>
+                            )}
+
+                            {/* Message preview */}
+                            {message.message && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {highlightSearchTerm(truncateText(message.message, 120), results.query.text)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {message.customer_name || "Unknown"}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {message.customer_email || "No email"}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(message.created_at)}
-                        </span>
-                      </div>
-
-                      {message.subject && (
-                        <p className="font-medium text-sm mb-1">
-                          {highlightSearchTerm(message.subject, results.query.text)}
-                        </p>
-                      )}
-
-                      {message.message && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {highlightSearchTerm(truncateText(message.message, 150), results.query.text)}
-                        </p>
+                      {index < results.messages.length - 1 && (
+                        <div className="border-b border-border/30 mx-11" />
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {results.pagination.pages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={results.pagination.page <= 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs text-muted-foreground px-3">
+                      {results.pagination.page} / {results.pagination.pages}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={results.pagination.page >= results.pagination.pages}
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {results.pagination.pages > 1 && (
-            <div className="mt-6 flex justify-center">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={results.pagination.page <= 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {results.pagination.page} of {results.pagination.pages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={results.pagination.page >= results.pagination.pages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
-      )}
+      </div>
 
       {/* Case Details Modal */}
       {modalOpen && selectedCase && (

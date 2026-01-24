@@ -12,7 +12,6 @@ import { useUser } from "@/lib/user-context"
 import { useAIErrorHandler, parseAPIError } from "@/lib/use-ai-error-handler"
 import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDate } from "@/lib/utils"
 import { EmailText } from "@/components/email-text"
-import { Badge } from "@/components/ui/badge"
 import { PieChart } from "@/components/ui/pie-chart"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/toast"
@@ -26,13 +25,9 @@ import {
 import { StarRating, getRatingLabel } from "@/components/ui/star-rating"
 import {
   Zap,
-  Clock,
-  User,
   Loader2,
-  PlayCircle,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2,
   AlertCircle,
   Star,
   MessageSquare,
@@ -79,11 +74,9 @@ export function QueueView() {
 
   // Calculate queue states
   const unprocessedMessages = messages.filter(m => !m.aiReviewed && m.status === 'new')
-  const processingMessages = messages.filter(m => m.isGenerating)
   const readyForReview = messages.filter(m => m.aiReviewed && m.status === 'new')
   const pendingMessages = readyForReview
   const currentMessage = pendingMessages[currentMessageIndex]
-  const nextMessage = pendingMessages[currentMessageIndex + 1]
 
   // Determine mode: triage is active when user explicitly enters it
   const isInTriageMode = isTriageActive && currentMessage
@@ -392,200 +385,158 @@ export function QueueView() {
   // ============================================================================
   if (isInTriageMode && currentMessage) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 max-w-4xl">
-        {/* Triage Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={exitTriage}
-                className="text-muted-foreground hover:text-foreground -ml-2"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-              <h1 className="text-xl font-semibold">Triage</h1>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <span className="px-2 py-1 bg-muted rounded-md font-medium">
-                  {pendingMessages.length - currentMessageIndex} remaining
-                </span>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <kbd className="kbd-sm">Esc</kbd>
-                <span>Exit</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="kbd-sm">→</kbd>
-                <span>Send</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="kbd-sm">←</kbd>
-                <span>Review</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="kbd-sm">E</kbd>
-                <span>Edit</span>
-              </span>
-            </div>
+      <div className="h-[calc(100vh-140px)] flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 px-6 py-3 border-b border-border/50 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={exitTriage}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-sm">
+              <span className="font-medium">{pendingMessages.length - currentMessageIndex}</span>
+              <span className="text-muted-foreground ml-1">remaining</span>
+            </span>
+          </div>
+          <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+            <span><kbd className="kbd-sm">←</kbd> Inbox</span>
+            <span><kbd className="kbd-sm">→</kbd> Send</span>
+            <span><kbd className="kbd-sm">E</kbd> Edit</span>
           </div>
         </div>
 
-        {/* Swipeable Card Stack */}
-        <div className="relative mb-6" style={{ height: "500px" }}>
-          {/* Next message (background) */}
-          {nextMessage && (
-            <div className="absolute inset-0 transform scale-[0.97] opacity-40 pointer-events-none">
-              <div className="h-full surface rounded-lg overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{nextMessage.customerName}</h3>
-                      <p className="text-sm text-muted-foreground">{nextMessage.customerEmail}</p>
-                    </div>
-                  </div>
+        {/* Swipeable Content */}
+        <SwipeableCard
+          onSwipeLeft={handleSendToReview}
+          onSwipeRight={handleApprove}
+          disabled={currentMessage.isGenerating || isActing}
+          className={`flex-1 ${isActing ? 'opacity-60 pointer-events-none' : ''}`}
+        >
+          <div
+            className="h-full flex flex-col transition-colors duration-200"
+            style={{
+              backgroundColor: keyboardFeedback === 'approve' ? 'rgba(34, 197, 94, 0.08)' : keyboardFeedback === 'review' ? 'rgba(251, 146, 60, 0.08)' : undefined,
+            }}
+          >
+            {/* Feedback indicators */}
+            {keyboardFeedback && (
+              <div className="absolute inset-x-0 top-0 flex justify-between px-6 py-3 pointer-events-none z-10">
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold transition-opacity ${
+                  keyboardFeedback === 'review' ? "bg-amber-500 text-white opacity-100" : "opacity-0"
+                }`}>
+                  → INBOX
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold transition-opacity ${
+                  keyboardFeedback === 'approve' ? "bg-emerald-500 text-white opacity-100" : "opacity-0"
+                }`}>
+                  SEND →
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Current message card (swipeable) */}
-          <SwipeableCard
-            onSwipeLeft={handleSendToReview}
-            onSwipeRight={handleApprove}
-            disabled={currentMessage.isGenerating || isActing}
-            className={`absolute inset-0 ${isActing ? 'opacity-60 pointer-events-none' : ''}`}
-          >
-            <div
-              className="h-full overflow-hidden transition-all duration-300 surface-elevated rounded-lg"
-              style={{
-                backgroundColor: keyboardFeedback === 'approve' ? 'rgba(34, 197, 94, 0.15)' : keyboardFeedback === 'review' ? 'rgba(251, 146, 60, 0.15)' : undefined,
-                borderColor: keyboardFeedback === 'approve' ? 'rgb(34, 197, 94)' : keyboardFeedback === 'review' ? 'rgb(251, 146, 60)' : undefined,
-              }}
-            >
-              {/* Card Header */}
-              <div className="p-6 border-b border-border">
-                <div className="flex items-start justify-between">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto px-6 py-6">
+                {/* Customer Header */}
+                <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                      {currentMessage.customerName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="font-semibold">{currentMessage.customerName}</h3>
-                      <p className="text-sm text-muted-foreground">{currentMessage.customerEmail}</p>
+                      <div className="font-medium">{currentMessage.customerName}</div>
+                      <div className="text-xs text-muted-foreground">{currentMessage.customerEmail}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-0.5 rounded ${getUrgencyBgClass(getMessageUrgency(currentMessage.timestamp, settings.messageAgeThresholds))}`}>
+                      {formatFriendlyDate(currentMessage.timestamp)}
+                    </span>
                     {currentMessage.category && (
-                      <Badge variant="outline" className="flex items-center gap-1.5">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: settings.categories.find(c => c.name === currentMessage.category)?.color || '#6b7280' }}
-                        />
-                        <span>{currentMessage.category}</span>
-                      </Badge>
+                      <span className="text-xs text-muted-foreground">{currentMessage.category}</span>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
-                  <Clock className="h-4 w-4" />
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${getUrgencyBgClass(getMessageUrgency(currentMessage.timestamp, settings.messageAgeThresholds))}`}>
-                    {formatFriendlyDate(currentMessage.timestamp)}
-                  </span>
-                </div>
-              </div>
 
-              {/* Card Body */}
-              <div className="p-6 h-[calc(100%-180px)] overflow-y-auto">
-                <div className="mb-6">
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Subject</h4>
-                  <p className="font-semibold">{currentMessage.subject}</p>
-                </div>
-                <div className="mb-6">
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Message</h4>
-                  <div className="text-foreground leading-relaxed">
+                {/* Subject */}
+                {currentMessage.subject && (
+                  <h2 className="text-lg font-semibold mb-4">{currentMessage.subject}</h2>
+                )}
+
+                {/* Customer Message */}
+                <div className="mb-8">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    Customer
+                  </div>
+                  <div className="text-sm leading-relaxed">
                     <EmailText text={currentMessage.message} />
                   </div>
                 </div>
 
-                {/* AI Response Section */}
-                <div className="border-t border-border pt-6">
+                {/* Divider */}
+                <div className="border-t border-border/50 my-6" />
+
+                {/* AI Response */}
+                <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center">
-                      <Zap className="h-3 w-3 text-accent" />
+                    <Zap className="h-3.5 w-3.5 text-accent" />
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      AI Response
+                    </span>
+                  </div>
+                  {currentMessage.isGenerating ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Generating...</span>
                     </div>
-                    <h4 className="font-medium text-sm">AI Response</h4>
-                  </div>
-                  <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                    {currentMessage.isGenerating ? (
-                      <div className="flex items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating response...</span>
-                      </div>
-                    ) : (
-                      <p className="text-foreground leading-relaxed whitespace-pre-line text-sm">
-                        {formatEmailText(currentMessage.aiSuggestedResponse || "")}
-                      </p>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="text-sm leading-relaxed whitespace-pre-line">
+                      {formatEmailText(currentMessage.aiSuggestedResponse || "")}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Keyboard feedback badges */}
-              {keyboardFeedback && (
-                <>
-                  <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${
-                    keyboardFeedback === 'approve' ? "bg-emerald-500 text-white opacity-100" : "opacity-0"
-                  }`}>
-                    SEND
-                  </div>
-                  <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold transition-opacity ${
-                    keyboardFeedback === 'review' ? "bg-amber-500 text-white opacity-100" : "opacity-0"
-                  }`}>
-                    TO INBOX
-                  </div>
-                </>
-              )}
             </div>
-          </SwipeableCard>
-        </div>
+          </div>
+        </SwipeableCard>
 
-        {/* Mobile Action Buttons */}
-        <div className="flex sm:hidden gap-3 justify-center">
+        {/* Action Bar */}
+        <div className="flex-shrink-0 px-6 py-3 border-t border-border/50 flex items-center justify-between bg-background">
           <Button
-            variant="outline"
-            size="lg"
+            variant="ghost"
+            size="sm"
             onClick={handleSendToReview}
             disabled={isActing}
-            className="flex-1 border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+            className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
           >
-            <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
-            Review
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            To Inbox
           </Button>
-          <Button
-            size="lg"
-            onClick={() => setQuickEditOpen(true)}
-            disabled={isActing}
-            className="flex-1"
-            variant="outline"
-          >
-            Edit
-          </Button>
-          <Button
-            size="lg"
-            onClick={handleApprove}
-            disabled={isActing}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-500"
-          >
-            Send
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setQuickEditOpen(true)}
+              disabled={isActing}
+              className="text-muted-foreground"
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleApprove}
+              disabled={isActing}
+              className="bg-emerald-600 hover:bg-emerald-500"
+            >
+              Send
+              <ArrowRight className="h-4 w-4 ml-1.5" />
+            </Button>
+          </div>
         </div>
 
         {/* Quick Edit Modal */}
@@ -603,212 +554,250 @@ export function QueueView() {
   // RENDER: PROCESSING MODE (Empty triage state or processing queue)
   // ============================================================================
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Queue</h1>
-      </div>
-
-      {/* AI Processing Queue Card */}
-      <div className="surface-elevated rounded-xl p-6 mb-6">
-        {/* AI config warning - only show after plan info loads */}
-        {planInfo && !isAIConfigured && (
-          <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <div>
-                <p className="text-sm font-medium text-destructive">AI not configured</p>
-                <p className="text-xs text-destructive/80">Configure your AI provider to enable auto-processing</p>
+    <div className="h-[calc(100vh-140px)] flex flex-col">
+      {/* Top Section - Pipeline */}
+      <div className="flex-shrink-0 border-b border-border/50">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* AI config warning */}
+          {planInfo && !isAIConfigured && (
+            <div className="mb-6 flex items-center justify-between gap-4 p-3 rounded-lg bg-destructive/5 border border-destructive/10">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <span className="text-sm text-destructive">AI not configured</span>
               </div>
-            </div>
-            <Button onClick={goToSettings} variant="outline" size="sm" className="border-destructive/30 text-destructive hover:bg-destructive/10">
-              Fix in Settings
-            </Button>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Zap className="h-5 w-5 text-accent" />
-            </div>
-            <div>
-              <h2 className="font-semibold">AI Processing Queue</h2>
-              <p className="text-sm text-muted-foreground">Auto-review messages with AI</p>
-            </div>
-          </div>
-          {(isProcessingBatch || processingMessages.length > 0) && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {isProcessingBatch ? `${processedCount}/${totalToProcess}` : 'Processing...'}
+              <Button onClick={goToSettings} variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                Fix in Settings
+              </Button>
             </div>
           )}
-        </div>
 
-        {/* Queue Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-4 bg-muted/50 rounded-lg text-center">
-            <div className="text-3xl font-bold text-secondary">{unprocessedMessages.length}</div>
-            <div className="text-sm text-muted-foreground">Awaiting AI review</div>
-          </div>
-          <div className="p-4 bg-muted/50 rounded-lg text-center">
-            <div className="text-3xl font-bold text-emerald-500">{readyForReview.length}</div>
-            <div className="text-sm text-muted-foreground">Ready for triage</div>
-          </div>
-        </div>
-
-        {/* Process Controls */}
-        {unprocessedMessages.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-muted/30 rounded-lg">
-              <div className="flex-1">
-                <p className="font-medium mb-2 text-sm">Batch size</p>
-                <div className="flex items-center gap-2">
-                  {[50, 100, 200].map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedBatchSize(size)}
-                      disabled={isProcessingBatch}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        selectedBatchSize === size
-                          ? 'bg-accent text-accent-foreground'
-                          : 'bg-muted hover:bg-muted/80 text-foreground'
-                      } ${isProcessingBatch ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Tooltip content={!isAIConfigured ? "Configure AI in Settings first" : "Start processing"} side="top">
-                  <div>
-                    <Button
-                      onClick={handleProcessQueue}
-                      disabled={isProcessingBatch || !isAIConfigured || preflightChecking}
-                      className="w-full sm:w-auto bg-accent hover:bg-accent/90"
-                      size="lg"
-                    >
-                      {isProcessingBatch || preflightChecking ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {preflightChecking ? 'Checking...' : 'Processing...'}
-                        </>
-                      ) : (
-                        <>
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          Process {Math.min(selectedBatchSize, unprocessedMessages.length)} Messages
-                        </>
-                      )}
-                    </Button>
+          {/* Pipeline Flow */}
+          <div className="flex items-center gap-4">
+            {/* Stage 1: Process */}
+            <div className={`flex-1 p-4 rounded-lg border transition-colors ${
+              unprocessedMessages.length > 0
+                ? 'border-border bg-muted/30'
+                : 'border-border/30 bg-transparent'
+            }`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    unprocessedMessages.length > 0
+                      ? 'bg-secondary/10 text-secondary'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    1
                   </div>
-                </Tooltip>
-                {isProcessingBatch && (
-                  <Button onClick={cancelBatchProcessing} variant="outline" size="sm" className="border-destructive/30 text-destructive">
-                    Cancel
+                  <div>
+                    <div className="text-sm font-medium">Process with AI</div>
+                    <div className="text-xs text-muted-foreground">
+                      {unprocessedMessages.length > 0
+                        ? `${unprocessedMessages.length} messages waiting`
+                        : 'No messages to process'
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                {unprocessedMessages.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center border border-border/50 rounded-md overflow-hidden">
+                      {[50, 100, 200].map(size => (
+                        <button
+                          key={size}
+                          onClick={() => setSelectedBatchSize(size)}
+                          disabled={isProcessingBatch}
+                          className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                            selectedBatchSize === size
+                              ? 'bg-muted text-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          } ${isProcessingBatch ? 'opacity-50' : ''}`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+
+                    <Tooltip content={!isAIConfigured ? "Configure AI first" : "Process messages"} side="bottom">
+                      <div>
+                        <Button
+                          onClick={handleProcessQueue}
+                          disabled={isProcessingBatch || !isAIConfigured || preflightChecking}
+                          size="sm"
+                          className="gap-1.5 bg-secondary hover:bg-secondary/90"
+                        >
+                          {isProcessingBatch || preflightChecking ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              {preflightChecking ? 'Checking...' : `${processedCount}/${totalToProcess}`}
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="h-3.5 w-3.5" />
+                              Process
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </Tooltip>
+
+                    {isProcessingBatch && (
+                      <Button onClick={cancelBatchProcessing} variant="ghost" size="sm" className="text-muted-foreground h-8 px-2">
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              {isProcessingBatch && (
+                <div className="mt-3">
+                  <Progress value={(processedCount / Math.max(1, totalToProcess)) * 100} className="h-1" />
+                </div>
+              )}
+            </div>
+
+            {/* Arrow connector */}
+            <div className="flex-shrink-0 text-muted-foreground/40">
+              <ArrowRight className="h-5 w-5" />
+            </div>
+
+            {/* Stage 2: Triage */}
+            <div className={`flex-1 p-4 rounded-lg border transition-colors ${
+              readyForReview.length > 0
+                ? 'border-emerald-500/30 bg-emerald-500/5'
+                : 'border-border/30 bg-transparent'
+            }`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    readyForReview.length > 0
+                      ? 'bg-emerald-500/10 text-emerald-500'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    2
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Review & Send</div>
+                    <div className="text-xs text-muted-foreground">
+                      {readyForReview.length > 0
+                        ? `${readyForReview.length} ready for triage`
+                        : 'Nothing to review yet'
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                {readyForReview.length > 0 && (
+                  <Button onClick={startTriage} size="sm" className="bg-emerald-600 hover:bg-emerald-500 gap-1.5">
+                    Start Triage
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
             </div>
-
-            {isProcessingBatch && (
-              <div className="p-4 bg-primary/5 rounded-lg">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="font-medium">Progress</span>
-                  <span className="text-muted-foreground">{processedCount} / {totalToProcess}</span>
-                </div>
-                <Progress value={(processedCount / Math.max(1, totalToProcess)) * 100} className="h-2" />
-              </div>
-            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Start Triage CTA */}
-      {readyForReview.length > 0 && (
-        <div className="surface-elevated rounded-xl p-6 mb-6 border-emerald-500/20 bg-emerald-500/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">{readyForReview.length} messages ready</h3>
-                <p className="text-sm text-muted-foreground">Start reviewing AI-generated responses</p>
-              </div>
+      {/* Bottom Section - Stats (scrollable) */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          {/* Stats Header */}
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Statistics
+            </span>
+            <div className="flex items-center gap-1">
+              {(['7d', '30d', 'all'] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimelineFilter(range)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    timelineFilter === range
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {range === '7d' ? '7d' : range === '30d' ? '30d' : 'All'}
+                </button>
+              ))}
             </div>
-            <Button onClick={startTriage} size="lg" className="bg-emerald-600 hover:bg-emerald-500">
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Start Triage
-            </Button>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div>
+              <div className="text-2xl font-semibold tabular-nums">{stats.totalMessages}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Total messages</div>
+              {stats.pendingMessages > 0 && (
+                <div className="text-xs text-emerald-500 mt-1">+{stats.pendingMessages} pending</div>
+              )}
+            </div>
+
+            <div>
+              <div className="text-2xl font-semibold tabular-nums">{stats.avgResponseTime.toFixed(1)}<span className="text-base font-normal text-muted-foreground ml-1">min</span></div>
+              <div className="text-xs text-muted-foreground mt-0.5">Avg response time</div>
+            </div>
+
+            <div>
+              {totalSent === 0 ? (
+                <>
+                  <div className="text-2xl font-semibold text-muted-foreground">—</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">SLA compliance</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl font-semibold tabular-nums text-emerald-500">{pctIn}%</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">SLA compliance</div>
+                  <div className="text-xs text-muted-foreground/60 mt-1">{inSLA}/{totalSent} within SLA</div>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => totalRatings > 0 && setCsatModalOpen(true)}
+              className={`text-left ${totalRatings > 0 ? 'cursor-pointer group' : ''}`}
+              disabled={totalRatings === 0}
+            >
+              {totalRatings === 0 ? (
+                <>
+                  <div className="text-2xl font-semibold text-muted-foreground">—</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">CSAT score</div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-semibold tabular-nums text-amber-500">{avgCSAT.toFixed(1)}</span>
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5 group-hover:text-foreground transition-colors">
+                    CSAT · {totalRatings} ratings
+                  </div>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border/50 my-6" />
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Cases by Category
+              </div>
+              {pieData.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No cases yet</p>
+              ) : (
+                <PieChart data={pieData} totalLabel="Total" />
+              )}
+            </div>
+            <UsageWidget />
           </div>
         </div>
-      )}
-
-      {/* Stats Header with Timeline Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold">Statistics</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
-          {(['7d', '30d', 'all'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimelineFilter(range)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                timelineFilter === range
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-muted hover:bg-muted/80 text-foreground'
-              }`}
-            >
-              {range === '7d' ? 'Last 7 days' : range === '30d' ? 'Last 30 days' : 'All time'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="surface p-4 rounded-lg">
-          <div className="text-sm text-muted-foreground mb-1">Total Messages</div>
-          <div className="text-2xl font-bold">{stats.totalMessages}</div>
-          <p className="text-xs text-emerald-500 mt-1">+{stats.pendingMessages} pending</p>
-        </div>
-
-        <div className="surface p-4 rounded-lg">
-          <div className="text-sm text-muted-foreground mb-1">Avg Response Time</div>
-          <div className="text-2xl font-bold">{stats.avgResponseTime.toFixed(1)} min</div>
-        </div>
-
-        <div className="surface p-4 rounded-lg">
-          <div className="text-sm text-muted-foreground mb-1">SLA Compliance</div>
-          {totalSent === 0 ? (
-            <p className="text-sm text-muted-foreground">No data</p>
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-emerald-500">{pctIn}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{inSLA}/{totalSent} within SLA</p>
-            </>
-          )}
-        </div>
-
-        <button
-          onClick={() => totalRatings > 0 && setCsatModalOpen(true)}
-          className={`surface p-4 rounded-lg text-left transition-colors ${totalRatings > 0 ? 'hover:bg-muted/50 cursor-pointer' : ''}`}
-          disabled={totalRatings === 0}
-        >
-          <div className="text-sm text-muted-foreground mb-1">CSAT Score</div>
-          {totalRatings === 0 ? (
-            <p className="text-sm text-muted-foreground">No ratings yet</p>
-          ) : (
-            <>
-              <div className="flex items-baseline gap-1.5">
-                <div className="text-2xl font-bold text-amber-500">{avgCSAT.toFixed(1)}</div>
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{totalRatings} response{totalRatings !== 1 ? 's' : ''} &middot; Click to view</p>
-            </>
-          )}
-        </button>
       </div>
 
       {/* CSAT Feedback Modal */}
@@ -830,7 +819,6 @@ export function QueueView() {
                   key={item.id}
                   onClick={() => {
                     setCsatModalOpen(false)
-                    // Remove # prefix from ticketId for URL (API adds it back)
                     const caseId = item.ticketId?.replace(/^#/, '') || item.id
                     window.location.href = `/app/c/${caseId}`
                   }}
@@ -872,19 +860,6 @@ export function QueueView() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Category Chart & Usage Widget */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="surface p-6 rounded-lg">
-          <h3 className="text-sm font-medium text-muted-foreground mb-4">Cases by Category</h3>
-          {pieData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No cases yet.</p>
-          ) : (
-            <PieChart data={pieData} totalLabel="Total" />
-          )}
-        </div>
-        <UsageWidget />
-      </div>
     </div>
   )
 }

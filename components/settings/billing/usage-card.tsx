@@ -50,7 +50,7 @@ export function UsageCard({
   // Unlimited
   if (limit === null) {
     return (
-      <div className="bg-card rounded-xl border border-border/50 p-5">
+      <div className="p-4 rounded-lg border border-border/30 bg-muted/20">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {icon}
@@ -70,7 +70,7 @@ export function UsageCard({
   const remaining = Math.max(0, limit - used)
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 p-5">
+    <div className="p-4 rounded-lg border border-border/30 bg-muted/20">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}

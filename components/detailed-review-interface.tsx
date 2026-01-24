@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMessageManager } from "@/lib/message-manager"
 import { useSettings } from "@/lib/settings-context"
@@ -14,7 +13,7 @@ import { formatEmailText, getMessageUrgency, getUrgencyBgClass, formatFriendlyDa
 import { EmailText } from "@/components/email-text"
 import { CategorySelector } from "@/components/ui/category-selector"
 import { Tooltip } from "@/components/ui/tooltip"
-import { Clock, User, Send, Sparkles, MessageSquare, Loader2, MoreHorizontal, X } from "lucide-react"
+import { Send, Sparkles, MessageSquare, Loader2, MoreHorizontal, X } from "lucide-react"
 import { useAIErrorHandler } from "@/lib/use-ai-error-handler"
 import { ShopifyPanel } from "@/components/shopify-panel"
 
@@ -348,250 +347,296 @@ End with the signature: "${settings.agentSignature}"`
   // Empty state
   if (reviewMessages.length === 0) {
     return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="surface rounded-xl p-12">
-          <div className="empty-state">
-            <MessageSquare className="empty-state-icon" />
-            <h3 className="empty-state-title">Inbox Empty</h3>
-            <p className="empty-state-description">No cases need review right now</p>
-          </div>
+      <div className="h-[calc(100vh-140px)] flex items-center justify-center">
+        <div className="text-center">
+          <MessageSquare className="w-10 h-10 mx-auto mb-3 text-muted-foreground/20" />
+          <h3 className="text-lg font-medium mb-1">All caught up</h3>
+          <p className="text-sm text-muted-foreground">No cases need review right now</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-6 py-6">
-      <div className="flex gap-6 h-[calc(100vh-140px)]">
-        {/* Left Panel - Case List */}
-        <div className="w-64 flex-shrink-0">
-          <div className="surface h-full rounded-lg flex flex-col">
-            <div className="p-4 border-b border-border">
-              <h2 className="text-sm font-semibold">Cases ({reviewMessages.length})</h2>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
-                {reviewMessages.map((message) => {
-                  const isSelected = selectedMessageId === message.id
-                  const isPending = message.metadata &&
-                    typeof message.metadata === 'object' &&
-                    (message.metadata as Record<string, unknown>)['pending_followup'] === true
+    <div className="h-[calc(100vh-140px)] flex">
+      {/* Left Panel - Case List */}
+      <div className="w-72 flex-shrink-0 flex flex-col border-r border-border/50">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Inbox
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {reviewMessages.length}
+          </span>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="px-2 pb-2">
+            {reviewMessages.map((message) => {
+              const isSelected = selectedMessageId === message.id
+              const isPending = message.metadata &&
+                typeof message.metadata === 'object' &&
+                (message.metadata as Record<string, unknown>)['pending_followup'] === true
+              const urgency = getMessageUrgency(message.timestamp, settings.messageAgeThresholds)
 
-                  return (
-                    <Tooltip
-                      key={message.id}
-                      content={stripQuotedForTooltip(message.message)}
-                      delay={800}
-                    >
-                      <div
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          isSelected
-                            ? "bg-primary/10 border border-primary/20"
-                            : "hover:bg-muted/50"
-                        }`}
-                        onClick={() => setSelectedMessageId(message.id)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm font-medium truncate">{message.customerName}</span>
+              return (
+                <Tooltip
+                  key={message.id}
+                  content={stripQuotedForTooltip(message.message)}
+                  delay={800}
+                >
+                  <div
+                    className={`group relative px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
+                      isSelected
+                        ? "bg-muted"
+                        : "hover:bg-muted/50"
+                    }`}
+                    onClick={() => setSelectedMessageId(message.id)}
+                  >
+                    {/* Selection indicator */}
+                    <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-primary transition-opacity ${
+                      isSelected ? "opacity-100" : "opacity-0"
+                    }`} />
+
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                        isSelected
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted-foreground/10 text-muted-foreground"
+                      }`}>
+                        {message.customerName.charAt(0).toUpperCase()}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <span className={`text-sm font-medium truncate ${
+                            isSelected ? "text-foreground" : "text-foreground/80"
+                          }`}>
+                            {message.customerName}
+                          </span>
+                          {urgency === 'red' && !isPending && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                          )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs px-1.5 py-0">
+
+                        <p className="text-xs text-muted-foreground truncate mb-1.5">
+                          {message.subject || stripQuotedForTooltip(message.message).slice(0, 50)}
+                        </p>
+
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-muted-foreground/60">
                             {message.category}
-                          </Badge>
+                          </span>
+                          <span className="text-muted-foreground/40">·</span>
                           {isPending ? (
-                            <span className="status-badge status-pending text-[10px]">PENDING</span>
+                            <span className="text-purple-400">Pending</span>
                           ) : (
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${getUrgencyBgClass(getMessageUrgency(message.timestamp, settings.messageAgeThresholds))}`}>
+                            <span className={`px-1.5 py-0.5 rounded ${getUrgencyBgClass(urgency)}`}>
                               {formatFriendlyDate(message.timestamp)}
                             </span>
                           )}
                         </div>
                       </div>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            </ScrollArea>
+                    </div>
+                  </div>
+                </Tooltip>
+              )
+            })}
           </div>
-        </div>
+        </ScrollArea>
+      </div>
 
-        {/* Main Content */}
-        {selectedMessage && (
-          <div className="flex-1 flex flex-col gap-4 min-h-0">
-            {/* Customer Question */}
-            <div className="surface rounded-lg flex flex-col h-[45%] min-h-0">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Customer Question</h3>
-                <CategorySelector
-                  currentCategory={selectedMessage.category || ""}
-                  onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
-                />
+      {/* Main Content - Seamless flow */}
+      {selectedMessage && (
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-6 py-3 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                {selectedMessage.customerName.charAt(0).toUpperCase()}
               </div>
-              <div className="p-4 flex-1 overflow-y-auto">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-                  <span className="flex items-center gap-1">
-                    <User className="h-4 w-4" />
-                    {selectedMessage.customerName}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span className={`px-2 py-0.5 rounded text-xs ${getUrgencyBgClass(getMessageUrgency(selectedMessage.timestamp, settings.messageAgeThresholds))}`}>
-                      {formatFriendlyDate(selectedMessage.timestamp)}
-                    </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{selectedMessage.customerName}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${getUrgencyBgClass(getMessageUrgency(selectedMessage.timestamp, settings.messageAgeThresholds))}`}>
+                    {formatFriendlyDate(selectedMessage.timestamp)}
                   </span>
                 </div>
-                <div className="p-4 bg-muted/50 rounded-lg">
+                <span className="text-xs text-muted-foreground">{selectedMessage.customerEmail}</span>
+              </div>
+            </div>
+            <CategorySelector
+              currentCategory={selectedMessage.category || ""}
+              onCategoryChange={(newCategory) => updateMessageCategory(selectedMessage.id, newCategory)}
+            />
+          </div>
+
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto px-6 py-6">
+              {/* Subject */}
+              {selectedMessage.subject && (
+                <h2 className="text-lg font-semibold mb-4">{selectedMessage.subject}</h2>
+              )}
+
+              {/* Customer Message */}
+              <div className="mb-8">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                  Customer
+                </div>
+                <div className="text-sm leading-relaxed text-foreground/90">
                   <EmailText text={selectedMessage.message} />
                 </div>
               </div>
-            </div>
 
-            {/* Draft Reply */}
-            <div className="surface rounded-lg flex flex-col h-[55%] min-h-0">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Draft Reply</h3>
-                <Button
-                  variant={showAiInput ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setShowAiInput(!showAiInput)}
-                  className="h-7 text-xs"
-                >
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  AI
-                  <kbd className="kbd-sm ml-2">⌘I</kbd>
-                </Button>
-              </div>
+              {/* Divider */}
+              <div className="border-t border-border/50 my-6" />
 
-              {/* AI Refinement Input */}
-              {showAiInput && (
-                <div className="px-4 py-3 border-b border-border bg-accent/5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-accent flex-shrink-0" />
-                    <input
-                      ref={aiInputRef}
-                      type="text"
-                      value={aiInput}
-                      onChange={(e) => setAiInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault()
-                          handleAiRefine()
-                        }
-                      }}
-                      placeholder="Refine response: 'make shorter', 'add empathy', 'translate to Spanish'..."
-                      className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
-                      disabled={isAiLoading}
-                    />
-                    {isAiLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setShowAiInput(false)
-                            setAiInput("")
-                          }}
-                          className="h-6 px-2"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                        {aiInput.trim() && (
+              {/* Reply Section */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Your Reply
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAiInput(!showAiInput)}
+                    className={`h-7 text-xs gap-1.5 ${showAiInput ? 'text-accent' : 'text-muted-foreground'}`}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    AI Refine
+                    <kbd className="kbd-sm ml-1">⌘I</kbd>
+                  </Button>
+                </div>
+
+                {/* AI Refinement Input */}
+                {showAiInput && (
+                  <div className="mb-4 p-3 rounded-lg bg-accent/5 border border-accent/10">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-accent flex-shrink-0" />
+                      <input
+                        ref={aiInputRef}
+                        type="text"
+                        value={aiInput}
+                        onChange={(e) => setAiInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault()
+                            handleAiRefine()
+                          }
+                        }}
+                        placeholder="'make shorter', 'add empathy', 'translate to Spanish'..."
+                        className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground/50"
+                        disabled={isAiLoading}
+                      />
+                      {isAiLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                      ) : (
+                        <>
+                          {aiInput.trim() && (
+                            <Button
+                              size="sm"
+                              onClick={handleAiRefine}
+                              className="h-6 px-2 text-xs bg-accent hover:bg-accent/90"
+                            >
+                              Refine
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            onClick={handleAiRefine}
-                            className="h-6 px-2 text-xs bg-accent hover:bg-accent/90"
+                            variant="ghost"
+                            onClick={() => {
+                              setShowAiInput(false)
+                              setAiInput("")
+                            }}
+                            className="h-6 w-6 p-0"
                           >
-                            Refine
+                            <X className="h-3 w-3" />
                           </Button>
-                        )}
-                      </div>
-                    )}
+                        </>
+                      )}
+                    </div>
+                    {/* Quick Actions */}
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      {settings.quickActions.slice(0, 4).map((action, idx) => (
+                        <button
+                          key={action.id}
+                          onClick={() => {
+                            setAiInput(action.action)
+                            setTimeout(() => handleAiRefine(), 100)
+                          }}
+                          className="inline-flex items-center gap-1 h-6 px-2 text-xs rounded-md
+                                     bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground
+                                     transition-colors"
+                          disabled={isAiLoading}
+                        >
+                          <span className="text-[10px] text-muted-foreground/60">{idx + 1}</span>
+                          {action.title}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  {/* Quick Actions */}
-                  <div className="flex items-center gap-1 mt-2">
-                    {settings.quickActions.slice(0, 4).map((action, idx) => (
-                      <Button
-                        key={action.id}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setAiInput(action.action)
-                          setTimeout(() => handleAiRefine(), 100)
-                        }}
-                        className="h-6 text-xs px-2"
-                        disabled={isAiLoading}
-                      >
-                        <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[10px] mr-1">
-                          {idx + 1}
-                        </span>
-                        {action.title}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
 
-              <div className="p-4 flex-1 flex flex-col min-h-0">
                 <Textarea
-                  placeholder="Edit the AI-generated response or write your own..."
+                  placeholder="Write your reply..."
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  className="flex-1 min-h-0 resize-none"
+                  className="min-h-[200px] resize-none border-0 bg-transparent p-0 text-sm leading-relaxed
+                             focus-visible:ring-0 focus-visible:ring-offset-0
+                             placeholder:text-muted-foreground/40"
                 />
-              </div>
-
-              <div className="p-4 border-t border-border flex items-center justify-between">
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                    className="h-9 w-9"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                  {moreMenuOpen && (
-                    <div className="absolute left-0 bottom-full mb-2 w-56 bg-popover border border-border rounded-lg shadow-lg p-1 z-50">
-                      <button
-                        onClick={handleSendKeepOpen}
-                        className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
-                      >
-                        Send & keep case open
-                      </button>
-                      <button
-                        onClick={handleCloseWithoutReply}
-                        className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
-                      >
-                        Close without replying
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
-                    <kbd className="kbd-sm">⌘</kbd>
-                    <kbd className="kbd-sm ml-0.5">↵</kbd>
-                    <span className="ml-1">to send</span>
-                  </div>
-                  <Button onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-500">
-                    <Send className="h-4 w-4 mr-2" />
-                    Send
-                  </Button>
-                </div>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Shopify Panel - Right Sidebar */}
-        {selectedMessage && shopifyConfigured && settings.shopifyIntegration?.enabled && (
-          <ShopifyPanel customerEmail={selectedMessage.customerEmail} />
-        )}
-      </div>
+          {/* Action Bar - Fixed at bottom */}
+          <div className="px-6 py-3 border-t border-border/50 flex items-center justify-between bg-background">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className="text-muted-foreground"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+              {moreMenuOpen && (
+                <div className="absolute left-0 bottom-full mb-2 w-52 bg-popover border border-border rounded-lg shadow-xl p-1 z-50">
+                  <button
+                    onClick={handleSendKeepOpen}
+                    className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+                  >
+                    Send & keep open
+                  </button>
+                  <button
+                    onClick={handleCloseWithoutReply}
+                    className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+                  >
+                    Close without reply
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground hidden sm:block">
+                <kbd className="kbd-sm">⌘↵</kbd> to send
+              </span>
+              <Button onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-500 h-9">
+                <Send className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shopify Panel - Right Sidebar */}
+      {selectedMessage && shopifyConfigured && settings.shopifyIntegration?.enabled && (
+        <ShopifyPanel customerEmail={selectedMessage.customerEmail} />
+      )}
     </div>
   )
 }

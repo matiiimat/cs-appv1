@@ -264,9 +264,14 @@ export function BillingSection() {
         />
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-card rounded-xl border border-border/50 p-6 animate-pulse">
-              <div className="h-6 w-1/3 bg-muted rounded mb-4" />
-              <div className="h-4 w-2/3 bg-muted rounded" />
+            <div key={i} className="py-5 border-b border-border/30 animate-pulse">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 bg-muted rounded-lg" />
+                <div className="flex-1">
+                  <div className="h-5 w-1/3 bg-muted rounded mb-2" />
+                  <div className="h-3 w-1/2 bg-muted rounded" />
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -281,7 +286,7 @@ export function BillingSection() {
           title="Billing"
           description="Manage your subscription and view usage"
         />
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-center gap-3 text-destructive">
             <AlertTriangle className="w-5 h-5" />
             <span>{error || 'Failed to load billing data'}</span>
@@ -312,7 +317,7 @@ export function BillingSection() {
 
       <div className="space-y-6">
         {/* Current Plan Card */}
-        <SettingCard>
+        <SettingCard bordered>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -397,7 +402,7 @@ export function BillingSection() {
 
         {/* Upgrade Section (for Free and Plus users) */}
         {(isFreePlan || planData.planType === 'plus') && (
-          <SettingCard>
+          <SettingCard bordered>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-[#3872B9] via-[#B33275] to-[#F38135] rounded-lg flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
@@ -424,7 +429,7 @@ export function BillingSection() {
 
         {/* Subscription Management */}
         {isPaidPlan && (showCancelButton || showResumeButton) && (
-          <SettingCard>
+          <SettingCard bordered>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-muted/50 rounded-lg flex items-center justify-center">
                 <CreditCard className="w-5 h-5 text-muted-foreground" />
@@ -481,7 +486,7 @@ export function BillingSection() {
 
         {/* Invoice History */}
         {isPaidPlan && (
-          <SettingCard>
+          <SettingCard bordered>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-muted/50 rounded-lg flex items-center justify-center">
                 <CreditCard className="w-5 h-5 text-muted-foreground" />

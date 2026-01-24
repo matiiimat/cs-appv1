@@ -336,74 +336,77 @@ export function SetupSection() {
         </div>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {/* Brand Identity */}
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
             Brand Identity
             {settings.brandName.trim() && settings.agentName.trim() && (
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
             )}
           </h3>
+
           <SettingCard>
-            <div className="space-y-6">
-              <SettingField
-                label="Brand Name"
-                description={`Appears in emails as "${settings.brandName || "Your Brand"} Support"`}
-              >
-                <Input
-                  value={settings.brandName}
-                  onChange={(e) => {
-                    const value = e.target.value.slice(0, 80)
-                    updateSettings({ brandName: value })
-                  }}
-                  placeholder="e.g., Acme Corp"
-                  className="max-w-md"
-                />
-              </SettingField>
-
-              <SettingField label="Agent Name" description="Your display name in conversations">
-                <Input
-                  value={settings.agentName}
-                  onChange={(e) => {
-                    const value = e.target.value.slice(0, 32)
-                    updateSettings({ agentName: value })
-                  }}
-                  placeholder="e.g., Sarah Johnson"
-                  className="max-w-md"
-                />
-              </SettingField>
-
-              <SettingField
-                label="Email Signature"
-                characterCount={{
-                  current: settings.agentSignature.length,
-                  max: 100,
+            <SettingField
+              label="Brand Name"
+              description={`Appears in emails as "${settings.brandName || "Your Brand"} Support"`}
+            >
+              <Input
+                value={settings.brandName}
+                onChange={(e) => {
+                  const value = e.target.value.slice(0, 80)
+                  updateSettings({ brandName: value })
                 }}
-              >
-                <Textarea
-                  value={settings.agentSignature}
-                  onChange={(e) => {
-                    const value = e.target.value.slice(0, 100)
-                    updateSettings({ agentSignature: value })
-                  }}
-                  placeholder="Best regards,&#10;The Support Team"
-                  rows={3}
-                  className="max-w-md resize-none"
-                />
-              </SettingField>
-            </div>
+                placeholder="e.g., Acme Corp"
+                className="max-w-md"
+              />
+            </SettingField>
+          </SettingCard>
+
+          <SettingCard>
+            <SettingField label="Agent Name" description="Your display name in conversations">
+              <Input
+                value={settings.agentName}
+                onChange={(e) => {
+                  const value = e.target.value.slice(0, 32)
+                  updateSettings({ agentName: value })
+                }}
+                placeholder="e.g., Sarah Johnson"
+                className="max-w-md"
+              />
+            </SettingField>
+          </SettingCard>
+
+          <SettingCard>
+            <SettingField
+              label="Email Signature"
+              characterCount={{
+                current: settings.agentSignature.length,
+                max: 100,
+              }}
+            >
+              <Textarea
+                value={settings.agentSignature}
+                onChange={(e) => {
+                  const value = e.target.value.slice(0, 100)
+                  updateSettings({ agentSignature: value })
+                }}
+                placeholder="Best regards,&#10;The Support Team"
+                rows={3}
+                className="max-w-md resize-none"
+              />
+            </SettingField>
           </SettingCard>
         </div>
 
         {/* AI Configuration - Show managed banner for managed plans, full config for BYOK */}
         {isManaged ? (
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
               AI Configuration
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
             </h3>
-            <SettingCard className="bg-primary/5 border-primary/20">
+            <SettingCard bordered className="bg-primary/5 border-primary/20 mt-4">
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
@@ -444,15 +447,15 @@ export function SetupSection() {
           </div>
         ) : (
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
             AI Configuration
             {(connectionResult?.success || aiConfigHasKey) && (
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
             )}
           </h3>
 
           {/* Provider Selection */}
-          <SettingCard className="mb-4">
+          <SettingCard>
             <div className="space-y-4">
               <label className="text-sm font-medium text-foreground">AI Provider</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -517,7 +520,7 @@ export function SetupSection() {
           </SettingCard>
 
           {/* Model & API Key */}
-          <SettingCard className="mb-4">
+          <SettingCard>
             <div className="space-y-6">
               {settings.aiConfig.provider === "local" ? (
                 <>
@@ -671,7 +674,7 @@ export function SetupSection() {
           </SettingCard>
 
           {/* Connection Test */}
-          <SettingCard className="bg-muted/30">
+          <SettingCard bordered className="mt-4">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-medium text-foreground">Test Connection</h4>

@@ -52,36 +52,70 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `You are an AI assistant that creates knowledge base entries from customer support cases.
 
-Analyze the customer support case and create a comprehensive knowledge base entry that captures the essence of both the problem and its solution.
+Your goal is to create entries that will help identify and resolve similar issues in the future.
 
-CRITICAL REQUIREMENTS:
-1. Case Summary: Extract the CORE ISSUE from the customer's message, not just the subject line
-2. Resolution: Focus on the ACTUAL SOLUTION provided in the AI response
-3. Remove ALL personally identifiable information (names, emails, phone numbers, addresses)
-4. Make it technically specific and actionable for future similar cases
-5. Keep case_summary under 150 words, resolution under 250 words
+CASE SUMMARY REQUIREMENTS:
+The case_summary must answer these questions in a cohesive paragraph:
+1. CONTEXT: What was the customer trying to do? (their goal or task)
+2. PROBLEM: What went wrong or blocked them?
+3. SYMPTOMS: What did they experience? (error messages, unexpected behavior, specific observations)
+4. IMPACT: How did this affect them? (optional, include if mentioned)
 
-RESPONSE FORMAT - You MUST return ONLY a valid JSON object in this exact format:
+RESOLUTION REQUIREMENTS:
+1. Focus on the ACTUAL SOLUTION provided, not generic advice
+2. Include specific steps, settings, or actions taken
+3. Make it actionable for future similar cases
+
+GENERAL RULES:
+- Remove ALL personally identifiable information (names, emails, phone numbers, addresses, account IDs)
+- Keep case_summary under 150 words, resolution under 250 words
+- Be specific and technical, avoid vague language
+
+EXAMPLES:
+
+Example 1:
+Customer Message: "I've been trying to export my report to PDF for the last hour but every time I click the export button nothing happens. I'm using Chrome on Windows. I need this for a meeting at 3pm!"
+AI Response: "I understand the urgency! This is usually caused by pop-up blockers. Please go to Chrome Settings > Privacy > Site Settings > Pop-ups and allow pop-ups for our domain. Then try the export again."
+
+Good Output:
 {
-  "case_summary": "Detailed description of the customer's actual problem/issue based on their message content",
-  "resolution": "Step-by-step solution or explanation of how the issue was resolved",
+  "case_summary": "Customer attempting to export a report to PDF format. Clicking the export button produced no response - no error message, no download, no visible feedback. Issue occurred in Chrome browser on Windows. Customer had time-sensitive need for the exported report.",
+  "resolution": "Issue caused by browser pop-up blocker preventing the PDF export window from opening. Resolution: Guide customer to Chrome Settings > Privacy and Security > Site Settings > Pop-ups and redirects, then add the application domain to the allowed list. Export functionality works immediately after allowing pop-ups.",
+  "category": "Technical"
+}
+
+Example 2:
+Customer Message: "My subscription says it renewed but I'm locked out of premium features. I can see the charge on my credit card from yesterday for $49."
+AI Response: "I've verified your payment was received successfully. There was a sync delay between our payment system and your account. I've manually refreshed your subscription status - please log out and back in, and you should see your premium features restored."
+
+Good Output:
+{
+  "case_summary": "Customer's paid subscription not reflecting in account after successful renewal. Account displaying free tier limitations and locked premium features despite confirmed payment charge appearing on credit card statement.",
+  "resolution": "Subscription sync delay between payment processor and application database. Verified payment receipt in payment system, then manually triggered subscription status refresh via admin panel. Customer instructed to log out and back in to see restored premium access.",
+  "category": "Billing"
+}
+
+RESPONSE FORMAT - Return ONLY a valid JSON object:
+{
+  "case_summary": "Cohesive paragraph covering context, problem, and symptoms",
+  "resolution": "Specific steps and actions that resolved the issue",
   "category": "Issue category if provided"
 }
 
 DO NOT include any text before or after the JSON object. DO NOT use markdown formatting.`;
 
-    const userPrompt = `Please analyze this customer support case and create a knowledge base entry:
+    const userPrompt = `Analyze this customer support case and create a knowledge base entry:
 
-Customer Issue:
+CUSTOMER MESSAGE:
 Subject: ${validatedData.subject}
 Message: ${validatedData.message}
 
-${validatedData.ai_suggested_response ? `Resolution Provided:
-${validatedData.ai_suggested_response}` : 'No resolution provided yet.'}
+${validatedData.ai_suggested_response ? `RESOLUTION PROVIDED:
+${validatedData.ai_suggested_response}` : 'No resolution provided yet - summarize the issue only.'}
 
 ${validatedData.category ? `Category: ${validatedData.category}` : ''}
 
-Create a knowledge base entry that captures the essence of this issue and its resolution, removing any PII and making it useful for future similar cases.`;
+Remember: The case_summary should explain what the customer was trying to do, what went wrong, and what symptoms they experienced. Focus on the PROBLEM, not the solution. Remove any PII (names, emails, account IDs, etc.).`;
 
     const responseText = await aiService.generateText(
       systemPrompt,
