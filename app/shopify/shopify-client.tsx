@@ -195,7 +195,7 @@ export default function ShopifyLandingPageClient() {
                       <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      <strong>1/3 the cost</strong> of Gorgias ($208 vs $900/month)
+                      <strong>1/3 the cost</strong> of Gorgias ($249 vs $900/month)
                     </span>
                   </div>
                   <div className="flex items-start gap-3">
@@ -468,7 +468,7 @@ export default function ShopifyLandingPageClient() {
                   <tr>
                     <td className="px-4 py-4 text-sm text-slate-700 dark:text-slate-300">Starting Price</td>
                     <td className="bg-gradient-to-br from-[#3872B9]/5 to-[#B33275]/5 px-4 py-4 text-center">
-                      <span className="font-semibold text-green-600 dark:text-green-400">$208/mo</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">$249/mo</span>
                     </td>
                     <td className="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">$300-900/mo</td>
                     <td className="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">$600-1,200/mo</td>
@@ -535,7 +535,7 @@ export default function ShopifyLandingPageClient() {
                 <div className="flex items-center justify-center">
                   <DollarSign className="h-8 w-8 text-green-600" />
                 </div>
-                <div className="mt-3 text-4xl font-bold text-slate-900 dark:text-white">$208</div>
+                <div className="mt-3 text-4xl font-bold text-slate-900 dark:text-white">$249</div>
                 <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">Starting Price/Month</div>
               </div>
             </div>
@@ -554,27 +554,33 @@ export default function ShopifyLandingPageClient() {
               </p>
             </div>
 
-            <div className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
-              {/* Plus Plan */}
-              <div className="rounded-2xl border-2 border-slate-200 bg-white p-8 dark:border-white/10 dark:bg-slate-900">
+            <div className="mx-auto mt-12 max-w-2xl">
+              {/* Plus Plan - Single Featured Plan */}
+              <div className="relative rounded-2xl border-2 border-[#3872B9] bg-gradient-to-br from-[#3872B9]/5 to-[#B33275]/5 p-8">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#3872B9] to-[#B33275] px-4 py-1 text-sm font-semibold text-white">
+                  Most Popular
+                </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Plus</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Perfect for growing Shopify stores</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">All-inclusive AI for Shopify stores</p>
                 <div className="mt-6">
-                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$208</span>
+                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$249</span>
                   <span className="text-slate-600 dark:text-slate-400">/month</span>
                 </div>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Or $208/month billed annually
+                </p>
                 <ul className="mt-8 space-y-3">
+                  <li className="flex items-start gap-3">
+                    <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">AI included — no API key needed</span>
+                  </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
                     <span className="text-sm text-slate-700 dark:text-slate-300">5,000 emails/month</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Unlimited agents</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">AI response drafts</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Order history & tracking in every ticket</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
@@ -582,42 +588,15 @@ export default function ShopifyLandingPageClient() {
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Knowledge base training</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Pro Plan */}
-              <div className="relative rounded-2xl border-2 border-[#3872B9] bg-gradient-to-br from-[#3872B9]/5 to-[#B33275]/5 p-8">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#3872B9] to-[#B33275] px-4 py-1 text-sm font-semibold text-white">
-                  Most Popular
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Pro</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">For high-volume Shopify stores</p>
-                <div className="mt-6">
-                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$608</span>
-                  <span className="text-slate-600 dark:text-slate-400">/month</span>
-                </div>
-                <ul className="mt-8 space-y-3">
-                  <li className="flex items-start gap-3">
-                    <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">25,000 emails/month</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Powered by Claude AI</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Everything in Plus</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Self-learning from your replies</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Priority support</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Advanced analytics</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Custom integrations</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Multilingual support</span>
                   </li>
                 </ul>
               </div>
