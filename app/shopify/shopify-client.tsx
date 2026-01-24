@@ -580,7 +580,7 @@ export default function ShopifyLandingPageClient() {
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Order history & tracking in every ticket</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Automatic order history & tracking in every ticket</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
