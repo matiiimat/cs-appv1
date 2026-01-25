@@ -263,20 +263,12 @@ export default function CaseViewPage() {
       </div>
 
       {/* Actions */}
-      <div className="mt-8 flex items-center gap-4">
+      <div className="mt-8">
         <Link href="/app">
           <Button variant="outline">
             Back to Dashboard
           </Button>
         </Link>
-
-        {message.status !== 'sent' && (
-          <Link href={`/app?view=detailed-review&messageId=${message.id}`}>
-            <Button>
-              Review in Inbox
-            </Button>
-          </Link>
-        )}
       </div>
 
       {/* Knowledge Base Modal */}
@@ -285,6 +277,7 @@ export default function CaseViewPage() {
           isOpen={showKnowledgeBaseModal}
           onClose={() => setShowKnowledgeBaseModal(false)}
           message={message}
+          sourceTicketId={message.ticket_id?.replace(/^#/, '')}
         />
       )}
     </div>

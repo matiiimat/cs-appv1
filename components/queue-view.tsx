@@ -800,59 +800,77 @@ export function QueueView() {
         </div>
       </div>
 
-      {/* CSAT Feedback Modal */}
+      {/* CSAT Modal */}
       <Dialog open={csatModalOpen} onOpenChange={setCsatModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-              Customer Feedback
+              CSAT Ratings
               <span className="text-muted-foreground font-normal text-sm ml-2">
-                {avgCSAT.toFixed(1)} avg from {totalRatings} response{totalRatings !== 1 ? 's' : ''}
+                {avgCSAT.toFixed(1)} avg · {totalRatings} response{totalRatings !== 1 ? 's' : ''}
               </span>
             </DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 -mx-6 px-6">
             <div className="space-y-3 pb-4">
-              {ratedMessages.slice(0, 50).map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setCsatModalOpen(false)
-                    const caseId = item.ticketId?.replace(/^#/, '') || item.id
-                    window.location.href = `/app/c/${caseId}`
-                  }}
-                  className="w-full text-left p-4 rounded-lg bg-muted/50 border border-border hover:bg-muted/80 hover:border-primary/30 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">
-                        <span className="text-muted-foreground">#{item.ticketId}</span>
-                        {' '}{item.subject}
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0 flex items-center gap-2">
-                      <StarRating rating={item.rating} size="sm" />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {getRatingLabel(item.rating)}
-                      </span>
-                    </div>
-                  </div>
-                  {item.feedback && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-foreground">{item.feedback}</p>
+              {ratedMessages.slice(0, 50).map((item) => {
+                const isHighRating = item.rating >= 4
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`relative p-4 rounded-lg border transition-colors ${
+                      isHighRating
+                        ? 'bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 hover:border-emerald-500/30'
+                        : 'bg-muted/50 border-border hover:bg-muted/80 hover:border-primary/30'
+                    }`}
+                  >
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <button
+                        onClick={() => {
+                          setCsatModalOpen(false)
+                          const caseId = item.ticketId?.replace(/^#/, '') || item.id
+                          window.location.href = `/app/c/${caseId}`
+                        }}
+                        className="min-w-0 flex-1 text-left group"
+                      >
+                        <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                          <span className="text-muted-foreground">#{item.ticketId}</span>
+                          {' '}{item.subject}
+                        </p>
+                      </button>
+
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        <StarRating rating={item.rating} size="sm" />
+                        <span className={`text-xs font-medium ${
+                          item.rating >= 4 ? 'text-emerald-600' : item.rating === 3 ? 'text-amber-600' : 'text-red-600'
+                        }`}>
+                          {getRatingLabel(item.rating)}
+                        </span>
                       </div>
                     </div>
-                  )}
-                  {item.submittedAt && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {formatFriendlyDate(item.submittedAt)}
-                    </p>
-                  )}
-                </button>
-              ))}
+
+                    {/* Feedback */}
+                    {item.feedback && (
+                      <div className="mt-3 pt-3 border-t border-border/50">
+                        <div className="flex items-start gap-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-foreground">{item.feedback}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Timestamp */}
+                    {item.submittedAt && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatFriendlyDate(item.submittedAt)}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
               {ratedMessages.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">No ratings yet</p>
               )}

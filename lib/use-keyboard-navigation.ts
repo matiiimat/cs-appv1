@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef, useState } from "react"
 
-type ViewMode = "queue" | "inbox" | "knowledge" | "settings"
+type ViewMode = "queue" | "inbox" | "settings"
 
 interface KeyboardNavigationOptions {
   onNavigate: (view: ViewMode) => void
@@ -69,10 +69,6 @@ export function useKeyboardNavigation({
         case "i":
           e.preventDefault()
           onNavigate("inbox")
-          return
-        case "k":
-          e.preventDefault()
-          onNavigate("knowledge")
           return
         case "s":
           e.preventDefault()
