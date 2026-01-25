@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -180,56 +179,49 @@ export function KnowledgeBaseManager() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Knowledge Base Management
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-2">
-                Manage your saved case resolutions that help improve AI response accuracy.
-              </p>
-            </div>
-            <Badge variant="secondary">
-              {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search knowledge base entries..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+          </span>
+        </div>
+      </div>
 
-            {entries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">No knowledge base entries yet</p>
-                <p className="text-sm">
-                  Start by adding cases to your knowledge base from the case detail pages.
-                </p>
-              </div>
-            ) : filteredEntries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No entries match your search.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`border rounded-lg p-4 space-y-3 ${
-                      !entry.enabled ? 'opacity-60 bg-muted/30' : ''
-                    }`}
-                  >
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search knowledge base entries..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Entries List */}
+      {entries.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <BookOpen className="h-10 w-10 mx-auto mb-4 opacity-50" />
+          <p className="font-medium">No knowledge base entries yet</p>
+          <p className="text-sm mt-1">
+            Add cases from the case detail pages to improve AI accuracy.
+          </p>
+        </div>
+      ) : filteredEntries.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>No entries match your search.</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {filteredEntries.map((entry) => (
+            <div
+              key={entry.id}
+              className={`py-4 border-b border-border/30 last:border-b-0 space-y-2 ${
+                !entry.enabled ? 'opacity-60' : ''
+              }`}
+            >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
@@ -286,12 +278,9 @@ export function KnowledgeBaseManager() {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
