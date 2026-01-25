@@ -16,7 +16,7 @@ export function QuickActionEditor() {
         Quick actions let you apply common transformations to AI-generated responses with one click.
       </p>
 
-      <div className="space-y-3">
+      <div className="space-y-1">
         {settings.quickActions.map((action, index) => {
           const isExpanded = expandedId === action.id
 
@@ -24,8 +24,8 @@ export function QuickActionEditor() {
             <div
               key={action.id}
               className={`
-                border rounded-lg transition-all duration-200
-                ${isExpanded ? "bg-muted/30 border-border" : "bg-card border-border/50 hover:border-border"}
+                transition-all duration-200 rounded-lg
+                ${isExpanded ? "bg-muted/30" : "hover:bg-muted/20"}
               `}
             >
               {/* Header - always visible */}
@@ -102,7 +102,7 @@ export function QuickActionEditor() {
       </div>
 
       {settings.quickActions.length === 0 && (
-        <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg text-center">
+        <div className="text-sm text-muted-foreground py-6 text-center">
           No quick actions configured.
         </div>
       )}

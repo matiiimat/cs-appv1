@@ -187,9 +187,9 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
   }
 
   return (
-    <div className="w-72 flex-shrink-0 surface rounded-lg flex flex-col h-full">
+    <div className="w-72 flex-shrink-0 border-l border-border flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="p-3 border-b border-border">
+      <div className="p-3 border-b border-border/50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Image
@@ -325,10 +325,10 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
                         return (
                           <div
                             key={order.id}
-                            className="border border-border rounded-lg overflow-hidden"
+                            className="border-b border-border/30 last:border-b-0"
                           >
                             {/* Order Header */}
-                            <div className="p-2">
+                            <div className="py-2">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   {getShopifyAdminUrl('order', order.id) ? (
@@ -367,7 +367,7 @@ export function ShopifyPanel({ customerEmail, onClose }: ShopifyPanelProps) {
 
                             {/* Expanded Details */}
                             {isExpanded && (
-                              <div className="px-2 pb-2 border-t border-border pt-2 space-y-2">
+                              <div className="pb-3 pt-2 space-y-2 pl-6">
                                 {/* Date & Total */}
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="text-muted-foreground">

@@ -25,6 +25,7 @@ interface AddToKnowledgeBaseModalProps {
   isOpen: boolean
   onClose: () => void
   message: Message
+  sourceTicketId?: string
 }
 
 interface Synthesis {
@@ -33,7 +34,7 @@ interface Synthesis {
   category?: string
 }
 
-export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowledgeBaseModalProps) {
+export function AddToKnowledgeBaseModal({ isOpen, onClose, message, sourceTicketId }: AddToKnowledgeBaseModalProps) {
   const [step, setStep] = useState<'initial' | 'editing'>('initial')
   const [synthesis, setSynthesis] = useState<Synthesis | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -92,6 +93,7 @@ export function AddToKnowledgeBaseModal({ isOpen, onClose, message }: AddToKnowl
           case_summary: synthesis.case_summary,
           resolution: synthesis.resolution,
           category: synthesis.category,
+          source_ticket_id: sourceTicketId || message.ticket_id?.replace(/^#/, ''),
         }),
       })
 

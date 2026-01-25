@@ -8,6 +8,7 @@ export const KnowledgeBaseEntryDBSchema = z.object({
   case_summary: z.string(),
   resolution: z.string(),
   category: z.string().nullable(),
+  source_ticket_id: z.string().nullable(),
   enabled: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -20,6 +21,7 @@ export const CreateKnowledgeBaseEntryDBSchema = z.object({
   case_summary: z.string().min(1),
   resolution: z.string().min(1),
   category: z.string().optional(),
+  source_ticket_id: z.string().optional(),
 })
 
 export type CreateKnowledgeBaseEntryDBInput = z.infer<typeof CreateKnowledgeBaseEntryDBSchema>
@@ -30,6 +32,7 @@ export const KnowledgeBaseEntryClientSchema = z.object({
   case_summary: z.string(),
   resolution: z.string(),
   category: z.string().optional(),
+  source_ticket_id: z.string().optional(),
   enabled: z.boolean(),
   created_date: z.string(), // Note: using created_date to match localStorage interface
 })
@@ -83,8 +86,8 @@ export class KnowledgeBaseModel {
     entryData: CreateKnowledgeBaseEntryDBInput
   ): Promise<KnowledgeBaseEntryClient> {
     const result = await db.query(
-      'INSERT INTO knowledge_base_entries (organization_id, case_summary, resolution, category) VALUES ($1, $2, $3, $4) RETURNING id, case_summary, resolution, category, enabled, created_at',
-      [organizationId, entryData.case_summary, entryData.resolution, entryData.category || null]
+      'INSERT INTO knowledge_base_entries (organization_id, case_summary, resolution, category, source_ticket_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, case_summary, resolution, category, source_ticket_id, enabled, created_at',
+      [organizationId, entryData.case_summary, entryData.resolution, entryData.category || null, entryData.source_ticket_id || null]
     )
 
     const row = result.rows[0] as any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -93,6 +96,7 @@ export class KnowledgeBaseModel {
       case_summary: row.case_summary,
       resolution: row.resolution,
       category: row.category || undefined,
+      source_ticket_id: row.source_ticket_id || undefined,
       enabled: row.enabled,
       created_date: row.created_at,
     }
@@ -171,6 +175,37 @@ export class KnowledgeBaseModel {
     )
 
     return result.rowCount > 0
+  }
+
+  /**
+   * Find KB entries by source ticket IDs
+   * Returns a map of ticketId -> KB entry id
+   */
+  static async findByTicketIds(
+    organizationId: string,
+    ticketIds: string[]
+  ): Promise<Map<string, string>> {
+    if (ticketIds.length === 0) {
+      return new Map()
+    }
+
+    // Build parameterized query
+    const placeholders = ticketIds.map((_, i) => `$${i + 2}`).join(',')
+    const query = `
+      SELECT source_ticket_id, id
+      FROM knowledge_base_entries
+      WHERE organization_id = $1
+        AND source_ticket_id IN (${placeholders})
+        AND source_ticket_id IS NOT NULL
+    `
+
+    const result = await db.query(query, [organizationId, ...ticketIds])
+
+    const map = new Map<string, string>()
+    for (const row of result.rows as { source_ticket_id: string; id: string }[]) {
+      map.set(row.source_ticket_id, row.id)
+    }
+    return map
   }
 
   /**

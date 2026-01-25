@@ -1,9 +1,17 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { Search, LayoutGrid, Inbox, BookOpen, Settings, Zap, ArrowRight } from "lucide-react"
+import { Search, LayoutGrid, Inbox, Settings, Zap, ArrowRight, Loader2, FileText } from "lucide-react"
 
-type ViewMode = "queue" | "inbox" | "knowledge" | "settings"
+type ViewMode = "queue" | "inbox" | "settings"
+
+interface CaseResult {
+  id: string
+  ticket_id: string
+  subject: string | null
+  status: string
+  category: string | null
+}
 
 interface CommandItem {
   id: string
@@ -25,6 +33,24 @@ interface CommandPaletteProps {
   hasMessagesToTriage?: boolean
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  new: "New",
+  to_send_queue: "Approved",
+  rejected: "Rejected",
+  edited: "Edited",
+  sent: "Sent",
+  to_review_queue: "Review"
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  new: "bg-blue-500/15 text-blue-400",
+  to_send_queue: "bg-emerald-500/15 text-emerald-400",
+  rejected: "bg-red-500/15 text-red-400",
+  edited: "bg-amber-500/15 text-amber-400",
+  sent: "bg-emerald-500/15 text-emerald-400",
+  to_review_queue: "bg-amber-500/15 text-amber-400"
+}
+
 export function CommandPalette({
   isOpen,
   onClose,
@@ -36,7 +62,10 @@ export function CommandPalette({
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [caseResults, setCaseResults] = useState<CaseResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const commands: CommandItem[] = [
     // Navigation
@@ -54,14 +83,6 @@ export function CommandPalette({
       shortcut: ["G", "I"],
       icon: <Inbox className="w-4 h-4" />,
       action: () => { onNavigate("inbox"); onClose() },
-      category: "Navigation",
-    },
-    {
-      id: "nav-knowledge",
-      label: "Go to Knowledge",
-      shortcut: ["G", "K"],
-      icon: <BookOpen className="w-4 h-4" />,
-      action: () => { onNavigate("knowledge"); onClose() },
       category: "Navigation",
     },
     {
@@ -104,8 +125,65 @@ export function CommandPalette({
     return acc
   }, {})
 
-  // Flatten for index navigation
-  const flatCommands = Object.values(groupedCommands).flat()
+  // Total items count (commands + case results)
+  const totalItems = filteredCommands.length + caseResults.length
+
+  // Search for cases when query has 2+ characters
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (!query || query.length < 2) {
+      setCaseResults([])
+      setIsSearching(false)
+      return
+    }
+
+    // Create abort controller for this search request
+    const abortController = new AbortController()
+    let isCancelled = false
+
+    setIsSearching(true)
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/messages/search?q=${encodeURIComponent(query)}&limit=5`,
+          { signal: abortController.signal }
+        )
+        if (!isCancelled && response.ok) {
+          const data = await response.json()
+          setCaseResults(data.messages || [])
+        } else if (!isCancelled) {
+          setCaseResults([])
+        }
+      } catch (error) {
+        // Only update state if not aborted
+        if (!isCancelled && !(error instanceof DOMException && error.name === 'AbortError')) {
+          setCaseResults([])
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsSearching(false)
+        }
+      }
+    }, 300)
+
+    return () => {
+      isCancelled = true
+      abortController.abort()
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [query])
+
+  // Navigate to case detail
+  const navigateToCase = useCallback((ticketId: string) => {
+    const caseId = ticketId.replace(/^#/, '')
+    window.location.href = `/app/c/${caseId}`
+    onClose()
+  }, [onClose])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!isOpen) return
@@ -113,7 +191,7 @@ export function CommandPalette({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault()
-        setSelectedIndex(prev => Math.min(prev + 1, flatCommands.length - 1))
+        setSelectedIndex(prev => Math.min(prev + 1, totalItems - 1))
         break
       case "ArrowUp":
         e.preventDefault()
@@ -121,8 +199,15 @@ export function CommandPalette({
         break
       case "Enter":
         e.preventDefault()
-        if (flatCommands[selectedIndex]) {
-          flatCommands[selectedIndex].action()
+        // If index is within commands range
+        if (selectedIndex < filteredCommands.length) {
+          filteredCommands[selectedIndex]?.action()
+        } else {
+          // Index is in case results range
+          const caseIndex = selectedIndex - filteredCommands.length
+          if (caseResults[caseIndex]) {
+            navigateToCase(caseResults[caseIndex].ticket_id)
+          }
         }
         break
       case "Escape":
@@ -130,13 +215,15 @@ export function CommandPalette({
         onClose()
         break
     }
-  }, [isOpen, flatCommands, selectedIndex, onClose])
+  }, [isOpen, totalItems, filteredCommands, caseResults, selectedIndex, onClose, navigateToCase])
 
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus()
       setQuery("")
       setSelectedIndex(0)
+      setCaseResults([])
+      setIsSearching(false)
     }
   }, [isOpen])
 
@@ -167,7 +254,7 @@ export function CommandPalette({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Type a command or search..."
+            placeholder="Search cases or type a command..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="command-palette-input border-0 px-0"
@@ -210,9 +297,50 @@ export function CommandPalette({
             </div>
           ))}
 
-          {flatCommands.length === 0 && (
+          {/* Case Search Results */}
+          {(caseResults.length > 0 || isSearching) && (
+            <div>
+              <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                Cases
+                {isSearching && <Loader2 className="w-3 h-3 animate-spin" />}
+              </div>
+              {caseResults.map((caseItem) => {
+                const itemIndex = currentIndex++
+                const isSelected = itemIndex === selectedIndex
+
+                return (
+                  <div
+                    key={caseItem.id}
+                    className={`command-palette-item ${isSelected ? "command-palette-item-active" : ""}`}
+                    onClick={() => navigateToCase(caseItem.ticket_id)}
+                    onMouseEnter={() => setSelectedIndex(itemIndex)}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span className="text-muted-foreground">
+                        <FileText className="w-4 h-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground">{caseItem.ticket_id}</span>
+                          <span className="text-foreground truncate">
+                            {caseItem.subject || "No subject"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${STATUS_COLORS[caseItem.status] || 'bg-muted text-muted-foreground'}`}>
+                      {STATUS_LABELS[caseItem.status] || caseItem.status}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {filteredCommands.length === 0 && caseResults.length === 0 && !isSearching && query.length >= 2 && (
             <div className="px-4 py-8 text-center text-muted-foreground">
-              No commands found
+              <p>No results found</p>
+              <p className="text-xs mt-1">Try a case ID (e.g. 1234) or different keywords</p>
             </div>
           )}
         </div>

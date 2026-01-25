@@ -22,6 +22,26 @@ export async function GET(request: NextRequest) {
     const orgUser = await requireAuth(request);
 
     const { searchParams } = new URL(request.url);
+
+    // Handle ticket ID lookup (for Success Library - checking which cases are in KB)
+    const ticketIdsParam = searchParams.get('ticketIds');
+    if (ticketIdsParam) {
+      // Validate and sanitize ticket IDs - only allow alphanumeric characters
+      const ticketIds = ticketIdsParam
+        .split(',')
+        .filter(Boolean)
+        .map(id => id.trim())
+        .filter(id => /^[a-zA-Z0-9]+$/.test(id))
+        .slice(0, 100); // Limit to 100 IDs to prevent DoS
+
+      if (ticketIds.length > 0) {
+        const ticketMap = await KnowledgeBaseModel.findByTicketIds(orgUser.organizationId, ticketIds);
+        return NextResponse.json({ ticketMap: Object.fromEntries(ticketMap) });
+      }
+      return NextResponse.json({ ticketMap: {} });
+    }
+
+    // Handle regular search/fetch
     const category = searchParams.get('category') || undefined;
     const search = searchParams.get('search')?.split(',').filter(Boolean) || undefined;
 

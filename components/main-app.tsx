@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react"
 import { QueueView } from "@/components/queue-view"
 import { DetailedReviewInterface } from "@/components/detailed-review-interface"
 import { SettingsPage } from "@/components/settings-page"
-import { KnowledgePage } from "@/components/knowledge-page"
 import { CommandPalette } from "@/components/command-palette"
 import { MessageManagerProvider, useMessageManager } from "@/lib/message-manager"
 import { SettingsProvider } from "@/lib/settings-context"
@@ -13,10 +12,10 @@ import { UserProvider } from "@/lib/user-context"
 import { ToastProvider } from "@/components/ui/toast"
 import { OnboardingWrapper } from "@/components/onboarding/onboarding-wrapper"
 import { useKeyboardNavigation } from "@/lib/use-keyboard-navigation"
-import { LayoutGrid, Inbox, BookOpen, Settings } from "lucide-react"
+import { LayoutGrid, Inbox, Settings } from "lucide-react"
 import Image from "next/image"
 
-type ViewMode = "queue" | "inbox" | "knowledge" | "settings"
+type ViewMode = "queue" | "inbox" | "settings"
 
 function AppContent() {
   const [currentView, setCurrentView] = useState<ViewMode>("queue")
@@ -52,7 +51,7 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const view = params.get('view') as ViewMode | null
-      if (view && ['queue', 'inbox', 'knowledge', 'settings'].includes(view)) {
+      if (view && ['queue', 'inbox', 'settings'].includes(view)) {
         setCurrentView(view)
         // Clean up URL without reload
         const newUrl = window.location.pathname
@@ -94,7 +93,6 @@ function AppContent() {
   const navItems = [
     { id: "queue" as ViewMode, label: "Queue", icon: LayoutGrid, shortcut: "G Q" },
     { id: "inbox" as ViewMode, label: "Inbox", icon: Inbox, shortcut: "G I" },
-    { id: "knowledge" as ViewMode, label: "Knowledge", icon: BookOpen, shortcut: "G K" },
     { id: "settings" as ViewMode, label: "Settings", icon: Settings, shortcut: "G S" },
   ]
 
@@ -177,7 +175,6 @@ function AppContent() {
       <main>
         {currentView === "queue" && <QueueView />}
         {currentView === "inbox" && <DetailedReviewInterface />}
-        {currentView === "knowledge" && <KnowledgePage />}
         {currentView === "settings" && <SettingsPage />}
       </main>
 

@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 interface SectionHeaderProps {
   title: string
   description?: string
+  /** Action button for the header */
   action?: {
     label: string
     onClick: () => void

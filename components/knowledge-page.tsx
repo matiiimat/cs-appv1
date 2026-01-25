@@ -441,6 +441,7 @@ export function KnowledgePage() {
           isOpen={showKnowledgeBaseModal}
           onClose={() => setShowKnowledgeBaseModal(false)}
           message={selectedCase}
+          sourceTicketId={selectedCase.ticket_id?.replace(/^#/, '')}
         />
       )}
     </div>

@@ -1,18 +1,19 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { useSettings } from "@/lib/settings-context"
 import { useToast } from "@/components/ui/toast"
+import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { SectionHeader } from "../section-header"
 import { SettingCard, SettingField } from "../setting-card"
+import { CollapsibleSection } from "../collapsible-section"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { AIService } from "@/lib/ai-providers"
 import {
   Save,
-  Check,
   Loader2,
   Eye,
   EyeOff,
@@ -51,7 +52,6 @@ export function SetupSection() {
   const { settings, updateSettings, saveSettings, aiConfigHasKey, setAiConfigHasKey, planInfo } = useSettings()
   const isManaged = planInfo?.isManaged ?? false
   const { addToast } = useToast()
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{
@@ -63,62 +63,29 @@ export function SetupSection() {
   const [apiKeyInput, setApiKeyInput] = useState("")
   const [savingApiKey, setSavingApiKey] = useState(false)
 
-  const [initialSnapshot, setInitialSnapshot] = useState(() =>
-    JSON.stringify({
+  // Auto-save hook for brand identity and AI config
+  const { resetSnapshot } = useAutoSave({
+    data: {
       brandName: settings.brandName,
       agentName: settings.agentName,
       agentSignature: settings.agentSignature,
-      aiConfig: {
-        provider: settings.aiConfig.provider,
-        model: settings.aiConfig.model,
-        apiKey: settings.aiConfig.apiKey,
-        localEndpoint: settings.aiConfig.localEndpoint,
-      },
-    })
-  )
+      aiConfigProvider: settings.aiConfig.provider,
+      aiConfigModel: settings.aiConfig.model,
+      aiConfigLocalEndpoint: settings.aiConfig.localEndpoint,
+    },
+    onSave: saveSettings,
+    debounceMs: 1500,
+    addToast,
+  })
 
-  const hasChanges = useMemo(() => {
-    const current = JSON.stringify({
-      brandName: settings.brandName,
-      agentName: settings.agentName,
-      agentSignature: settings.agentSignature,
-      aiConfig: {
-        provider: settings.aiConfig.provider,
-        model: settings.aiConfig.model,
-        apiKey: settings.aiConfig.apiKey,
-        localEndpoint: settings.aiConfig.localEndpoint,
-      },
-    })
-    return current !== initialSnapshot
-  }, [settings, initialSnapshot])
-
+  // Reset snapshot when settings are loaded from server
   const didMount = useRef(false)
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true
-      setInitialSnapshot(
-        JSON.stringify({
-          brandName: settings.brandName,
-          agentName: settings.agentName,
-          agentSignature: settings.agentSignature,
-          aiConfig: {
-            provider: settings.aiConfig.provider,
-            model: settings.aiConfig.model,
-            apiKey: settings.aiConfig.apiKey,
-            localEndpoint: settings.aiConfig.localEndpoint,
-          },
-        })
-      )
+      resetSnapshot()
     }
-  }, [
-    settings.brandName,
-    settings.agentName,
-    settings.agentSignature,
-    settings.aiConfig.provider,
-    settings.aiConfig.model,
-    settings.aiConfig.apiKey,
-    settings.aiConfig.localEndpoint,
-  ])
+  }, [resetSnapshot])
 
   const handleProviderChange = (provider: Provider) => {
     const defaultModel =
@@ -198,46 +165,7 @@ export function SetupSection() {
     }
   }
 
-  const handleSave = async (showToast = false) => {
-    setSaveStatus("saving")
-    try {
-      await saveSettings()
-      setSaveStatus("saved")
-      setInitialSnapshot(
-        JSON.stringify({
-          brandName: settings.brandName,
-          agentName: settings.agentName,
-          agentSignature: settings.agentSignature,
-          aiConfig: {
-            provider: settings.aiConfig.provider,
-            model: settings.aiConfig.model,
-            apiKey: settings.aiConfig.apiKey,
-            localEndpoint: settings.aiConfig.localEndpoint,
-          },
-        })
-      )
-      if (showToast) {
-        addToast({
-          type: "success",
-          title: "Settings saved",
-          message: "Your AI configuration has been saved",
-          duration: 3000,
-        })
-      }
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    } catch {
-      setSaveStatus("error")
-      addToast({
-        type: "error",
-        title: "Failed to save",
-        message: "Please try again",
-        duration: 4000,
-      })
-      setTimeout(() => setSaveStatus("idle"), 3000)
-    }
-  }
-
-  // Save API key explicitly
+  // Save API key explicitly (manual save for security)
   const handleSaveApiKey = async () => {
     if (!apiKeyInput.trim()) return
 
@@ -338,75 +266,73 @@ export function SetupSection() {
 
       <div className="space-y-10">
         {/* Brand Identity */}
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
-            Brand Identity
-            {settings.brandName.trim() && settings.agentName.trim() && (
-              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-            )}
-          </h3>
+        <CollapsibleSection
+          title="Brand Identity"
+          isComplete={!!(settings.brandName.trim() && settings.agentName.trim())}
+        >
+          <div className="space-y-1">
+            <SettingCard>
+              <SettingField
+                label="Brand Name"
+                description={`Appears in emails as "${settings.brandName || "Your Brand"} Support"`}
+              >
+                <Input
+                  value={settings.brandName}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 80)
+                    updateSettings({ brandName: value })
+                  }}
+                  placeholder="e.g., Acme Corp"
+                  className="max-w-md"
+                />
+              </SettingField>
+            </SettingCard>
 
-          <SettingCard>
-            <SettingField
-              label="Brand Name"
-              description={`Appears in emails as "${settings.brandName || "Your Brand"} Support"`}
-            >
-              <Input
-                value={settings.brandName}
-                onChange={(e) => {
-                  const value = e.target.value.slice(0, 80)
-                  updateSettings({ brandName: value })
-                }}
-                placeholder="e.g., Acme Corp"
-                className="max-w-md"
-              />
-            </SettingField>
-          </SettingCard>
+            <SettingCard>
+              <SettingField label="Agent Name" description="Your display name in conversations">
+                <Input
+                  value={settings.agentName}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 32)
+                    updateSettings({ agentName: value })
+                  }}
+                  placeholder="e.g., Sarah Johnson"
+                  className="max-w-md"
+                />
+              </SettingField>
+            </SettingCard>
 
-          <SettingCard>
-            <SettingField label="Agent Name" description="Your display name in conversations">
-              <Input
-                value={settings.agentName}
-                onChange={(e) => {
-                  const value = e.target.value.slice(0, 32)
-                  updateSettings({ agentName: value })
+            <SettingCard>
+              <SettingField
+                label="Email Signature"
+                characterCount={{
+                  current: settings.agentSignature.length,
+                  max: 100,
                 }}
-                placeholder="e.g., Sarah Johnson"
-                className="max-w-md"
-              />
-            </SettingField>
-          </SettingCard>
-
-          <SettingCard>
-            <SettingField
-              label="Email Signature"
-              characterCount={{
-                current: settings.agentSignature.length,
-                max: 100,
-              }}
-            >
-              <Textarea
-                value={settings.agentSignature}
-                onChange={(e) => {
-                  const value = e.target.value.slice(0, 100)
-                  updateSettings({ agentSignature: value })
-                }}
-                placeholder="Best regards,&#10;The Support Team"
-                rows={3}
-                className="max-w-md resize-none"
-              />
-            </SettingField>
-          </SettingCard>
-        </div>
+              >
+                <Textarea
+                  value={settings.agentSignature}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 100)
+                    updateSettings({ agentSignature: value })
+                  }}
+                  placeholder="Best regards,&#10;The Support Team"
+                  rows={3}
+                  className="max-w-md resize-none"
+                />
+              </SettingField>
+            </SettingCard>
+          </div>
+        </CollapsibleSection>
 
         {/* AI Configuration - Show managed banner for managed plans, full config for BYOK */}
         {isManaged ? (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
-              AI Configuration
-              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-            </h3>
-            <SettingCard bordered className="bg-primary/5 border-primary/20 mt-4">
+          <CollapsibleSection
+            title="AI Configuration"
+            isComplete={true}
+            badge="Managed"
+          >
+            <SettingCard bordered className="bg-primary/5 border-primary/20">
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
@@ -444,18 +370,15 @@ export function SetupSection() {
                 </div>
               </div>
             </SettingCard>
-          </div>
+          </CollapsibleSection>
         ) : (
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
-            AI Configuration
-            {(connectionResult?.success || aiConfigHasKey) && (
-              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-            )}
-          </h3>
-
-          {/* Provider Selection */}
-          <SettingCard>
+        <CollapsibleSection
+          title="AI Configuration"
+          isComplete={connectionResult?.success || aiConfigHasKey}
+        >
+          <div className="space-y-1">
+            {/* Provider Selection */}
+            <SettingCard>
             <div className="space-y-4">
               <label className="text-sm font-medium text-foreground">AI Provider</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -736,66 +659,11 @@ export function SetupSection() {
                 </div>
               </div>
             )}
-          </SettingCard>
-        </div>
-        )}
-
-        {/* Save Status Feedback */}
-        {saveStatus === "error" && (
-          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-            Failed to save changes. Please try again.
+            </SettingCard>
           </div>
+        </CollapsibleSection>
         )}
       </div>
-
-      {/* Sticky Save Footer */}
-      {hasChanges && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-64">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-4 px-4 py-3 rounded-lg bg-card border border-border shadow-lg flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-muted-foreground">You have unsaved changes</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    // Reset to initial state by reloading
-                    window.location.reload()
-                  }}
-                  disabled={saveStatus === "saving"}
-                >
-                  Discard
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleSave(true)}
-                  disabled={saveStatus === "saving" || saveStatus === "saved"}
-                >
-                  {saveStatus === "saving" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                      Saving...
-                    </>
-                  ) : saveStatus === "saved" ? (
-                    <>
-                      <Check className="h-4 w-4 mr-1.5" />
-                      Saved
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-1.5" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

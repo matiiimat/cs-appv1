@@ -6,9 +6,8 @@ import { SetupSection } from "./sections/setup-section"
 import { CustomizationSection } from "./sections/customization-section"
 import { KnowledgeSection } from "./sections/knowledge-section"
 import { IntegrationsSection } from "./sections/integrations-section"
-import { SystemSection } from "./sections/system-section"
 import { BillingSection } from "./sections/billing-section"
-import { GDPRSection } from "./sections/gdpr-section"
+import { AccountSection } from "./sections/account-section"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -34,18 +33,16 @@ export function SettingsLayout() {
     switch (activeSection) {
       case "setup":
         return <SetupSection />
-      case "customization":
-        return <CustomizationSection />
       case "knowledge":
         return <KnowledgeSection />
+      case "customization":
+        return <CustomizationSection />
       case "integrations":
         return <IntegrationsSection />
-      case "system":
-        return <SystemSection />
       case "billing":
         return <BillingSection />
-      case "privacy":
-        return <GDPRSection />
+      case "account":
+        return <AccountSection />
       default:
         return <SetupSection />
     }
