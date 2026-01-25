@@ -323,10 +323,10 @@ async function putHandler(request: NextRequest) {
                 metadata: updatedMetadataWithCSAT,
               })
 
-              const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+              const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
               ratingUrl = `${appUrl}/rate/${csatToken.token}`
             } else if (existingCSAT?.token) {
-              const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+              const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
               ratingUrl = `${appUrl}/rate/${existingCSAT.token}`
             }
 
@@ -476,10 +476,10 @@ async function putHandler(request: NextRequest) {
                   metadata: updatedMetadataWithCSAT,
                 })
 
-                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+                const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
                 ratingUrl = `${appUrl}/rate/${csatToken.token}`
               } else if (existingCSAT?.token) {
-                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+                const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
                 ratingUrl = `${appUrl}/rate/${existingCSAT.token}`
               }
 
