@@ -9,34 +9,85 @@ import {
   User,
   Sun,
   Moon,
-  Shield,
   CreditCard,
   Plug,
 } from "lucide-react"
 
 export type SettingsSection =
   | "setup"
-  | "customization"
   | "knowledge"
+  | "customization"
   | "integrations"
-  | "system"
   | "billing"
-  | "privacy"
+  | "account"
 
 interface SettingsSidebarProps {
   activeSection: SettingsSection
   onSectionChange: (section: SettingsSection) => void
 }
 
-const mainNavItems: { id: SettingsSection; label: string; icon: React.ElementType }[] = [
+interface NavItem {
+  id: SettingsSection
+  label: string
+  icon: React.ElementType
+}
+
+const configNavItems: NavItem[] = [
   { id: "setup", label: "Setup", icon: Rocket },
-  { id: "customization", label: "Customization", icon: Sliders },
   { id: "knowledge", label: "Knowledge", icon: BookOpen },
+  { id: "customization", label: "Customization", icon: Sliders },
   { id: "integrations", label: "Integrations", icon: Plug },
-  { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "system", label: "Account", icon: User },
-  { id: "privacy", label: "Privacy & Data", icon: Shield },
 ]
+
+const accountNavItems: NavItem[] = [
+  { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "account", label: "Account", icon: User },
+]
+
+function NavSection({
+  label,
+  items,
+  activeSection,
+  onSectionChange
+}: {
+  label: string
+  items: NavItem[]
+  activeSection: SettingsSection
+  onSectionChange: (section: SettingsSection) => void
+}) {
+  return (
+    <div>
+      <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {label}
+      </p>
+      <ul className="space-y-1">
+        {items.map((item) => {
+          const Icon = item.icon
+          const isActive = activeSection === item.id
+          return (
+            <li key={item.id}>
+              <button
+                onClick={() => onSectionChange(item.id)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                  transition-all duration-150
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary border-l-2 border-primary ml-[-2px]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }
+                `}
+              >
+                <Icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                {item.label}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
 
 export function SettingsSidebar({ activeSection, onSectionChange }: SettingsSidebarProps) {
   const { settings, updateSettings } = useSettings()
@@ -54,35 +105,23 @@ export function SettingsSidebar({ activeSection, onSectionChange }: SettingsSide
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-3">
-        <ul className="space-y-1">
-          {mainNavItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeSection === item.id
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => onSectionChange(item.id)}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                    transition-all duration-150
-                    ${
-                      isActive
-                        ? "bg-primary/10 text-primary border-l-2 border-primary ml-[-2px]"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }
-                  `}
-                >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
-                  {item.label}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="flex-1 px-3 space-y-6">
+        <NavSection
+          label="Configuration"
+          items={configNavItems}
+          activeSection={activeSection}
+          onSectionChange={onSectionChange}
+        />
+
+        <NavSection
+          label="Account"
+          items={accountNavItems}
+          activeSection={activeSection}
+          onSectionChange={onSectionChange}
+        />
 
         {/* Separator */}
-        <div className="my-6 border-t border-border" />
+        <div className="border-t border-border" />
 
         {/* Theme Toggle */}
         <div className="px-3 py-2">
