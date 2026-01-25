@@ -1,89 +1,44 @@
 "use client"
 
-import { useState, useMemo } from "react"
 import { useSettings } from "@/lib/settings-context"
+import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { SectionHeader } from "../section-header"
 import { SettingField } from "../setting-card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { KnowledgeBaseManager } from "@/components/knowledge-base-manager"
-import { Save, Check, Loader2, FileText, Database } from "lucide-react"
+import { FileText, BookMarked, Lightbulb } from "lucide-react"
 
 export function KnowledgeSection() {
   const { settings, updateSettings, saveSettings } = useSettings()
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
-  const [initialSnapshot, setInitialSnapshot] = useState(() =>
-    JSON.stringify({
+
+  // Auto-save hook
+  const { status: saveStatus } = useAutoSave({
+    data: {
       companyKnowledge: settings.companyKnowledge,
       aiInstructions: settings.aiInstructions,
-    })
-  )
-
-  const hasChanges = useMemo(() => {
-    const current = JSON.stringify({
-      companyKnowledge: settings.companyKnowledge,
-      aiInstructions: settings.aiInstructions,
-    })
-    return current !== initialSnapshot
-  }, [settings.companyKnowledge, settings.aiInstructions, initialSnapshot])
-
-  const handleSave = async () => {
-    setSaveStatus("saving")
-    try {
-      await saveSettings()
-      setSaveStatus("saved")
-      setInitialSnapshot(
-        JSON.stringify({
-          companyKnowledge: settings.companyKnowledge,
-          aiInstructions: settings.aiInstructions,
-        })
-      )
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    } catch {
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus("idle"), 3000)
-    }
-  }
+    },
+    onSave: saveSettings,
+    debounceMs: 1500, // Slightly longer debounce for large text areas
+  })
 
   return (
     <div className="animate-in fade-in duration-200">
       <SectionHeader
         title="Knowledge"
-        description="Documentation and saved cases the AI uses to generate responses. More detailed knowledge leads to more accurate replies, but will consume additional AI tokens per response."
-        action={
-          hasChanges
-            ? {
-                label:
-                  saveStatus === "saved"
-                    ? "Saved"
-                    : saveStatus === "saving"
-                    ? "Saving..."
-                    : "Save Changes",
-                onClick: handleSave,
-                loading: saveStatus === "saving",
-                disabled: saveStatus === "saving" || saveStatus === "saved",
-                icon:
-                  saveStatus === "saved" ? (
-                    <Check className="h-4 w-4" />
-                  ) : saveStatus === "saving" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  ),
-              }
-            : undefined
-        }
+        description="Documentation and saved cases the AI uses to generate responses"
+        saveStatus={saveStatus}
       />
 
       <Tabs defaultValue="documentation" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="documentation" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Documentation
+            Company Docs
           </TabsTrigger>
           <TabsTrigger value="resolution-library" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Resolution Library
+            <BookMarked className="h-4 w-4" />
+            Saved Replies
           </TabsTrigger>
         </TabsList>
 
@@ -97,6 +52,22 @@ export function KnowledgeSection() {
               Paste your company&apos;s support documentation, FAQs, policies, and product information.
               The AI will use this to provide accurate, company-specific responses.
             </p>
+
+            {/* Empty state hint */}
+            {!settings.companyKnowledge.trim() && (
+              <div className="mb-4 p-4 rounded-lg border border-dashed border-border bg-muted/30">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Get started with your knowledge base</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Add your FAQs, return policies, shipping info, and product details.
+                      The AI references this information to give accurate, on-brand responses.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <SettingField
               label=""
@@ -120,29 +91,34 @@ We ship to all 50 states. Standard shipping takes 5-7 business days...
 # Product FAQs
 Q: How do I reset my password?
 A: Click "Forgot Password" on the login page...`}
-                rows={14}
-                className="font-mono text-sm resize-y min-h-[280px]"
+                rows={settings.companyKnowledge.trim() ? 14 : 8}
+                className="font-mono text-sm resize-y min-h-[200px]"
                 maxLength={50000}
               />
             </SettingField>
 
-            {/* Progress bar for character usage */}
-            <div className="mt-3 space-y-1">
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-300 ${
-                    settings.companyKnowledge.length > 45000
-                      ? "bg-red-500"
-                      : settings.companyKnowledge.length > 35000
-                      ? "bg-amber-500"
-                      : "bg-primary"
-                  }`}
-                  style={{
-                    width: `${Math.min(100, (settings.companyKnowledge.length / 50000) * 100)}%`,
-                  }}
-                />
+            {/* Progress bar for character usage - only show when there's content */}
+            {settings.companyKnowledge.length > 0 && (
+              <div className="mt-3 space-y-1">
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      settings.companyKnowledge.length > 45000
+                        ? "bg-red-500"
+                        : settings.companyKnowledge.length > 35000
+                        ? "bg-amber-500"
+                        : "bg-primary"
+                    }`}
+                    style={{
+                      width: `${Math.min(100, (settings.companyKnowledge.length / 50000) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  More content = more accurate responses, but uses more AI tokens per request
+                </p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Custom AI Instructions */}

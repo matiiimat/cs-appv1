@@ -1,80 +1,32 @@
 "use client"
 
-import { useState, useMemo } from "react"
 import { useSettings } from "@/lib/settings-context"
+import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { SectionHeader } from "../section-header"
 import { CategoryEditor } from "../editors/category-editor"
 import { SLAVisualizer } from "../editors/sla-visualizer"
 import { QuickActionEditor } from "../editors/quick-action-card"
-import { Save, Check, Loader2 } from "lucide-react"
 
 export function CustomizationSection() {
   const { settings, saveSettings } = useSettings()
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
-  const [initialSnapshot, setInitialSnapshot] = useState(() =>
-    JSON.stringify({
+
+  // Auto-save hook
+  const { status: saveStatus } = useAutoSave({
+    data: {
       categories: settings.categories,
       messageAgeThresholds: settings.messageAgeThresholds,
       quickActions: settings.quickActions,
-    })
-  )
-
-  const hasChanges = useMemo(() => {
-    const current = JSON.stringify({
-      categories: settings.categories,
-      messageAgeThresholds: settings.messageAgeThresholds,
-      quickActions: settings.quickActions,
-    })
-    return current !== initialSnapshot
-  }, [settings.categories, settings.messageAgeThresholds, settings.quickActions, initialSnapshot])
-
-  const handleSave = async () => {
-    setSaveStatus("saving")
-    try {
-      await saveSettings()
-      setSaveStatus("saved")
-      setInitialSnapshot(
-        JSON.stringify({
-          categories: settings.categories,
-          messageAgeThresholds: settings.messageAgeThresholds,
-          quickActions: settings.quickActions,
-        })
-      )
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    } catch {
-      setSaveStatus("error")
-      setTimeout(() => setSaveStatus("idle"), 3000)
-    }
-  }
+    },
+    onSave: saveSettings,
+    debounceMs: 1000,
+  })
 
   return (
     <div className="animate-in fade-in duration-200">
       <SectionHeader
         title="Customization"
         description="Configure categories, response time thresholds, and quick actions"
-        action={
-          hasChanges
-            ? {
-                label:
-                  saveStatus === "saved"
-                    ? "Saved"
-                    : saveStatus === "saving"
-                    ? "Saving..."
-                    : "Save Changes",
-                onClick: handleSave,
-                loading: saveStatus === "saving",
-                disabled: saveStatus === "saving" || saveStatus === "saved",
-                icon:
-                  saveStatus === "saved" ? (
-                    <Check className="h-4 w-4" />
-                  ) : saveStatus === "saving" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  ),
-              }
-            : undefined
-        }
+        saveStatus={saveStatus}
       />
 
       <div className="space-y-10">

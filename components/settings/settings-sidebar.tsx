@@ -6,7 +6,7 @@ import {
   Rocket,
   Sliders,
   BookOpen,
-  Settings2,
+  User,
   Sun,
   Moon,
   Shield,
@@ -33,8 +33,8 @@ const mainNavItems: { id: SettingsSection; label: string; icon: React.ElementTyp
   { id: "customization", label: "Customization", icon: Sliders },
   { id: "knowledge", label: "Knowledge", icon: BookOpen },
   { id: "integrations", label: "Integrations", icon: Plug },
-  { id: "system", label: "System", icon: Settings2 },
   { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "system", label: "Account", icon: User },
   { id: "privacy", label: "Privacy & Data", icon: Shield },
 ]
 
