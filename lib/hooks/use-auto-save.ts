@@ -4,6 +4,10 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
 
+interface ToastFn {
+  (toast: { type: 'success' | 'error' | 'info'; title: string; message?: string; duration?: number }): void
+}
+
 interface UseAutoSaveOptions<T> {
   /** The current data to track */
   data: T
@@ -15,6 +19,8 @@ interface UseAutoSaveOptions<T> {
   savedDisplayMs?: number
   /** Keys to track for changes (if not provided, tracks entire object) */
   trackKeys?: (keyof T)[]
+  /** Toast function for notifications */
+  addToast?: ToastFn
 }
 
 interface UseAutoSaveReturn {
@@ -34,6 +40,7 @@ export function useAutoSave<T extends Record<string, unknown>>({
   debounceMs = 1000,
   savedDisplayMs = 2000,
   trackKeys,
+  addToast,
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn {
   const [status, setStatus] = useState<SaveStatus>("idle")
   const [initialSnapshot, setInitialSnapshot] = useState<string>("")
@@ -81,6 +88,15 @@ export function useAutoSave<T extends Record<string, unknown>>({
       setInitialSnapshot(currentSnapshot)
       setStatus("saved")
 
+      // Show success toast
+      if (addToast) {
+        addToast({
+          type: "success",
+          title: "Changes saved",
+          duration: 2000,
+        })
+      }
+
       // Clear any existing saved timer
       if (savedTimerRef.current) {
         clearTimeout(savedTimerRef.current)
@@ -92,10 +108,19 @@ export function useAutoSave<T extends Record<string, unknown>>({
       }, savedDisplayMs)
     } catch {
       setStatus("error")
+      // Show error toast
+      if (addToast) {
+        addToast({
+          type: "error",
+          title: "Failed to save",
+          message: "Please try again",
+          duration: 4000,
+        })
+      }
       // Return to idle after showing error
       setTimeout(() => setStatus("idle"), 3000)
     }
-  }, [onSave, currentSnapshot, savedDisplayMs, status])
+  }, [onSave, currentSnapshot, savedDisplayMs, status, addToast])
 
   // Auto-save when changes are detected
   useEffect(() => {

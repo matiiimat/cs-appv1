@@ -2,6 +2,7 @@
 
 import { useSettings } from "@/lib/settings-context"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
+import { useToast } from "@/components/ui/toast"
 import { SectionHeader } from "../section-header"
 import { SettingField } from "../setting-card"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,15 +12,17 @@ import { FileText, BookMarked, Lightbulb } from "lucide-react"
 
 export function KnowledgeSection() {
   const { settings, updateSettings, saveSettings } = useSettings()
+  const { addToast } = useToast()
 
   // Auto-save hook
-  const { status: saveStatus } = useAutoSave({
+  useAutoSave({
     data: {
       companyKnowledge: settings.companyKnowledge,
       aiInstructions: settings.aiInstructions,
     },
     onSave: saveSettings,
-    debounceMs: 1500, // Slightly longer debounce for large text areas
+    debounceMs: 2000, // Longer debounce for large text areas
+    addToast,
   })
 
   return (
@@ -27,7 +30,6 @@ export function KnowledgeSection() {
       <SectionHeader
         title="Knowledge"
         description="Documentation and saved cases the AI uses to generate responses"
-        saveStatus={saveStatus}
       />
 
       <Tabs defaultValue="documentation" className="space-y-6">
@@ -151,13 +153,6 @@ A: Click "Forgot Password" on the login page...`}
               />
             </SettingField>
           </div>
-
-          {/* Save Status Feedback */}
-          {saveStatus === "error" && (
-            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-              Failed to save changes. Please try again.
-            </div>
-          )}
         </TabsContent>
 
         <TabsContent value="resolution-library">

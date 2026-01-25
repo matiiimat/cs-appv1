@@ -64,7 +64,7 @@ export function SetupSection() {
   const [savingApiKey, setSavingApiKey] = useState(false)
 
   // Auto-save hook for brand identity and AI config
-  const { status: saveStatus, resetSnapshot } = useAutoSave({
+  const { resetSnapshot } = useAutoSave({
     data: {
       brandName: settings.brandName,
       agentName: settings.agentName,
@@ -74,7 +74,8 @@ export function SetupSection() {
       aiConfigLocalEndpoint: settings.aiConfig.localEndpoint,
     },
     onSave: saveSettings,
-    debounceMs: 1000,
+    debounceMs: 1500,
+    addToast,
   })
 
   // Reset snapshot when settings are loaded from server
@@ -227,7 +228,6 @@ export function SetupSection() {
       <SectionHeader
         title="Setup"
         description="Configure your brand identity and AI provider to get started"
-        saveStatus={saveStatus}
       />
 
       {/* Setup Progress */}
@@ -663,15 +663,7 @@ export function SetupSection() {
           </div>
         </CollapsibleSection>
         )}
-
-        {/* Save Status Feedback */}
-        {saveStatus === "error" && (
-          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-            Failed to save changes. Please try again.
-          </div>
-        )}
       </div>
-
     </div>
   )
 }
