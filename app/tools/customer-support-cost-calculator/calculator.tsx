@@ -340,7 +340,56 @@ export default function CostCalculator() {
             </div>
           </div>
 
-          {/* Content sections would continue here - I'll truncate for brevity but the full content is in the original */}
+          {/* Related Resources */}
+          <div className="mt-16 rounded-2xl border border-slate-200 bg-white p-8 dark:border-white/[0.06] dark:bg-white/[0.02]">
+            <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-white">Related Resources</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Link
+                href="/blog/email-support-cost-comparison"
+                className="group rounded-lg border border-slate-200 p-4 transition-colors hover:border-[#3872B9] dark:border-white/10 dark:hover:border-[#3872B9]"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-[#3872B9] dark:text-white dark:group-hover:text-[#3872B9]">
+                  The True Cost of Email Support in 2026
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
+                  Detailed breakdown: hiring vs outsourcing vs AI-assisted support
+                </p>
+              </Link>
+              <Link
+                href="/blog/ai-vs-hiring-support-agent"
+                className="group rounded-lg border border-slate-200 p-4 transition-colors hover:border-[#3872B9] dark:border-white/10 dark:hover:border-[#3872B9]"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-[#3872B9] dark:text-white dark:group-hover:text-[#3872B9]">
+                  Should You Hire or Use AI?
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
+                  Decision framework for your first support hire vs AI-assisted
+                </p>
+              </Link>
+              <Link
+                href="/blog/gorgias-alternative-shopify"
+                className="group rounded-lg border border-slate-200 p-4 transition-colors hover:border-[#3872B9] dark:border-white/10 dark:hover:border-[#3872B9]"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-[#3872B9] dark:text-white dark:group-hover:text-[#3872B9]">
+                  Best Gorgias Alternative for Shopify
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
+                  Compare pricing and features for Shopify stores
+                </p>
+              </Link>
+              <Link
+                href="/blog/zendesk-vs-aidly-comparison"
+                className="group rounded-lg border border-slate-200 p-4 transition-colors hover:border-[#3872B9] dark:border-white/10 dark:hover:border-[#3872B9]"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-[#3872B9] dark:text-white dark:group-hover:text-[#3872B9]">
+                  Zendesk vs Aidly Comparison
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
+                  Feature and pricing breakdown for B2C teams
+                </p>
+              </Link>
+            </div>
+          </div>
 
         </main>
 
