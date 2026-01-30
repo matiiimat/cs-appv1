@@ -7,6 +7,7 @@ import { stripe as stripePlugin } from '@better-auth/stripe'
 import { ensureProvisioned } from '@/lib/tenant'
 import { EmailUsageModel } from '@/lib/models/email-usage'
 import { db as pgDb } from '@/lib/database'
+import { maskEmail } from '@/lib/utils'
 
 const db = createKysely()
 
@@ -115,7 +116,7 @@ export const auth = betterAuth({
           if (email) {
             try {
               const result = await ensureProvisioned(email, user.name || undefined)
-              console.log(`[databaseHooks] Provisioned org ${result.organizationId} for verified user: ${email}`)
+              console.log(`[databaseHooks] Provisioned org ${result.organizationId} for verified user: ${maskEmail(email)}`)
 
               // Store terms acceptance timestamp
               try {
@@ -125,13 +126,13 @@ export const auth = betterAuth({
                   .set({ terms_accepted_at: new Date() })
                   .where('id', '=', user.id)
                   .execute()
-                console.log(`[databaseHooks] Stored terms acceptance timestamp for user: ${email}`)
+                console.log(`[databaseHooks] Stored terms acceptance timestamp for user: ${maskEmail(email)}`)
               } catch (e) {
-                console.error(`[databaseHooks] Failed to store terms acceptance timestamp for ${email}:`, e)
+                console.error(`[databaseHooks] Failed to store terms acceptance timestamp for ${maskEmail(email)}:`, e)
               }
             } catch (e) {
               // Log but don't fail - protected layout will retry if needed
-              console.error(`[databaseHooks] Failed to provision for ${email}:`, e)
+              console.error(`[databaseHooks] Failed to provision for ${maskEmail(email)}:`, e)
             }
           }
         },
@@ -181,7 +182,7 @@ export const auth = betterAuth({
               return
             }
 
-            console.log(`[Stripe onEvent] Processing checkout completion for email: ${email}`)
+            console.log(`[Stripe onEvent] Processing checkout completion for email: ${maskEmail(email)}`)
 
             // Ensure user/org exists before sending magic link
             let provisionResult
@@ -189,7 +190,7 @@ export const auth = betterAuth({
               provisionResult = await ensureProvisioned(email)
               console.log(`[Stripe onEvent] Successfully provisioned org: ${provisionResult.organizationId}, user: ${provisionResult.userId}`)
             } catch (e) {
-              console.error('[Stripe onEvent] Critical provisioning error for email:', email, e)
+              console.error('[Stripe onEvent] Critical provisioning error for email:', maskEmail(email), e)
               // Don't send magic link if provisioning failed
               return
             }
@@ -240,7 +241,7 @@ export const auth = betterAuth({
             }
 
             // Auto magic-link send removed by request; users can sign in via the standard login flow.
-            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${email}.`)
+            console.log(`[Stripe onEvent] Checkout completed; provisioned org and user for ${maskEmail(email)}.`)
           }
 
           // Handle subscription cancellation - downgrade to free at period end

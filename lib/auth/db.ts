@@ -7,7 +7,7 @@ export function createKysely() {
     throw new Error('DATABASE_URL is required for Better Auth')
   }
   const ssl = connectionString.includes('neon.tech') || connectionString.includes('supabase.co')
-    ? { rejectUnauthorized: false }
+    ? { rejectUnauthorized: true }
     : undefined
 
   const pool = new Pool({ connectionString, ssl })

@@ -1,5 +1,6 @@
 import { db } from '@/lib/database';
 import { DatabaseEncryption } from '@/lib/encryption';
+import { maskEmail } from '@/lib/utils';
 import crypto from 'crypto';
 
 // Shopify OAuth scopes needed for order data
@@ -371,12 +372,12 @@ export class ShopifyClient {
       const customer = data.customers.edges[0]?.node;
 
       if (!customer) {
-        console.log(`[Shopify] No customer found for email: ${normalizedEmail}`);
+        console.log(`[Shopify] No customer found for email: ${maskEmail(normalizedEmail)}`);
         console.log(`[Shopify] Raw response edges:`, JSON.stringify(data.customers.edges));
         return null;
       }
 
-      console.log(`[Shopify] Found customer: ${customer.email} with ${customer.numberOfOrders} orders`);
+      console.log(`[Shopify] Found customer: ${maskEmail(customer.email)} with ${customer.numberOfOrders} orders`);
 
       // Transform orders to our format (anonymizing PII)
       const recentOrders: ShopifyOrder[] = customer.orders.edges.map(({ node }) => ({

@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Mask email for logging - shows first 2 chars + domain
+ * "john.doe@company.com" → "jo***@company.com"
+ */
+export function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return '[invalid-email]'
+  const [local, domain] = email.split('@')
+  const masked = local.length > 2 ? local.slice(0, 2) + '***' : '***'
+  return `${masked}@${domain}`
+}
+
 export function formatEmailText(text: string): string {
   if (!text) return text
   

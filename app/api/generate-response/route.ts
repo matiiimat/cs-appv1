@@ -12,6 +12,7 @@ import { TokenUsageModel } from '@/lib/models/token-usage'
 import { canUseAIWithConfig } from '@/lib/ai-config-helpers'
 import { createCustomerAnonymizer } from '@/lib/pii-anonymizer'
 import { ShopifyClient, formatShopifyContextForAI, type ShopifyOrder } from '@/lib/shopify-client'
+import { maskEmail } from '@/lib/utils'
 
 // Extract order numbers from text (e.g., #1002, order 1002, order #1002)
 function extractOrderNumbers(text: string): string[] {
@@ -335,7 +336,7 @@ Message: ${anonymizedBody}`
         const customerContext = await shopifyClient.getCustomerContext(emailValidation.customerEmail)
         if (customerContext) {
           shopifyContext = formatShopifyContextForAI(customerContext)
-          console.log(`[Shopify] Found customer context for ${emailValidation.customerEmail}: ${customerContext.totalOrders} orders`)
+          console.log(`[Shopify] Found customer context for ${maskEmail(emailValidation.customerEmail)}: ${customerContext.totalOrders} orders`)
         } else {
           // Fallback: try to find order by number if mentioned in the message
           const orderNumbers = extractOrderNumbers(`${emailValidation.subject} ${emailValidation.body}`)
@@ -353,7 +354,7 @@ Message: ${anonymizedBody}`
 
           // If still no data found, log for debugging
           if (!shopifyContext) {
-            console.log(`[Shopify] No customer or order data found for email: ${emailValidation.customerEmail}`)
+            console.log(`[Shopify] No customer or order data found for email: ${maskEmail(emailValidation.customerEmail)}`)
           }
         }
       }
