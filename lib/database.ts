@@ -42,7 +42,7 @@ class DatabaseConnection {
    * Parse and validate database configuration from environment
    */
   private parseConfig(): PoolConfig {
-    const sslConfig = process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false;
+    const sslConfig = process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false;
 
     // Prefer DATABASE_URL when available (e.g., Vercel/Neon)
     const connectionString = process.env.DATABASE_URL;
@@ -52,7 +52,7 @@ class DatabaseConnection {
       const cfg: PoolConfig = {
         connectionString,
         // Neon and other managed databases require SSL
-        ssl: isNeonOrManagedDB ? { rejectUnauthorized: false } : sslConfig,
+        ssl: isNeonOrManagedDB ? { rejectUnauthorized: true } : sslConfig,
       };
 
       // Optional pool tuning from env
