@@ -243,15 +243,63 @@ export default function CostCalculator() {
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": "Customer Support Cost Calculator",
-              "applicationCategory": "BusinessApplication",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              },
-              "description": "Free customer support cost calculator. Analyze your true support costs, benchmark against industry standards, and explore AI-assisted support options.",
+              "@graph": [
+                {
+                  "@type": "SoftwareApplication",
+                  "name": "Customer Support Cost Calculator",
+                  "applicationCategory": "BusinessApplication",
+                  "operatingSystem": "Web",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                  },
+                  "description": "Free customer support cost calculator. Analyze your true support costs, benchmark against industry standards, and explore AI-assisted support options.",
+                  "url": "https://aidly.me/tools/customer-support-cost-calculator",
+                  "author": {
+                    "@type": "Organization",
+                    "name": "Aidly",
+                    "url": "https://aidly.me"
+                  }
+                },
+                {
+                  "@type": "FAQPage",
+                  "mainEntity": [
+                    {
+                      "@type": "Question",
+                      "name": "How much does customer support cost per ticket?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Customer support costs $5-25 per ticket on average, depending on your team size, salaries, and overhead. With in-house agents at $50,000/year handling 350 tickets/month, the true cost is about $7-10 per ticket when including benefits and overhead."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "How many emails can one support agent handle per month?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Industry average is 350 tickets per agent per month for email support. High-performing teams may reach 450-600, while teams handling complex issues may be lower at 250-300. With AI assistance, agents can handle 2-2.5x more volume."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "What are the hidden costs of customer support?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Hidden costs include: benefits and taxes (add 35% to salary), turnover costs (support has ~35% annual turnover), training time, management overhead, and software licenses. True cost is typically 1.3-1.5x the base salary."
+                      }
+                    },
+                    {
+                      "@type": "Question",
+                      "name": "How can AI reduce customer support costs?",
+                      "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "AI-assisted support can reduce costs by 50-90% by: (1) Increasing agent capacity 2-2.5x through instant draft generation, (2) Reducing time per ticket from 7-10 minutes to 1-3 minutes, (3) Enabling the same team to handle more volume without hiring."
+                      }
+                    }
+                  ]
+                }
+              ]
             })
           }}
         />
