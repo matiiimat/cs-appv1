@@ -1174,6 +1174,7 @@ export default function LuxuryLanding() {
                 <h3 className="font-medium text-slate-900 dark:text-white mb-3">Resources</h3>
                 <ul className="space-y-2 text-sm text-slate-600 dark:text-white/60">
                   <li><Link href="/blog" className="transition-colors hover:text-slate-900 dark:hover:text-white">Blog</Link></li>
+                  <li><Link href="/tools/customer-support-cost-calculator" className="transition-colors hover:text-slate-900 dark:hover:text-white">Cost Calculator</Link></li>
                   <li><Link href="/compare/zendesk-alternative" className="transition-colors hover:text-slate-900 dark:hover:text-white">Compare</Link></li>
                 </ul>
               </div>
