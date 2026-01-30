@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/database';
+import crypto from 'crypto';
 
 /**
  * Cron job to clean up temporary/expired data
@@ -23,7 +24,10 @@ export async function GET(request: NextRequest) {
       console.error('[Cron] CRON_SECRET not configured in production');
       return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
     }
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expected = Buffer.from(`Bearer ${cronSecret}`)
+    const received = Buffer.from(authHeader || '')
+    const isValid = expected.length === received.length && crypto.timingSafeEqual(expected, received)
+    if (!isValid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
