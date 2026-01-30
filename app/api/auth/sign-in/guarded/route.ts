@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from 'next/server'
 import { auth } from '@/lib/auth/server'
 import { withRateLimit } from '@/lib/rate-limiter'
 import { verifyTurnstileToken, getClientIp } from '@/lib/turnstile'
+import { maskEmail } from '@/lib/utils'
 
 // Ensure Node.js runtime (SendGrid + server fetch)
 export const runtime = 'nodejs'
@@ -43,7 +44,7 @@ async function handler(request: NextRequest) {
     const clientIp = getClientIp(request.headers)
     const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp)
     if (!turnstileResult.success) {
-      console.log(`[magic-link] Turnstile verification failed for ${email}: ${turnstileResult.error}`)
+      console.log(`[magic-link] Turnstile verification failed for ${maskEmail(email)}: ${turnstileResult.error}`)
       return NextResponse.json(
         { error: 'captcha_failed', message: turnstileResult.error },
         { status: 400 }
@@ -60,7 +61,7 @@ async function handler(request: NextRequest) {
     const lastRequest = recentRequests.get(requestKey)
 
     if (lastRequest && (now - lastRequest) < 5000) {
-      console.log(`[magic-link] Duplicate request blocked for ${email} (within 5s)`)
+      console.log(`[magic-link] Duplicate request blocked for ${maskEmail(email)} (within 5s)`)
       return NextResponse.json({ ok: true }) // Return success to avoid confusing the user
     }
 
@@ -77,18 +78,18 @@ async function handler(request: NextRequest) {
     }
 
     try {
-      console.log(`[magic-link] Attempting direct API call for ${email}`)
+      console.log(`[magic-link] Attempting direct API call for ${maskEmail(email)}`)
       await auth.api.signInMagicLink({
         body: { email, callbackURL },
         headers: request.headers,
       })
-      console.log(`[magic-link] SUCCESS - Direct API worked for ${email}`)
+      console.log(`[magic-link] SUCCESS - Direct API worked for ${maskEmail(email)}`)
     } catch (directErr) {
-      console.log(`[magic-link] Direct API failed for ${email}, trying fallback:`, directErr instanceof Error ? directErr.message : directErr)
+      console.log(`[magic-link] Direct API failed for ${maskEmail(email)}, trying fallback:`, directErr instanceof Error ? directErr.message : directErr)
 
       // Use fallback but with deduplication
       try {
-        console.log(`[magic-link] Attempting fallback for ${email}`)
+        console.log(`[magic-link] Attempting fallback for ${maskEmail(email)}`)
         const resp = await fetch(`${origin}/api/auth/sign-in/magic-link`, {
           method: 'POST',
           headers: {
@@ -108,16 +109,16 @@ async function handler(request: NextRequest) {
           } catch {
             try { detail = await resp.text() } catch {}
           }
-          console.log(`[magic-link] Fallback failed for ${email}:`, detail)
+          console.log(`[magic-link] Fallback failed for ${maskEmail(email)}:`, detail)
           return NextResponse.json(
             { error: 'email_send_failed', detail },
             { status: 502 }
           )
         }
-        console.log(`[magic-link] SUCCESS - Fallback worked for ${email}`)
+        console.log(`[magic-link] SUCCESS - Fallback worked for ${maskEmail(email)}`)
       } catch (fallbackErr) {
         const message = fallbackErr instanceof Error ? fallbackErr.message : ''
-        console.error('[magic-link] Both direct and fallback failed for', email, ':', fallbackErr)
+        console.error('[magic-link] Both direct and fallback failed for', maskEmail(email), ':', fallbackErr)
         return NextResponse.json({ error: 'email_send_failed', detail: message }, { status: 502 })
       }
     }

@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail'
+import { maskEmail } from '@/lib/utils'
 
 const apiKey = process.env.SENDGRID_API_KEY || ''
 const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'login@aidly.me'
@@ -11,7 +12,7 @@ export async function sendMagicLinkEmail(to: string, url: string) {
   if (!apiKey) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn('[sendgrid] Missing SENDGRID_API_KEY. Dev fallback: logging magic link')
-      console.log(`[magic-link] To: ${to} URL: ${url}`)
+      console.log(`[magic-link] To: ${maskEmail(to)} URL: [redacted]`)
       return
     }
     throw new Error('SENDGRID_API_KEY is required to send emails')
@@ -65,7 +66,7 @@ export async function sendAccountDeletionEmail(
   if (!apiKey) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn('[sendgrid] Missing SENDGRID_API_KEY. Dev fallback: logging deletion email')
-      console.log(`[deletion-email] To: ${to}, Stats: ${JSON.stringify(stats)}`)
+      console.log(`[deletion-email] To: ${maskEmail(to)}, Stats: ${JSON.stringify(stats)}`)
       return
     }
     throw new Error('SENDGRID_API_KEY is required to send emails')
