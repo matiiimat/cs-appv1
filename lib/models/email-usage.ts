@@ -28,7 +28,7 @@ export interface UsageInfo {
   isFreePlan: boolean
 }
 
-interface OrganizationPlan {
+export interface EmailOrganizationPlan {
   plan_type: string
   plan_status: string
   current_period_start: string | null
@@ -111,8 +111,8 @@ export class EmailUsageModel {
   /**
    * Get organization's plan info
    */
-  private static async getOrganizationPlan(organizationId: string): Promise<OrganizationPlan | null> {
-    const result = await db.query<OrganizationPlan>(
+  private static async getOrganizationPlan(organizationId: string): Promise<EmailOrganizationPlan | null> {
+    const result = await db.query<EmailOrganizationPlan>(
       `SELECT plan_type, plan_status, current_period_start
        FROM organizations WHERE id = $1`,
       [organizationId]
@@ -127,9 +127,14 @@ export class EmailUsageModel {
 
   /**
    * Get usage summary for an organization
+   * @param organizationId - The organization ID
+   * @param orgPlan - Optional pre-fetched org plan to avoid duplicate query
    */
-  static async getUsageSummary(organizationId: string): Promise<UsageInfo> {
-    const org = await this.getOrganizationPlan(organizationId)
+  static async getUsageSummary(
+    organizationId: string,
+    orgPlan?: EmailOrganizationPlan | null
+  ): Promise<UsageInfo> {
+    const org = orgPlan !== undefined ? orgPlan : await this.getOrganizationPlan(organizationId)
 
     if (!org) {
       throw new Error('Organization not found')

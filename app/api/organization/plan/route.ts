@@ -19,9 +19,13 @@ export async function GET(request: NextRequest) {
 
     const { organizationId } = orgUser
 
-    // Get organization plan info
-    const result = await db.query<{ plan_type: string; plan_status: string }>(
-      `SELECT plan_type, plan_status FROM organizations WHERE id = $1`,
+    // Get organization plan info (single query, reused for both models)
+    const result = await db.query<{
+      plan_type: string
+      plan_status: string
+      current_period_start: string | null
+    }>(
+      `SELECT plan_type, plan_status, current_period_start FROM organizations WHERE id = $1`,
       [organizationId]
     )
 
@@ -29,19 +33,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    const { plan_type: planType, plan_status: planStatus } = result.rows[0]
+    const orgData = result.rows[0]
+    const { plan_type: planType, plan_status: planStatus } = orgData
 
     // Check if this is a managed plan (free or plus)
     const isManaged = TokenUsageModel.isManagedPlan(planType)
 
-    // Get token usage for managed plans
+    // Get token usage for managed plans (pass org data to avoid re-fetching)
     let tokenUsage = null
     if (isManaged) {
-      tokenUsage = await TokenUsageModel.getUsageSummary(organizationId)
+      tokenUsage = await TokenUsageModel.getUsageSummary(organizationId, orgData)
     }
 
-    // Get email usage for all plans
-    const emailUsage = await EmailUsageModel.getUsageSummary(organizationId)
+    // Get email usage for all plans (pass org data to avoid re-fetching)
+    const emailUsage = await EmailUsageModel.getUsageSummary(organizationId, orgData)
 
     return NextResponse.json({
       planType,
