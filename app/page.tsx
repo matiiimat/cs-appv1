@@ -1009,11 +1009,11 @@ export default function LuxuryLanding() {
                     {/* Features */}
                     <div className="mb-6 space-y-2.5">
                       {[
+                        "All Plus features included",
                         "Unlimited emails",
                         "SSO / SAML authentication",
-                        "Dedicated account manager",
-                        "Custom SLA (99.9% uptime)",
                         "Audit logs & compliance",
+                        "Custom SLA (99.9% uptime)",
                         "Priority support",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
