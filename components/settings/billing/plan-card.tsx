@@ -142,11 +142,12 @@ export function PlanComparison({ currentPlan, onUpgrade, isLoading, loadingPlan 
     // },
   ]
 
-  // Filter out current plan and plans below current
-  const upgradePlans = plans.filter((plan) => {
-    if (currentPlan === 'plus') return plan.id === 'pro'
-    if (currentPlan === 'pro') return false
-    return true // Free users see both
+  // Filter out current plan - only show upgrade options
+  const upgradePlans = plans.filter(() => {
+    // Plus users have no upgrade path (Pro removed, Enterprise is contact-only)
+    if (currentPlan === 'plus') return false
+    // Free users see Plus
+    return true
   })
 
   if (upgradePlans.length === 0) {
