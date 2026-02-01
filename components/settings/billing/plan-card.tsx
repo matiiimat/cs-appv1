@@ -124,28 +124,30 @@ export function PlanComparison({ currentPlan, onUpgrade, isLoading, loadingPlan 
       ],
       isPopular: true,
     },
-    {
-      id: 'pro' as const,
-      name: 'Pro',
-      price: '$199',
-      period: 'month',
-      description: 'Bring your own AI keys',
-      features: [
-        '1,000 emails per month',
-        'Use your own API keys',
-        'Unlimited AI tokens',
-        'All integrations',
-        'Advanced analytics',
-      ],
-      isPopular: false,
-    },
+    // Pro plan removed to simplify pricing - single plan is clearer for customers
+    // {
+    //   id: 'pro' as const,
+    //   name: 'Pro',
+    //   price: '$199',
+    //   period: 'month',
+    //   description: 'Bring your own AI keys',
+    //   features: [
+    //     '1,000 emails per month',
+    //     'Use your own API keys',
+    //     'Unlimited AI tokens',
+    //     'All integrations',
+    //     'Advanced analytics',
+    //   ],
+    //   isPopular: false,
+    // },
   ]
 
-  // Filter out current plan and plans below current
-  const upgradePlans = plans.filter((plan) => {
-    if (currentPlan === 'plus') return plan.id === 'pro'
-    if (currentPlan === 'pro') return false
-    return true // Free users see both
+  // Filter out current plan - only show upgrade options
+  const upgradePlans = plans.filter(() => {
+    // Plus users have no upgrade path (Pro removed, Enterprise is contact-only)
+    if (currentPlan === 'plus') return false
+    // Free users see Plus
+    return true
   })
 
   if (upgradePlans.length === 0) {
