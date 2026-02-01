@@ -159,8 +159,8 @@ export default function LuxuryLanding() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Checkout function
-  async function startCheckout(plan: 'plus' | 'pro' = 'plus') {
+  // Checkout function (Pro plan removed - only Plus available)
+  async function startCheckout(plan: 'plus' = 'plus') {
     setError("")
     try {
       setLoading(true)
@@ -285,7 +285,7 @@ export default function LuxuryLanding() {
           "priceCurrency": "USD",
           "lowPrice": "0",
           "highPrice": "249",
-          "offerCount": "3",
+          "offerCount": "2",
           "offers": [
             {
               "@type": "Offer",
@@ -300,13 +300,14 @@ export default function LuxuryLanding() {
               "priceCurrency": "USD",
               "billingIncrement": annual ? "year" : "month"
             },
-            {
-              "@type": "Offer",
-              "name": "Pro Plan",
-              "price": annual ? "166" : "199",
-              "priceCurrency": "USD",
-              "billingIncrement": annual ? "year" : "month"
-            }
+            // Pro plan removed - simplified to single paid tier
+            // {
+            //   "@type": "Offer",
+            //   "name": "Pro Plan",
+            //   "price": annual ? "166" : "199",
+            //   "priceCurrency": "USD",
+            //   "billingIncrement": annual ? "year" : "month"
+            // }
           ]
         },
         "description": "AI-powered customer support software for email ticketing. Get intelligent draft responses in seconds.",
@@ -368,7 +369,7 @@ export default function LuxuryLanding() {
             "name": "What does AI usage cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Plus plan: AI is included — no API key needed, no extra costs. Pro plan: Bring your own API key and pay your provider directly for token usage."
+              "text": "AI is included in your Plus plan — no API key needed, no extra costs. We handle everything so you can focus on your customers."
             }
           },
           {
@@ -816,8 +817,8 @@ export default function LuxuryLanding() {
               </button>
             </div>
 
-            {/* Pricing cards - Four tiers */}
-            <div className="mt-10 grid gap-6 lg:grid-cols-4">
+            {/* Pricing cards - Three tiers */}
+            <div className="mt-10 grid gap-6 lg:grid-cols-3">
               {/* Free Trial */}
               <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
                 <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
@@ -868,17 +869,14 @@ export default function LuxuryLanding() {
                 </div>
               </div>
 
-              {/* Pro Tier - BYOK */}
-              <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
+              {/* Pro Tier - BYOK (Removed to simplify pricing) */}
+              {/* <div className="relative overflow-hidden rounded-3xl border p-1 border-slate-200 bg-white dark:border-white/[0.08] dark:bg-white/[0.03]">
                 <div className="relative h-full rounded-[22px] p-6 bg-white dark:bg-[#0A0A0B]">
                   <div className="flex h-full flex-col">
-                    {/* Header */}
                     <div className="mb-5">
                       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Pro</h3>
                       <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Bring your own key</p>
                     </div>
-
-                    {/* Price */}
                     <div className="mb-5">
                       <div className="flex items-baseline gap-2">
                         <span className="font-[var(--font-custom)] text-4xl font-medium text-slate-900 dark:text-white">
@@ -892,8 +890,6 @@ export default function LuxuryLanding() {
                         <p className="mt-2 text-sm text-slate-500 dark:text-white/40">+ your AI API costs</p>
                       )}
                     </div>
-
-                    {/* Features */}
                     <div className="mb-6 space-y-2.5">
                       {[
                         "Use your own API key",
@@ -911,8 +907,6 @@ export default function LuxuryLanding() {
                         </div>
                       ))}
                     </div>
-
-                    {/* CTA */}
                     <div className="mt-auto">
                       <Button
                         size="lg"
@@ -926,7 +920,7 @@ export default function LuxuryLanding() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Plus Tier - Most Popular */}
               <div className="relative overflow-hidden rounded-3xl border p-1 shadow-xl border-slate-200 bg-white dark:border-white/[0.1] dark:bg-white/[0.03] dark:shadow-none">
@@ -964,12 +958,12 @@ export default function LuxuryLanding() {
                     {/* Features */}
                     <div className="mb-6 space-y-2.5">
                       {[
-                        "AI included — no API key needed",
-                        "5,000 emails per month",
-                        "Powered by Claude AI",
+                        "Native Shopify integration",
+                        "Connect any email inbox",
                         "Self-learning from your replies",
                         "Full approval control",
                         "Multilingual support",
+                        "Generous AI usage (10M tokens/mo)",
                       ].map((feature, i) => (
                         <div key={i} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-white/70">
                           <svg className="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1050,7 +1044,7 @@ export default function LuxuryLanding() {
             {/* Plan comparison note */}
             <div className="mt-8 mx-auto max-w-2xl rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.02]">
               <p className="text-sm text-slate-600 dark:text-white/50 text-center">
-                <span className="font-medium text-slate-700 dark:text-white/70">Plus</span> includes AI — no API key needed. <span className="font-medium text-slate-700 dark:text-white/70">Pro</span> lets you bring your own key for full control over AI costs and models.
+                <span className="font-medium text-slate-700 dark:text-white/70">Plus</span> includes AI — no API key needed, no extra costs. Need more? <span className="font-medium text-slate-700 dark:text-white/70">Enterprise</span> offers unlimited emails and dedicated support.
               </p>
             </div>
           </div>
@@ -1116,7 +1110,7 @@ export default function LuxuryLanding() {
                 },
                 {
                   q: "What does AI usage cost?",
-                  a: "Plus plan: AI is included — no API key needed, no extra costs. We handle everything. Pro plan: Bring your own API key (OpenAI, Anthropic, etc.) and pay your provider directly for token usage. This gives you full control over costs and provider choice. Either way, it's a fraction of the cost of a support agent."
+                  a: "AI is included in your Plus plan — no API key needed, no extra costs. We handle everything so you can focus on your customers. It's a fraction of the cost of a support agent."
                 },
                 {
                   q: "What if the AI gives wrong answers?",

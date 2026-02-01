@@ -124,21 +124,22 @@ export function PlanComparison({ currentPlan, onUpgrade, isLoading, loadingPlan 
       ],
       isPopular: true,
     },
-    {
-      id: 'pro' as const,
-      name: 'Pro',
-      price: '$199',
-      period: 'month',
-      description: 'Bring your own AI keys',
-      features: [
-        '1,000 emails per month',
-        'Use your own API keys',
-        'Unlimited AI tokens',
-        'All integrations',
-        'Advanced analytics',
-      ],
-      isPopular: false,
-    },
+    // Pro plan removed to simplify pricing - single plan is clearer for customers
+    // {
+    //   id: 'pro' as const,
+    //   name: 'Pro',
+    //   price: '$199',
+    //   period: 'month',
+    //   description: 'Bring your own AI keys',
+    //   features: [
+    //     '1,000 emails per month',
+    //     'Use your own API keys',
+    //     'Unlimited AI tokens',
+    //     'All integrations',
+    //     'Advanced analytics',
+    //   ],
+    //   isPopular: false,
+    // },
   ]
 
   // Filter out current plan and plans below current
