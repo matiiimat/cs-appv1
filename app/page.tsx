@@ -593,7 +593,7 @@ export default function LuxuryLanding() {
 
             {/* Subheadline */}
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-white/50 md:text-xl animate-[fadeInUp_0.8s_ease-out_0.5s_both]">
-              AI-powered email support that drafts perfect responses instantly—you have the final word. Save hours on repetitive emails while maintaining your brand voice. Native Shopify integration included.
+              AI-powered email support that instantly drafts on-brand replies, you stay in control with the final send. Save hours on repetitive customer emails. Includes a native Shopify integration.
             </p>
 
             {/* CTA button */}
