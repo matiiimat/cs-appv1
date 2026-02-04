@@ -28,7 +28,7 @@ export interface TokenUsageInfo {
   isManaged: boolean
 }
 
-interface OrganizationPlan {
+export interface OrganizationPlan {
   plan_type: string
   current_period_start: string | null
 }
@@ -124,9 +124,14 @@ export class TokenUsageModel {
   /**
    * Get usage summary for an organization
    * Returns null for non-managed plans (they don't have token tracking)
+   * @param organizationId - The organization ID
+   * @param orgPlan - Optional pre-fetched org plan to avoid duplicate query
    */
-  static async getUsageSummary(organizationId: string): Promise<TokenUsageInfo | null> {
-    const org = await this.getOrganizationPlan(organizationId)
+  static async getUsageSummary(
+    organizationId: string,
+    orgPlan?: OrganizationPlan | null
+  ): Promise<TokenUsageInfo | null> {
+    const org = orgPlan !== undefined ? orgPlan : await this.getOrganizationPlan(organizationId)
 
     if (!org) {
       return null

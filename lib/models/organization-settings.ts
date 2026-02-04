@@ -59,6 +59,7 @@ export const SettingsDataSchema = z.object({
     scope: z.string().optional(), // OAuth scopes granted
     installedAt: z.string().optional(), // ISO timestamp
   }).optional().default({ enabled: false }),
+  hasCompletedTour: z.boolean().optional().default(false), // Product tour completion status
   lastSaved: z.string().optional(), // ISO string
 });
 

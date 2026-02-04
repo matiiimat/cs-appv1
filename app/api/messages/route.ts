@@ -580,7 +580,50 @@ async function putHandler(request: NextRequest) {
   }
 }
 
+async function deleteHandler(request: NextRequest) {
+  try {
+    const orgId = await requireOrgId(request)
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: "Message ID is required" }, { status: 400 })
+    }
+
+    // Only allow deletion of demo messages (safety check)
+    const message = await MessageModel.findById(orgId, id)
+    if (!message) {
+      return NextResponse.json({ error: "Message not found" }, { status: 404 })
+    }
+
+    const metadata = message.metadata as Record<string, unknown> | undefined
+    if (!metadata?.isDemoMessage) {
+      return NextResponse.json({ error: "Only demo messages can be deleted" }, { status: 403 })
+    }
+
+    const deleted = await MessageModel.delete(orgId, id)
+    if (!deleted) {
+      return NextResponse.json({ error: "Failed to delete message" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'UNAUTHORIZED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'ORG_NOT_FOUND') {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+    console.error('Error deleting message:', error)
+    return NextResponse.json(
+      { error: "Failed to delete message" },
+      { status: 500 }
+    )
+  }
+}
+
 // Apply rate limiting to message endpoints
 export const GET = withRateLimit(getHandler, 'api')
 export const POST = withRateLimit(postHandler, 'email')
 export const PUT = withRateLimit(putHandler, 'api')
+export const DELETE = withRateLimit(deleteHandler, 'api')

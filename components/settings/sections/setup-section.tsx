@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { useSettings } from "@/lib/settings-context"
 import { useToast } from "@/components/ui/toast"
+import { useTour } from "@/lib/tour-context"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { SectionHeader } from "../section-header"
 import { SettingCard, SettingField } from "../setting-card"
@@ -22,6 +23,7 @@ import {
   Zap,
   Sparkles,
   Pencil,
+  PlayCircle,
 } from "lucide-react"
 
 type Provider = "openai" | "anthropic" | "local"
@@ -52,6 +54,7 @@ export function SetupSection() {
   const { settings, updateSettings, saveSettings, aiConfigHasKey, setAiConfigHasKey, planInfo } = useSettings()
   const isManaged = planInfo?.isManaged ?? false
   const { addToast } = useToast()
+  const { startTour, isTourActive } = useTour()
   const [showApiKey, setShowApiKey] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{
@@ -663,6 +666,36 @@ export function SetupSection() {
           </div>
         </CollapsibleSection>
         )}
+
+        {/* Take a Tour */}
+        <SettingCard bordered className="mt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <PlayCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground">Take a Tour</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  New to Aidly? Take a guided tour to learn how to process messages, triage responses, and get the most out of the app.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Navigate to queue view first, then start tour
+                window.dispatchEvent(new CustomEvent('aidly:navigate:queue'))
+                setTimeout(() => startTour(), 300)
+              }}
+              disabled={isTourActive}
+              className="shrink-0"
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              {isTourActive ? "Tour in progress..." : "Start Tour"}
+            </Button>
+          </div>
+        </SettingCard>
       </div>
     </div>
   )

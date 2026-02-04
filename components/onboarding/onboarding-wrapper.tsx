@@ -1,16 +1,36 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { useSettings } from "@/lib/settings-context"
 import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton"
 import { OnboardingWizard } from "./onboarding-wizard"
+import { TourProvider, useTour } from "@/lib/tour-context"
 
 interface OnboardingWrapperProps {
   children: ReactNode
 }
 
-export function OnboardingWrapper({ children }: OnboardingWrapperProps) {
+function OnboardingContent({ children }: OnboardingWrapperProps) {
   const { isSettingsLoaded, hasCompletedOnboarding, completeOnboarding } = useSettings()
+  const { startTour, hasCompletedTour } = useTour()
+  const tourStartedRef = useRef(false)
+
+  // Auto-start tour after onboarding wizard completes
+  useEffect(() => {
+    if (
+      isSettingsLoaded &&
+      hasCompletedOnboarding &&
+      !hasCompletedTour &&
+      !tourStartedRef.current
+    ) {
+      tourStartedRef.current = true
+      // Small delay to ensure the app is fully rendered
+      const timer = setTimeout(() => {
+        startTour()
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+  }, [isSettingsLoaded, hasCompletedOnboarding, hasCompletedTour, startTour])
 
   // Show skeleton while settings are loading
   if (!isSettingsLoaded) {
@@ -24,5 +44,13 @@ export function OnboardingWrapper({ children }: OnboardingWrapperProps) {
       )}
       {children}
     </>
+  )
+}
+
+export function OnboardingWrapper({ children }: OnboardingWrapperProps) {
+  return (
+    <TourProvider>
+      <OnboardingContent>{children}</OnboardingContent>
+    </TourProvider>
   )
 }

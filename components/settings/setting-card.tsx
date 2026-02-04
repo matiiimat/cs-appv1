@@ -1,15 +1,15 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, HTMLAttributes } from "react"
 
-interface SettingCardProps {
+interface SettingCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
   className?: string
   /** Use bordered style for highlighted sections (e.g., managed AI banner) */
   bordered?: boolean
 }
 
-export function SettingCard({ children, className = "", bordered = false }: SettingCardProps) {
+export function SettingCard({ children, className = "", bordered = false, ...props }: SettingCardProps) {
   return (
     <div
       className={`
@@ -17,6 +17,7 @@ export function SettingCard({ children, className = "", bordered = false }: Sett
         ${bordered ? "px-5 rounded-lg border border-border/50 bg-muted/30" : "border-b border-border/30 last:border-b-0"}
         ${className}
       `}
+      {...props}
     >
       {children}
     </div>

@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
         slackIntegration: {
           enabled: false,
         },
+        hasCompletedTour: false,
       }),
       shopifyIntegration: {
         enabled: true, // Enable by default when connecting
