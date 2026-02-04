@@ -97,7 +97,7 @@ interface TourProviderProps {
 }
 
 export function TourProvider({ children }: TourProviderProps) {
-  const { settings, updateSettings, saveSettings } = useSettings()
+  const { settings, updateSettings } = useSettings()
   const [isTourActive, setIsTourActive] = useState(false)
   const [hasCompletedTour, setHasCompletedTour] = useState(settings.hasCompletedTour ?? false)
   const driverRef = useRef<Driver | null>(null)
@@ -129,16 +129,16 @@ export function TourProvider({ children }: TourProviderProps) {
     return null
   }, [])
 
-  // Mark tour as completed
+  // Mark tour as completed - uses dedicated endpoint to avoid race conditions
   const markTourCompleted = useCallback(async () => {
     setHasCompletedTour(true)
     updateSettings({ hasCompletedTour: true })
-    try {
-      await saveSettings()
-    } catch (error) {
-      console.error("Failed to save tour completion:", error)
-    }
-  }, [updateSettings, saveSettings])
+
+    // Save to database via dedicated endpoint (fire and forget, errors logged server-side)
+    fetch("/api/organization/tour-completed", { method: "POST" }).catch(() => {
+      // Silently ignore - tour completion is also tracked in local state
+    })
+  }, [updateSettings])
 
   // Start the product tour
   const startTour = useCallback(async () => {
@@ -166,6 +166,13 @@ export function TourProvider({ children }: TourProviderProps) {
       nextBtnText: "Next →",
       prevBtnText: "← Back",
       doneBtnText: "Done",
+      onHighlightStarted: (_element, step) => {
+        // Skip steps where the target element doesn't exist (e.g., user on different page)
+        const selector = step?.element as string | undefined
+        if (selector && !document.querySelector(selector)) {
+          driverObj.moveNext()
+        }
+      },
       onDestroyStarted: async () => {
         await markTourCompleted()
         setIsTourActive(false)
