@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
           enabled: false,
         },
         shopifyConfigured: false,
+        hasCompletedTour: false,
       })
     }
 

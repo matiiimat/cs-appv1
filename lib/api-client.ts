@@ -135,6 +135,12 @@ class ApiClient {
     });
   }
 
+  async deleteMessage(id: string): Promise<{ success: boolean }> {
+    return this.request(`/messages?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Stats operations
   async getStats(options: { dateRange?: '7d' | '30d' | 'all' } = {}): Promise<{ stats: ApiStats }> {
     const params = new URLSearchParams();

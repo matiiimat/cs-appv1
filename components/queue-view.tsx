@@ -574,11 +574,14 @@ export function QueueView() {
           {/* Pipeline Flow */}
           <div className="flex items-center gap-4">
             {/* Stage 1: Process */}
-            <div className={`flex-1 p-4 rounded-lg border transition-colors ${
-              unprocessedMessages.length > 0
-                ? 'border-border bg-muted/30'
-                : 'border-border/30 bg-transparent'
-            }`}>
+            <div
+              data-tour="process-stage"
+              className={`flex-1 p-4 rounded-lg border transition-colors ${
+                unprocessedMessages.length > 0
+                  ? 'border-border bg-muted/30'
+                  : 'border-border/30 bg-transparent'
+              }`}
+            >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
@@ -664,11 +667,14 @@ export function QueueView() {
             </div>
 
             {/* Stage 2: Triage */}
-            <div className={`flex-1 p-4 rounded-lg border transition-colors ${
-              readyForReview.length > 0
-                ? 'border-emerald-500/30 bg-emerald-500/5'
-                : 'border-border/30 bg-transparent'
-            }`}>
+            <div
+              data-tour="triage-stage"
+              className={`flex-1 p-4 rounded-lg border transition-colors ${
+                readyForReview.length > 0
+                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  : 'border-border/30 bg-transparent'
+              }`}
+            >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${

@@ -71,6 +71,7 @@ export interface Settings {
   }
   slackIntegration?: SlackIntegration
   shopifyIntegration?: ShopifyIntegration
+  hasCompletedTour?: boolean
 }
 
 interface SettingsContextType {
@@ -148,6 +149,7 @@ const defaultSettings: Settings = {
   shopifyIntegration: {
     enabled: false,
   },
+  hasCompletedTour: false,
 }
 
 const SETTINGS_STORAGE_KEY = 'supportai-settings'

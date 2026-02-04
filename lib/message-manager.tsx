@@ -213,6 +213,18 @@ export function MessageManagerProvider({ children }: { children: ReactNode }) {
     refreshData()
   }, [refreshData])
 
+  // Listen for refresh events (e.g., from tour when demo messages are created)
+  useEffect(() => {
+    const handleRefresh = () => {
+      refreshData()
+    }
+
+    window.addEventListener('aidly:refresh-data', handleRefresh)
+    return () => {
+      window.removeEventListener('aidly:refresh-data', handleRefresh)
+    }
+  }, [refreshData])
+
   const addMessage = async (messageData: Omit<CustomerMessage, "id" | "status" | "timestamp" | "ticketId" | "aiReviewed">) => {
     try {
       const apiData = convertToApiMessage(messageData)

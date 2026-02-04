@@ -63,6 +63,7 @@ function AppContent() {
   // Listen for cross-component navigation events
   useEffect(() => {
     const settingsHandler = () => setCurrentView("settings")
+    const queueHandler = () => setCurrentView("queue")
     const triageHandler = () => setCurrentView("queue")
     const inboxHandler = () => setCurrentView("inbox")
     // Navigate to billing section in settings
@@ -76,6 +77,7 @@ function AppContent() {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aidly:navigate:settings', settingsHandler as EventListener)
+      window.addEventListener('aidly:navigate:queue', queueHandler as EventListener)
       window.addEventListener('aidly:navigate:triage', triageHandler as EventListener)
       window.addEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
       window.addEventListener('aidly:navigate:billing', billingHandler as EventListener)
@@ -83,6 +85,7 @@ function AppContent() {
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aidly:navigate:settings', settingsHandler as EventListener)
+        window.removeEventListener('aidly:navigate:queue', queueHandler as EventListener)
         window.removeEventListener('aidly:navigate:triage', triageHandler as EventListener)
         window.removeEventListener('aidly:navigate:inbox', inboxHandler as EventListener)
         window.removeEventListener('aidly:navigate:billing', billingHandler as EventListener)
@@ -91,9 +94,9 @@ function AppContent() {
   }, [])
 
   const navItems = [
-    { id: "queue" as ViewMode, label: "Queue", icon: LayoutGrid, shortcut: "G Q" },
-    { id: "inbox" as ViewMode, label: "Inbox", icon: Inbox, shortcut: "G I" },
-    { id: "settings" as ViewMode, label: "Settings", icon: Settings, shortcut: "G S" },
+    { id: "queue" as ViewMode, label: "Queue", icon: LayoutGrid, shortcut: "G Q", tourId: "nav-queue" },
+    { id: "inbox" as ViewMode, label: "Inbox", icon: Inbox, shortcut: "G I", tourId: "nav-inbox" },
+    { id: "settings" as ViewMode, label: "Settings", icon: Settings, shortcut: "G S", tourId: "nav-settings" },
   ]
 
   return (
@@ -125,6 +128,7 @@ function AppContent() {
                     key={item.id}
                     onClick={() => navigateTo(item.id)}
                     className={`nav-item ${isActive ? "nav-item-active" : ""}`}
+                    data-tour={item.tourId}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>

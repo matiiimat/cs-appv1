@@ -228,7 +228,7 @@ export function AccountSection() {
         {/* General Tab */}
         <TabsContent value="general" className="space-y-6">
           {/* Email Forwarding */}
-          <SettingCard bordered>
+          <SettingCard bordered data-tour="email-address">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Mail className="h-5 w-5 text-primary" />
