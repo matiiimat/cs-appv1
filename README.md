@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aidly (SupportAI)
 
-## Getting Started
+**[aidly.me](https://aidly.me)**
 
-First, run the development server:
+AI-powered customer support platform that generates draft responses, triages tickets by priority, and learns from your team's resolved conversations. Built as a multi-tenant SaaS with org-based data isolation.
+
+## Why I Built This
+
+As a Technical Customer Success Manager, I've spent years watching support teams drown in repetitive tickets while their best knowledge lives in one person's head. I built Aidly to solve this: an AI assistant that drafts responses using your team's actual resolution history, surfaces urgent tickets first, and gets smarter over time. This isn't a wrapper around ChatGPT -- it's a full production system with billing, email routing, and multi-org tenancy.
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router), React 19, TypeScript
+- **Database:** PostgreSQL, Redis (caching & queues)
+- **AI:** OpenAI, Anthropic, local LLM support via AI SDK
+- **Infrastructure:** Vercel, Sentry, GDPR-compliant
+- **Integrations:** SendGrid (email), Stripe (billing), Shopify (app)
+- **Auth:** Better Auth with org-based multi-tenancy
+
+## Features
+
+- **Tinder-style triage** -- swipe to approve, edit, or reject AI-drafted responses
+- **Multi-provider AI** -- switch between OpenAI, Anthropic, or local models per org
+- **Knowledge base** -- auto-learns from resolved tickets to improve future drafts
+- **Inbound/outbound email** -- full email pipeline via SendGrid webhooks
+- **Shopify integration** -- pull customer and order context into tickets
+- **Analytics dashboard** -- response times, resolution rates, agent performance
+- **Stripe billing** -- usage-based plans with org-level subscription management
+- **Multi-tenant architecture** -- complete data isolation between organizations
+
+## Screenshots
+
+> _Coming soon_
+
+## Quick Start
 
 ```bash
+# Clone and install
+git clone https://github.com/matiiimat/cs-appv1.git
+cd cs-appv1
+npm install
+
+# Start Postgres and Redis
+npm run db:up
+
+# Run migrations and seed data
+npm run db:migrate
+npm run db:seed
+
+# Set up environment variables
+cp .env.example .env.local
+# Add your API keys (OpenAI, SendGrid, Stripe, etc.)
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app follows a layered architecture: Next.js API routes handle business logic, PostgreSQL stores tenant-isolated data, and Redis manages session caching and background job queues. AI response generation is abstracted behind the Vercel AI SDK, allowing hot-swappable model providers. Inbound emails hit a SendGrid webhook endpoint, get classified and queued, then surface in the triage UI with a draft response ready for review.
 
-## Learn More
+```
+Client (React 19) → Next.js API Routes → PostgreSQL / Redis
+                                        → AI SDK (OpenAI / Anthropic / Local)
+                                        → SendGrid (Email) / Stripe (Billing)
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*426 commits and counting. Built by a CSM who codes.*
