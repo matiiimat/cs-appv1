@@ -68,5 +68,3 @@ Client (React 19) → Next.js API Routes → PostgreSQL / Redis
 ```
 
 ---
-
-*426 commits and counting. Built by a CSM who codes.*
