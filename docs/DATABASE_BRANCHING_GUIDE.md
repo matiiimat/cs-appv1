@@ -45,7 +45,7 @@ Edit `.env.local`:
 
 ```bash
 # PRODUCTION DATABASE - DO NOT USE FOR TESTING
-# DATABASE_URL=postgresql://neondb_owner:npg_rsFe46fzlENc@ep-purple-scene-agsa4l3a-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+# DATABASE_URL=postgresql://neondb_owner:npg_xxx@ep-purple-scene-agsa4l3a-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 # TEST BRANCH - Safe for migrations and testing
 DATABASE_URL=postgresql://neondb_owner:npg_xxx@ep-purple-scene-agsa4l3a-br-dev-usage-limits-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
